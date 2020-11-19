@@ -1,0 +1,32 @@
+#!/bin/bash
+#SBATCH --nodes=1                      #Numero de Nós
+#SBATCH --ntasks-per-node=1            #Numero de tarefas por Nó
+#SBATCH --ntasks=1                     #Numero total de tarefas MPI
+#SBATCH --cpus-per-task=24             #Numero de threads por tarefa MPI
+#SBATCH -p cpu_dev                     #Fila (partition) a ser utilizada
+#SBATCH -J teste_workflow              #Nome job
+#SBATCH --exclusive                    #Utilização exclusiva dos nós durante a execução do job
+#SBATCH --no-requeue                   #Não realiza uma nova submissão se algum dos nós falharem
+
+
+#Vai para o diretório do SCRATCH
+cd /scratch/pcmrnbio2/rafael.terra/
+#Exibe os nós alocados para o Job
+echo $SLURM_JOB_NODELIST
+nodeset -e $SLURM_JOB_NODELIST
+
+#Configura o compilador OpenMPI com GNU
+module load gcc/6.5
+module load openmpi/gnu/2.0.4.14
+
+#carrega os módulos do workflow
+module load perl
+module load raxml
+module load python/3.7.2
+
+#source /scratch/pcmrnbio2/app/softwares/astral/5.7.1
+script_dir = ./data_results/scripts/raxml.pl
+seqdir = ./data_results/baseline.gamma0.3_n30/input/nexus/
+astral_dir = /scratch/pcmrnbio2/app/softwares/astral/5.7.1
+##Teste raxml
+python3  parsl.py $script_dir $seqdir $astral_dir

@@ -1,0 +1,28 @@
+#!/bin/bash
+#SBATCH --nodes=4              #Numero de Nós
+#SBATCH --ntasks-per-node=1    #Numero de tarefas por Nó
+#SBATCH --ntasks=4             #Numero total de tarefas MPI
+#SBATCH --cpus-per-task=24     #Numero de threads por tarefa MPI
+#SBATCH -p cpu_long            #Fila (partition) a ser utilizada
+#SBATCH -J Job_RAxML_96        #Nome job
+#SBATCH --exclusive
+
+echo $SLURM_JOB_NODELIST
+nodeset -e $SLURM_JOB_NODELIST
+
+cd $SLURM_SUBMIT_DIR
+
+#module load gcc-5/5.3
+#module load openmpi/gnu/2.0.4.2
+module load raxml/8.2_openmpi-2.0_gnu
+
+cd /scratch/pcmrnbio2/kary.gautherot2/ufrj
+
+EXEC="/scratch/app/raxml/8.2/bin/raxmlHPC-HYBRID"
+/usr/bin/ldd $EXEC
+input_file=$1
+prefix=`basename ${input_file} | cut -d "." -f1`
+
+EXEC=$EXEC" -s ${input_file} -n ${basename}-hybrid-${SLURM_NTASKS}.phylip_tree2.raxml -c 4 -f d -m GTRGAMMAI  -b 05697 -N 1000 -p 1 -T $SLURM_CPUS_PER_TASK" 
+
+srun --resv-ports -n $SLURM_NTASKS -c $SLURM_CPUS_PER_TASK $EXEC
