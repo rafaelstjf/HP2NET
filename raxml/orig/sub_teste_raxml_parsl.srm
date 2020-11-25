@@ -10,7 +10,8 @@
 
 
 #Vai para o diretório do SCRATCH
-cd /scratch/pcmrnbio2/rafael.terra/
+cd /scratch/cenapadrjsd/diego.carvalho/bio
+
 #Exibe os nós alocados para o Job
 echo $SLURM_JOB_NODELIST
 nodeset -e $SLURM_JOB_NODELIST
@@ -27,6 +28,6 @@ module load python/3.7.2
 #source /scratch/pcmrnbio2/app/softwares/astral/5.7.1
 script_dir = ./data_results/scripts/raxml.pl
 seqdir = ./data_results/baseline.gamma0.3_n30/input/nexus/
-astral_dir = /scratch/pcmrnbio2/app/softwares/astral/5.7.1
+astral_dir = /scratch/cenapadrjsd/diego.carvalho/bio/astral/Astral
 ##Teste raxml
 python3  parsl.py $script_dir $seqdir $astral_dir
