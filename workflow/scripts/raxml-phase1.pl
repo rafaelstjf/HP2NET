@@ -1,5 +1,10 @@
 #!/usr/bin/perl
 
+# 2020 (@) Diego Carvalho - d.carvalho@ieee.org
+# Perl script to run raxml + bootstrap for each locus sequence of commands. 
+#
+# adapted from https://github.com/crsl4/PhyloNetworks.jl/wiki
+
 # May 26, 2016
 # Perl script to run raxml + bootstrap for each locus.
 # this is *not* part of the TICR pipeline
@@ -43,10 +48,10 @@ my $raxmldir; # directory for output, including log for this script
 my $astraldir;
 my $convertphylip = 1;
 my $doastral = 1;
-#my $raxml = 'raxmlHPC-PTHREADS-AVX'; # executable
-my $raxml = 'raxmlHPC'; # executable
-#my $astral = '/class/molevol-software/astral-5.5.2/astral.5.5.2.jar'; # adapt to your system
-my $astral = '/scratch/cenapadrjsd/diego.carvalho/bio/astral/Astral/astral.5.7.4.jar'; # adapt to your system
+# The raxml var points to a script that will store the execution that will be executed.
+my $raxml = 'python3 ../scripts/raxmlinsert.py raxml'; # executable
+# Point to the 'astral' tag. The java machine invocation is also changed to point to the script.
+my $astral = 'astral'; # adapt to your system
 
 # -------------- read arguments from command-line -----------------------
 GetOptions( 'numboot=i' => \$numboot,
@@ -177,53 +182,3 @@ for my $ig (0 .. $#genes){
 chdir($currentdir) or die "can't go back to original directory";
 system("date >> $logfile");
 close FHlog;
-
-#-----------------------------------------------#
-#  restructure output files                     #
-#-----------------------------------------------#
-
-# archive phylip files
-#`tar -czf ${phylipdir}.tgz $phylipdir`
-
-# delete info files created by raxml
-`rm $raxmldir/RAxML_info\.*`;
-
-# create directory to contain the bootstrap trees for all genes: 1 file per gene
-my $bootpath = "$raxmldir/bootstrap";
-make_path $bootpath unless(-d $bootpath);
-`mv $raxmldir/RAxML_bootstrap.* $bootpath`;
-# do not tar: needed for ASTRAL
-
-# create directory to contain the consensus trees: 2 files per gene
-`tar -czf $raxmldir/contrees.tgz $raxmldir/RAxML_bipartitions*`;
-`rm -f $raxmldir/RAxML_bipartitions*`;
-
-# create file listing all best trees: one line per gene
-my $raxmlOUT = "$raxmldir/besttrees.tre";
-`cat $raxmldir/RAxML_bestTree\.* > $raxmlOUT`;
-`tar -czf $raxmldir/besttrees.tgz $raxmldir/RAxML_bestTree\.*`;
-`rm -f $raxmldir/RAxML_bestTree\.*`;
-
-# ----------------------------------------------#
-#   astral analysis                             #
-# ----------------------------------------------#
-
-$astraldir = "astral" if !defined($astraldir);
-my $bsfile =  "$astraldir/BSlistfiles";
-my $astralLOG =  "$astraldir/astral.screenlog";
-my $astralOUT =  "$astraldir/astral.tre";
-
-`ls -d $bootpath/* > $bsfile`;
-
-my $astralcmd = "java -jar $astral -i $raxmlOUT -b $bsfile -r $numboot -o $astralOUT > $astralLOG 2>&1";
-open FHlog, ">> $logfile";
-if ($doastral){
-    print FHlog "running astral:\n";
-} else {
-    print FHlog "astral could be run with:\n";
-}
-print FHlog "$astralcmd\n";
-close FHlog;
-if ($doastral){
-    system($astralcmd);
-}
