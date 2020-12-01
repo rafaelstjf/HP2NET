@@ -49,7 +49,8 @@ my $astraldir;
 my $convertphylip = 1;
 my $doastral = 1;
 # The raxml var points to a script that will store the execution that will be executed.
-my $raxml = 'python3 ../scripts/raxmlinsert.py raxml'; # executable
+my $raxml = 'python3 ~/src/biocomp/workflow/scripts/raxmlinsert.py raxml'; # executable
+my $raxmlstart = 'python3 ~/src/biocomp/workflow/scripts/raxmlinsert.py start';
 # Point to the 'astral' tag. The java machine invocation is also changed to point to the script.
 my $astral = 'astral'; # adapt to your system
 
@@ -166,6 +167,8 @@ if ($convertphylip) {
 
 open FHlog, ">> $logfile";
 chdir($raxmldir) or die ("can't go to raxml directory $raxmldir\n");
+
+system($raxmlinsert);
 
 for my $ig (0 .. $#genes){
     my $infn = "../$seqdir/${genes[$ig]}";
