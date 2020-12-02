@@ -168,7 +168,7 @@ if ($convertphylip) {
 open FHlog, ">> $logfile";
 chdir($raxmldir) or die ("can't go to raxml directory $raxmldir\n");
 
-system($raxmlinsert);
+system($raxmlstart);
 
 for my $ig (0 .. $#genes){
     my $infn = "../$seqdir/${genes[$ig]}";
