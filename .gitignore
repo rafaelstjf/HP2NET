@@ -129,4 +129,5 @@ dmypy.json
 .pyre/
 
 # local data
-data
+data_results
+workdir
