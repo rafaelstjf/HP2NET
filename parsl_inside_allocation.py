@@ -137,7 +137,7 @@ def astral(datadir: str, inputs=[], outputs=[], flags=False, stderr=parsl.AUTO_L
     import random
 
     # Build the invocation command.
-    input_file = inputs[0]
+    input_file = datadir
     output_file = 1#outputs[0]
 
     cmd = f"java astral {flags} -p -s {input_file} -n {output_file}"
@@ -155,6 +155,7 @@ def loop_on_baseline_raxml(basedir, datalist):
         
 
 if __name__ == "__main__":
+    import os
     import glob
     logging.info('Starting the Workflow Orchastration') 
     
@@ -177,18 +178,32 @@ if __name__ == "__main__":
 
     result = list()
     for basedir in work_list:
-        logging.info(f'Calling get_raxml_input({basedir})')
-        print(f'Calling get_raxml_input({basedir})')
         #TODO: Convert nexus to phylip
         base_file_list = glob.glob(basedir + '/input/phylip/*')
         rf = loop_on_baseline_raxml(basedir,base_file_list)
         for i in rf:
             result.append(i)
 
-    logging.info(f'Entering in wait_for_all')
+    logging.info(f'Entering in wait_for_all raxml')
     wait_for_all(result)
 
     logging.info(f'Running Astral')
-    result = astral('scratch',inputs=['input_filename'])
-
-    result.result()
+    result = list()
+    for basedir in work_list:
+        raxml_dir = f'{basedir}/raxml'
+        os.system(f'rm {raxml_dir}/RAxML_info.*')
+        try:
+            os.mkdir(f'{raxml_dir}/bootstrap')
+        except FileExistsError:
+            os.system(f'rm -f {raxml_dir}/bootstrap/*')
+        os.system(f'mv {raxml_dir}/RAxML_bootstrap.* {raxml_dir}/bootstrap')
+        os.system(f'tar -czf {raxml_dir}/contrees.tgz {raxml_dir}/RAxML_bipartitions*')
+        os.system(f'rm -f {raxml_dir}/RAxML_bipartitions*')
+        os.system(f'cat {raxml_dir}/RAxML_bestTree.* > {raxml_dir}/besttrees.tre')
+        os.system(f'tar -czf {raxml_dir}/besttrees.tgz {raxml_dir}/RAxML_bestTree.*')
+        os.system(f'rm -f {raxml_dir}/RAxML_bestTree.*')
+        r = astral(basedir)
+        result.append(r)
+        
+    logging.info(f'Entering in wait_for_all atral')
+    wait_for_all(result)
