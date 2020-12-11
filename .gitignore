@@ -131,3 +131,4 @@ dmypy.json
 # local data
 data_results
 workdir
+Astral/*

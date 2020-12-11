@@ -63,18 +63,26 @@ def workflow_config(name, nodes, cores_per_node=24, interval=30, monitor=False):
     return
 
 
-def wait_for_all(list_of_futures, sleep=60):
+def wait_for_all(list_of_futures, sleep=10):
     import time
 
-    ready_list = [1 for _ in list_of_futures]
+    #TODO: must find a better algorithm, since there are groups
+    # on parallel DAGs
+    
+    not_done = True
 
-    while sum(ready_list) > 0:
-        # TODO: checks everytime all items, including any already done.
-        # Must check if we can copy Parsl.Future objects.
-        for id, r in enumerate(list_of_futures):
-            if r.done():
-                ready_list[id] = 0
-            time.sleep(sleep)
+    while not_done:
+        not_done = False
+        for r in list_of_futures:
+            if not r.done():
+                not_done = True
+                break
+        time.sleep(sleep)
+
+    for r in list_of_futures:
+        r.result()
+
+    return
 
 #
 # Parsl Bash Applications
@@ -137,11 +145,19 @@ def astral(datadir: str, inputs=[], outputs=[], flags=False, stderr=parsl.AUTO_L
     import random
 
     # Build the invocation command.
-    input_file = datadir
-    output_file = 1#outputs[0]
 
-    cmd = f"java astral {flags} -p -s {input_file} -n {output_file}"
-    cmd = f"echo {cmd}" 
+    #TODO: manage the fixed jar pointer...
+    astral_exec_dir ='/scratch/cenapadrjsd/diego.carvalho/biocomp/Astral/'
+    astral_jar = 'astral.5.7.4.jar'
+    astral_dir = f'{datadir}/astral'
+    input_file = f'{datadir}/raxml/besttrees.tre'
+    bs_file = f'{astral_dir}/BSlistfiles'
+    #TODO: manage the fixed bootstrap number...
+    num_boot = 100
+    astral_out = f'{astral_dir}/astral.tre'
+
+    cmd = f'cd {astral_exec_dir}; java -jar {astral_jar} -i {input_file} -b {bs_file} -r {num_boot} -o {astral_out}'
+
     # Return to Parsl to be executed on the workflow
     return cmd
 
@@ -196,6 +212,7 @@ if __name__ == "__main__":
             os.mkdir(f'{raxml_dir}/bootstrap')
         except FileExistsError:
             os.system(f'rm -f {raxml_dir}/bootstrap/*')
+
         os.system(f'mv {raxml_dir}/RAxML_bootstrap.* {raxml_dir}/bootstrap')
         os.system(f'tar -czf {raxml_dir}/contrees.tgz {raxml_dir}/RAxML_bipartitions*')
         os.system(f'rm -f {raxml_dir}/RAxML_bipartitions*')
