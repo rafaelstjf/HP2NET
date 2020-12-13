@@ -1,14 +1,16 @@
 #!/bin/bash
-#SBATCH --nodes=2            #Numero de Nós
+#SBATCH --nodes=4            #Numero de Nós
 #SBATCH --ntasks-per-node=48 #Numero de tarefas por Nó
-#SBATCH --ntasks=96          #Numero de tarefas
+#SBATCH --ntasks=192         #Numero de tarefas
 #SBATCH -p sequana_cpu_dev   #Fila (partition) a ser utilizada
 #SBATCH -J DCTST             #Nome job
 #SBATCH --exclusive          #Utilização exclusiva dos nós durante a execução do job
 #SBATCH --time=00:10:00
+#SBATCH -e log/slurm-%j.err
+#SBATCH -o log/slurm-%j.out
 
-NETINFO=netinfo.$SLURM_JOBID.log
-
+mkdir -p log tmp
+NETINFO=log/netinfo.$SLURM_JOBID.log
 
 #Exibe os nos alocados para o Job
 echo $SLURM_JOB_NODELIST

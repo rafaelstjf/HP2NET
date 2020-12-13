@@ -63,22 +63,34 @@ def workflow_config(name, nodes, cores_per_node=24, interval=30, monitor=False):
     return
 
 
-def wait_for_all(list_of_futures, sleep=10):
+def wait_for_all(list_of_futures, sleep_interval=10):
+    """ Wait for parsl's future completion.
+
+        Loops over the list of futures and check if everone were done. 
+        If not, sleep for sleep_interval.
+    Parameters:
+        list_of_futures (list): a list of parsl's futures.
+        sleep_interval (int): sleep interval
+    """
     import time
 
-    #TODO: must find a better algorithm, since there are groups
-    # on parallel DAGs
+    #TODO: must find a better algorithm, since there are different
+    # workflows being executed on parallel (several DAGs).
+    # Perhaps, DAG executer should be implemented, where the user
+    # may provide several workflows (DAGs) and the may be enacted by
+    # a scheduler.
     
+    # Loop
     not_done = True
-
     while not_done:
         not_done = False
         for r in list_of_futures:
             if not r.done():
                 not_done = True
                 break
-        time.sleep(sleep)
+        time.sleep(sleep_interval)
 
+    # Fetch status (just inform parsil that we can proceed)
     for r in list_of_futures:
         r.result()
 
@@ -89,6 +101,8 @@ def wait_for_all(list_of_futures, sleep=10):
 #
 import parsl
 from parsl import bash_app
+
+# raxml bash app
 @bash_app
 def raxml(datadir: str, inputs=[], outputs=[], flags=False, stderr=parsl.AUTO_LOGNAME, stdout=parsl.AUTO_LOGNAME):
     """Runs the Raxml's executable (RPS) on a directory (input)
@@ -106,6 +120,7 @@ def raxml(datadir: str, inputs=[], outputs=[], flags=False, stderr=parsl.AUTO_LO
     """
     import logging
     import random
+    import glob
     import os
 
     logging.info(f'raxml called with {datadir}')
@@ -142,6 +157,7 @@ def astral(datadir: str, inputs=[], outputs=[], flags=False, stderr=parsl.AUTO_L
         named according to task id and saved under task_logs in the run directory.
     """
     import os
+    import glob
     import random
 
     # Build the invocation command.
@@ -155,6 +171,11 @@ def astral(datadir: str, inputs=[], outputs=[], flags=False, stderr=parsl.AUTO_L
     #TODO: manage the fixed bootstrap number...
     num_boot = 100
     astral_out = f'{astral_dir}/astral.tre'
+
+    #Create bs_file
+    with open(bs_file,'w') as f:
+        for i in glob.glob(f'{datadir}/raxml/bootstrap/*'):
+            f.write(f'{i}\n')
 
     cmd = f'cd {astral_exec_dir}; java -jar {astral_jar} -i {input_file} -b {bs_file} -r {num_boot} -o {astral_out}'
 
@@ -178,7 +199,7 @@ if __name__ == "__main__":
     #Configure the infrastructure
     #TODO: Fetch the configuration from a file...
     workflow_config(name='BioWorkFlow',
-                    nodes=2,
+                    nodes=4,
                     cores_per_node=8,
                     interval=1,
                     monitor=False)
@@ -194,7 +215,26 @@ if __name__ == "__main__":
 
     result = list()
     for basedir in work_list:
-        #TODO: Convert nexus to phylip
+        input_dir = basedir + '/input'
+        input_nexus_dir = input_dir + '/nexus'
+        phylip_dir = input_dir + '/phylip'
+
+        # If we find phylip_dir, we suppose the input is Ok.
+        if not os.path.isfile(phylip_dir):
+            # So, some work must be done. Build the Nexus directory
+            if not os.path.isdir(input_nexus_dir):
+                os.mkdir(input_nexus_dir)
+                # List all tar.gz files, they are supposed to be the input
+                tar_file_list = glob.glob(f'{input_dir}/*.tar.gz')
+                if len(tar_file_list) == 0:
+                    print('TAR ERROR!!! TODO:')
+                # So, loop over and untar every file
+                for tar_file in tar_file_list:
+                    os.system(f'cd {input_nexus_dir}; tar zxvf {tar_file}')
+        # Now, use the modified script to convert nexus to phylip.
+        os.system(f'cd {basedir}; perl /scratch/cenapadrjsd/diego.carvalho/biocomp/raxml-phase1.pl  --seqdir=input/nexus --raxmldir=raxml --astraldir=astral')
+            
+
         base_file_list = glob.glob(basedir + '/input/phylip/*')
         rf = loop_on_baseline_raxml(basedir,base_file_list)
         for i in rf:
