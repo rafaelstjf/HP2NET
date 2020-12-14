@@ -25,8 +25,8 @@ if __name__ == "__main__":
     #Configure the infrastructure
     #TODO: Fetch the configuration from a file...
     workflow_config(name='BioWorkFlow',
-                    nodes=4,
-                    cores_per_node=8,
+                    nodes=16,
+                    cores_per_node=4,
                     interval=1,
                     monitor=False)
 

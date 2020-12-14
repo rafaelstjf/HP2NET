@@ -1,11 +1,11 @@
 #!/bin/bash
-#SBATCH --nodes=4            #Numero de Nós
-#SBATCH --ntasks-per-node=48 #Numero de tarefas por Nó
-#SBATCH --ntasks=192         #Numero de tarefas
-#SBATCH -p sequana_cpu_dev   #Fila (partition) a ser utilizada
+#SBATCH --nodes=16           #Numero de Nós
+#SBATCH --ntasks-per-node=24 #Numero de tarefas por Nó
+#SBATCH --ntasks=384         #Numero de tarefas
+#SBATCH -p cpu_small         #Fila (partition) a ser utilizada
 #SBATCH -J DCTST             #Nome job
 #SBATCH --exclusive          #Utilização exclusiva dos nós durante a execução do job
-#SBATCH --time=00:10:00
+#SBATCH --time=01:00:00
 #SBATCH -e log/slurm-%j.err
 #SBATCH -o log/slurm-%j.out
 
