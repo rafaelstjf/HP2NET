@@ -62,7 +62,7 @@ def workflow_config(name, nodes, cores_per_node=24, interval=30, monitor=False):
     parsl.load(config)
     return
 
-
+### SYNCHRONIZATION ROUTINE
 def wait_for_all(list_of_futures, sleep_interval=10):
     """ Wait for parsl's future completion.
 
@@ -97,10 +97,45 @@ def wait_for_all(list_of_futures, sleep_interval=10):
     return
 
 #
-# Parsl Bash Applications
+# Parsl Bash and Python Applications
 #
 import parsl
-from parsl import bash_app
+from parsl import bash_app, python_app
+
+# setup_phylip_data bash app
+@bash_app
+def setup_phylip_data(datadir: str, inputs=[], outputs=[], flags=False, stderr=parsl.AUTO_LOGNAME, stdout=parsl.AUTO_LOGNAME):
+    """Open Runs the Raxml's executable (RPS) on a directory (input)
+
+    Parameters:
+        TODO:
+    Returns:
+        returns an parsl's AppFuture
+
+    TODO: Provide provenance.
+
+    NB:
+        Stdout and Stderr are defaulted to parsl.AUTO_LOGNAME, so the log will be automatically 
+        named according to task id and saved under task_logs in the run directory.
+    """
+    input_dir = basedir + '/input'
+    input_nexus_dir = input_dir + '/nexus'
+    phylip_dir = input_dir + '/phylip'
+
+    # If we find phylip_dir, we suppose the input is Ok.
+    if not os.path.isfile(phylip_dir):
+        # So, some work must be done. Build the Nexus directory
+        if not os.path.isdir(input_nexus_dir):
+            os.mkdir(input_nexus_dir)
+            # List all tar.gz files, they are supposed to be the input
+            tar_file_list = glob.glob(f'{input_dir}/*.tar.gz')
+            if len(tar_file_list) == 0:
+                print('TAR ERROR!!! TODO:')
+            # So, loop over and untar every file
+            for tar_file in tar_file_list:
+                os.system(f'cd {input_nexus_dir}; tar zxvf {tar_file}')
+    # Now, use the modified script to convert nexus to phylip.
+    return f'cd {basedir}; perl /scratch/cenapadrjsd/diego.carvalho/biocomp/raxml-phase1.pl  --seqdir=input/nexus --raxmldir=raxml --astraldir=astral'
 
 # raxml bash app
 @bash_app
@@ -182,7 +217,15 @@ def astral(datadir: str, inputs=[], outputs=[], flags=False, stderr=parsl.AUTO_L
     # Return to Parsl to be executed on the workflow
     return cmd
 
-def loop_on_baseline_raxml(basedir, datalist):
+# raxml_sequence python app
+@python_app
+def loop_on_baseline_raxml(basedir):
+    import glob
+
+    ret_val = setup_phylip_data(basedir)
+    ret_val.result()
+
+    datalist = glob.glob(basedir + '/input/phylip/*')
     result = list()
     for input_file in datalist:
         fut_result = raxml(basedir, inputs=[input_file])
@@ -215,29 +258,9 @@ if __name__ == "__main__":
 
     result = list()
     for basedir in work_list:
-        input_dir = basedir + '/input'
-        input_nexus_dir = input_dir + '/nexus'
-        phylip_dir = input_dir + '/phylip'
-
-        # If we find phylip_dir, we suppose the input is Ok.
-        if not os.path.isfile(phylip_dir):
-            # So, some work must be done. Build the Nexus directory
-            if not os.path.isdir(input_nexus_dir):
-                os.mkdir(input_nexus_dir)
-                # List all tar.gz files, they are supposed to be the input
-                tar_file_list = glob.glob(f'{input_dir}/*.tar.gz')
-                if len(tar_file_list) == 0:
-                    print('TAR ERROR!!! TODO:')
-                # So, loop over and untar every file
-                for tar_file in tar_file_list:
-                    os.system(f'cd {input_nexus_dir}; tar zxvf {tar_file}')
-        # Now, use the modified script to convert nexus to phylip.
-        os.system(f'cd {basedir}; perl /scratch/cenapadrjsd/diego.carvalho/biocomp/raxml-phase1.pl  --seqdir=input/nexus --raxmldir=raxml --astraldir=astral')
-            
-
-        base_file_list = glob.glob(basedir + '/input/phylip/*')
-        rf = loop_on_baseline_raxml(basedir,base_file_list)
-        for i in rf:
+        rf = loop_on_baseline_raxml(basedir)
+        #TODO: move the wait section to the end
+        for i in rf.result():
             result.append(i)
 
     logging.info(f'Entering in wait_for_all raxml')
