@@ -19,7 +19,7 @@ logging.basicConfig(level=logging.INFO)
 
 if __name__ == "__main__":
     import os
-    from workflow import workflow_config, loop_on_baseline_raxml, wait_for_all, astral, setup_phylip_data, setup_astral_data
+    from workflow import workflow_config, wait_for_all, astral, setup_phylip_data, setup_astral_data
     logging.info('Starting the Workflow Orchastration') 
     
     #Configure the infrastructure
