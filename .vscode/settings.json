@@ -1,5 +1,5 @@
 {
-	"python.pythonPath": "/Users/carvalho/.pyenv/versions/3.8.5/bin/python",
+	"python.pythonPath": "/scratch/app/python/3.8.2-gcc-7.4-gnu/bin/python3",
 	"cSpell.words": [
 		"chdir"
 	]
