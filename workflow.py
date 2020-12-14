@@ -11,6 +11,9 @@ def workflow_config(name, nodes, cores_per_node=24, interval=30, monitor=False):
     from parsl.executors import HighThroughputExecutor
     from parsl.monitoring.monitoring import MonitoringHub
 
+    parsl.set_stream_logger()
+    parsl.set_file_logger('script.output', level=logging.DEBUG)
+
     logging.info('Configuring Parsl Workflow Infrastructure')
 
     #Read where datasets are...
@@ -54,6 +57,8 @@ def workflow_config(name, nodes, cores_per_node=24, interval=30, monitor=False):
         monitoring=mon_hub,
         strategy=None,
     )
+
+    logging.info('Loading Parsl Config')
 
     parsl.load(config)
     return
@@ -217,20 +222,3 @@ def astral(datadir: str, inputs=[], outputs=[], flags=False, stderr=parsl.AUTO_L
     # Return to Parsl to be executed on the workflow
     return cmd
 
-# raxml_sequence python app
-@python_app
-def loop_on_baseline_raxml(basedir):
-    import glob
-    from workflow import setup_phylip_data, raxml
-
-    ret_val = setup_phylip_data(basedir)
-    ret_val.result()
-
-    datalist = glob.glob(basedir + '/input/phylip/*')
-    result = list()
-    for input_file in datalist:
-        fut_result = raxml(basedir, inputs=[input_file])
-        result.append(fut_result)
-
-    return result
-   
