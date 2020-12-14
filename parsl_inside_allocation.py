@@ -19,7 +19,7 @@ logging.basicConfig(level=logging.INFO)
 
 if __name__ == "__main__":
     import os
-    from workflow import workflow_config, loop_on_baseline_raxml, wait_for_all, astral, setup_phylip_data
+    from workflow import workflow_config, loop_on_baseline_raxml, wait_for_all, astral, setup_phylip_data, setup_astral_data
     logging.info('Starting the Workflow Orchastration') 
     
     #Configure the infrastructure
@@ -56,25 +56,17 @@ if __name__ == "__main__":
     logging.info(f'Entering in wait_for_all raxml')
     wait_for_all(result)
 
-
-    logging.info(f'Running Astral')
     result = list()
     for basedir in work_list:
-        raxml_dir = f'{basedir}/raxml'
-        os.system(f'rm {raxml_dir}/RAxML_info.*')
-        try:
-            os.mkdir(f'{raxml_dir}/bootstrap')
-        except FileExistsError:
-            os.system(f'rm -f {raxml_dir}/bootstrap/*')
+        ret_val = setup_astral_data(basedir)
+        result.append(ret_val)
+    logging.info(f'Entering in wait_for_all setup_astral_data')
+    wait_for_all(result)
 
-        os.system(f'mv {raxml_dir}/RAxML_bootstrap.* {raxml_dir}/bootstrap')
-        os.system(f'tar -czf {raxml_dir}/contrees.tgz {raxml_dir}/RAxML_bipartitions*')
-        os.system(f'rm -f {raxml_dir}/RAxML_bipartitions*')
-        os.system(f'cat {raxml_dir}/RAxML_bestTree.* > {raxml_dir}/besttrees.tre')
-        os.system(f'tar -czf {raxml_dir}/besttrees.tgz {raxml_dir}/RAxML_bestTree.*')
-        os.system(f'rm -f {raxml_dir}/RAxML_bestTree.*')
+    
+    result = list()
+    for basedir in work_list:
         r = astral(basedir)
-        result.append(r)
-        
+        result.append(r)        
     logging.info(f'Entering in wait_for_all astral')
     wait_for_all(result)

@@ -180,6 +180,13 @@ def raxml(datadir: str, inputs=[], outputs=[], flags=False, stderr=parsl.AUTO_LO
     # Return to Parsl to be executed on the workflow
     return cmd
 
+@bash_app
+def setup_astral_data(datadir: str, inputs=[], outputs=[], flags=False, stderr=parsl.AUTO_LOGNAME, stdout=parsl.AUTO_LOGNAME):
+    raxml_dir = f'{datadir}/raxml'
+
+    cmd = f'/scratch/cenapadrjsd/diego.carvalho/biocomp/setup_astral_data.sh {raxml_dir}'
+
+    return cmd
 
 @bash_app
 def astral(datadir: str, inputs=[], outputs=[], flags=False, stderr=parsl.AUTO_LOGNAME, stdout=parsl.AUTO_LOGNAME):
