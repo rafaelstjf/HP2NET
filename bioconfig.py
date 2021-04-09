@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" Appsexception.py. Parsl Application Functions (@) 2021
+""" BioConfig.py. Biocomp Application Configuration (@) 2021
 
 This module encapsulates all Parsl configuration stuff in order to provide a
 cluster configuration based in number of nodes and cores per node.
@@ -25,7 +25,7 @@ __author__ = "Diego Carvalho"
 __copyright__ = "Copyright 2021, The Biocomp Informal Collaboration (CEFET/RJ and LNCC)"
 __credits__ = ["Diego Carvalho", "Carla Osthoff", "Kary Ocaña", "Rafael Terra"]
 __license__ = "GPL"
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 __maintainer__ = "Diego Carvalho"
 __email__ = "d.carvalho@ieee.org"
 __status__ = "Research"
@@ -34,8 +34,91 @@ __status__ = "Research"
 #
 # Parsl Bash and Python Applications Configuration
 #
+import borg
+from dataclasses import dataclass, field
 
-class BioConfig(object):
+# TODO: self.mbblock = Prepare to read from a setup file.
+
+
+@dataclass
+class BioConfig:
+    data_dir:           str
+    script_dir:         str
+    raxml:              str
+    raxml_param:        str
+    raxml_phase1:       str
+    raxml_dir:          str
+    raxml_output:       str
+    raxml_threads:      int
+    raxml_exec_param:   str
+    astral_phase1:      str
+    astral_exec_dir:    str
+    astral_jar:         str
+    astral:             str
+    astral_dir:         str
+    astral_output:      str
+    snaq:               str
+    mbblock:            str
+    mrbayes:            str
+
+
+@borg.borg
+class ConfigFactory:
+
+    def __init__(self, data_dir: str, config_file: str = 'config/default.ini') -> None:
+        import configparser
+
+        self.config_file = config_file
+        self.data_dir = data_dir
+        self.config = configparser.ConfigParser()
+        self.config.read(self.config_file)
+
+        return
+
+    def build_config(self) -> BioConfig:
+
+        dd = self.data_dir
+
+        script_dir = self.config['GENERAL']['ScriptDir']
+        raxml = self.config['RAXML']['RaxmlExecutable']
+        raxml_param = self.config['RAXML']['RaxmlParameters']
+        raxml_phase1 = f"perl {self.config['RAXML']['RaxmlPhase1']} {raxml_param}"
+        raxml_dir = f"{dd}/{self.config['RAXML']['RaxmlDir']}"
+        raxml_output = f"{raxml_dir}/{self.config['RAXML']['RaxmlOutput']}"
+        raxml_theads = self.config['RAXML']['RaxmlThreads']
+        raxml_exec_param = self.config['RAXML']['RaxmlExecParam']
+        astral_phase1 = self.config['ASTRAL']['AstralScript']
+        astral_exec_dir = self.config['ASTRAL']['AstralExecDir']
+        astral_jar = self.config['ASTRAL']['AstralJar']
+        astral = f"cd {astral_exec_dir}; java -jar {astral_jar}"
+        astral_dir = f"{dd}/{self.config['ASTRAL']['AstralDir']}"
+        astral_output = f"{astral_dir}/{self.config['ASTRAL']['AstralOutput']}"
+        snaq = f"{script_dir}/{self.config['SNAQ']['SnaqScript']}"
+        mbblock = f"{script_dir}/{self.config['MRBAYES']['MrBlock']}"
+        mrbayes = f"perl {script_dir}/{self.config['MRBAYES']['MrDriver']}"
+
+        self.bioconfig = BioConfig(self.data_dir,
+                                   script_dir,
+                                   raxml,
+                                   raxml_param,
+                                   raxml_phase1,
+                                   raxml_dir,
+                                   raxml_output,
+                                   raxml_theads,
+                                   raxml_exec_param,
+                                   astral_phase1,
+                                   astral_exec_dir,
+                                   astral_jar,
+                                   astral,
+                                   astral_dir,
+                                   astral_output,
+                                   snaq,
+                                   mbblock,
+                                   mrbayes)
+        return self.bioconfig
+
+
+class suBioConfig(object):
     def __init__(self,
                  script_dir='/scratch/cenapadrjsd/diego.carvalho/biocomp/scripts/') -> None:
         self.script_dir = script_dir
@@ -75,3 +158,11 @@ class BioConfig(object):
     @property
     def snaq(self) -> str:
         return f"/scratch/cenapadrjsd/diego.carvalho/biocomp/scripts/snaq.sh"
+
+    @property
+    def mbblock(self) -> str:
+        return f"/scratch/cenapadrjsd/diego.carvalho/biocomp/scripts/mbblock.txt"
+
+    @property
+    def mrbayes(self) -> str:
+        return f"perl {self.script_dir}/mb.pl"

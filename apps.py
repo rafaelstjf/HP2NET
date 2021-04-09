@@ -32,23 +32,24 @@ __status__ = "Research"
 # Parsl Bash and Python Applications
 #
 import parsl
+from bioconfig import BioConfig
 
 
 # setup_phylip_data bash app
 
 
 @parsl.bash_app(executors=['single_thread'])
-def setup_phylip_data(datadir: str,
+def setup_phylip_data(config: BioConfig,
                       stderr=parsl.AUTO_LOGNAME,
                       stdout=parsl.AUTO_LOGNAME):
     """Convert the nexus format to phylip in order to run Raxml on a directory.
 
     Parameters:
-        datadir: str --- Directory where raxml-phase1 is going to search for a tar file with 
-                         nexus files. The script will create:
-                            seqdir=input/nexus
-                            raxmldir=raxml
-                            astraldir=astral
+        config: BioConfig --- config.data_dir is the directory where raxml-phase1 
+        is going to search for a tar file with nexus files. The script will create:
+            seqdir=input/nexus
+            raxmldir=raxml
+            astraldir=astral
     Returns:
         returns an parsl's AppFuture.
 
@@ -64,10 +65,10 @@ def setup_phylip_data(datadir: str,
     """
     import os
     import glob
-    import bioconfig
     from appsexception import PhylipMissingData
 
-    c = bioconfig.BioConfig()
+    datadir = config.data_dir
+    raxml_phase1 = config.raxml_phase1
 
     input_dir = datadir + '/input'
     input_nexus_dir = input_dir + '/nexus'
@@ -90,18 +91,120 @@ def setup_phylip_data(datadir: str,
                 os.system(f'cd {input_nexus_dir}; tar zxvf {tar_file}')
 
     # Now, use the modified script to convert nexus to phylip.
-    return f'cd {datadir}; {c.raxml_phase1}'
+    return f'cd {datadir}; {raxml_phase1}'
 
 
 # raxml bash app
 @parsl.bash_app(executors=['raxml'])
-def raxml(datadir: str,
+def raxml(config: BioConfig,
           input_file: str,
-          flags=None,
-          num_threads=6, inputs=[],
+          inputs=[],
           stderr=parsl.AUTO_LOGNAME,
           stdout=parsl.AUTO_LOGNAME):
     """Runs the Raxml's executable (RPS) on a directory (input)
+
+    Parameters:
+        TODO:
+    Returns:
+        returns an parsl's AppFuture
+
+    TODO: Provide provenance.
+
+    NB:
+        Stdout and Stderr are defaulted to parsl.AUTO_LOGNAME, so the log will be automatically 
+        named according to task id and saved under task_logs in the run directory.
+    """
+    import os
+    import random
+    import logging
+
+    datadir = config.data_dir
+    num_threads = config.raxml_threads
+    raxml_exec = config.raxml
+    exec_param = config.raxml_exec_param
+
+    logging.info(f'raxml called with {datadir}')
+    raxml_dir = datadir + '/' + config.raxml_dir
+
+    # TODO: Create the following parameters(external configuration): -m, -N,
+    flags = f"-T {num_threads} {exec_param}"
+
+    p = random.randint(1, 10000)
+    x = random.randint(1, 10000)
+
+    output_file = os.path.basename(input_file).split('.')[0]
+
+    # Return to Parsl to be executed on the workflow
+    return f"cd {raxml_dir}; {raxml_exec} {flags} -p {p} -x {x} -s {input_file} -n {output_file}"
+
+
+@parsl.bash_app(executors=['single_thread'])
+def setup_astral_data(config: BioConfig, inputs=[], outputs=[], flags=False, stderr=parsl.AUTO_LOGNAME, stdout=parsl.AUTO_LOGNAME):
+
+    astral_phase1 = config.astral_phase1
+    raxml_dir = config.raxml_dir
+
+    return f'{astral_phase1} {raxml_dir}'
+
+
+@parsl.bash_app(executors=['single_thread'])
+def astral(config: BioConfig, inputs=[], outputs=[], flags=False, stderr=parsl.AUTO_LOGNAME, stdout=parsl.AUTO_LOGNAME):
+    """Runs the Astral's executable (RPS) on a directory (input)
+
+    Parameters:
+        TODO:
+    Returns:
+        returns an parsl's AppFuture
+
+    TODO: Provide provenance.
+
+    NB:
+        Stdout and Stderr are defaulted to parsl.AUTO_LOGNAME, so the log will be automatically 
+        named according to task id and saved under task_logs in the run directory.
+    """
+    import glob
+
+    datadir = config.data_dir
+    astral_dir = config.astral_dir
+
+    # Build the invocation command.
+
+    # TODO: manage the fixed jar pointer...
+    bs_file = f'{astral_dir}/BSlistfiles'
+    # TODO: manage the fixed bootstrap number...
+    num_boot = 100
+
+    # Create bs_file
+    with open(bs_file, 'w') as f:
+        for i in glob.glob(f'{datadir}/raxml/bootstrap/*'):
+            f.write(f'{i}\n')
+
+    exec_astral = config.astral
+    raxml_output = config.raxml_output
+    astral_output = config.astral_output
+    # Return to Parsl to be executed on the workflow
+    return f'{exec_astral} -i {raxml_output} -b {bs_file} -r {num_boot} -o {astral_output}'
+
+
+# TODO: Export the parameter hmax (in .jl)
+@parsl.bash_app(executors=['snaq', 'snaq_l'])
+def snaq(config: BioConfig, inputs=[], outputs=[], flags=False, stderr=parsl.AUTO_LOGNAME, stdout=parsl.AUTO_LOGNAME):
+
+    datadir = config.data_dir
+    snaq_exec = config.snaq
+    num_threads = 6
+    return f'{snaq_exec} {datadir} {num_threads}'
+
+
+# Mr.Bayes bash app
+@parsl.bash_app(executors=['raxml'])
+def mrbayes(datadir: str,
+            input_file: str,
+            flags=None,
+            num_threads=6, inputs=[],
+            stderr=parsl.AUTO_LOGNAME,
+            stdout=parsl.AUTO_LOGNAME):
+    """Runs the Mr. Bayes' executable (RPS) on a directory (input)
 
     Parameters:
         TODO:
@@ -121,8 +224,12 @@ def raxml(datadir: str,
 
     c = bioconfig.BioConfig()
 
-    logging.info(f'raxml called with {datadir}')
-    raxml_dir = datadir + '/raxml'
+    logging.info(f'mrbayes called with {datadir}')
+    mrbayes_dir = datadir + '/mrbayes'
+
+    # If we find phylip_dir, we suppose the input is Ok.
+    if not os.path.isdir(mrbayes_dir):
+        os.mkdir(mrbayes_dir)
 
     # TODO: Create the following parameters(external configuration): -m, -N,
     if not flags:
@@ -134,59 +241,4 @@ def raxml(datadir: str,
     output_file = os.path.basename(input_file).split('.')[0]
 
     # Return to Parsl to be executed on the workflow
-    return f"cd {raxml_dir}; {c.raxml} {flags} -p {p} -x {x} -s {input_file} -n {output_file}"
-
-
-@parsl.bash_app(executors=['single_thread'])
-def setup_astral_data(datadir: str, inputs=[], outputs=[], flags=False, stderr=parsl.AUTO_LOGNAME, stdout=parsl.AUTO_LOGNAME):
-    from bioconfig import BioConfig
-
-    c = BioConfig()
-
-    return f'{c.astral_phase1} {c.raxml_dir(datadir)}'
-
-
-@parsl.bash_app(executors=['single_thread'])
-def astral(datadir: str, inputs=[], outputs=[], flags=False, stderr=parsl.AUTO_LOGNAME, stdout=parsl.AUTO_LOGNAME):
-    """Runs the Astral's executable (RPS) on a directory (input)
-
-    Parameters:
-        TODO:
-    Returns:
-        returns an parsl's AppFuture
-
-    TODO: Provide provenance.
-
-    NB:
-        Stdout and Stderr are defaulted to parsl.AUTO_LOGNAME, so the log will be automatically 
-        named according to task id and saved under task_logs in the run directory.
-    """
-    import glob
-    import bioconfig
-
-    c = bioconfig.BioConfig()
-
-    # Build the invocation command.
-
-    # TODO: manage the fixed jar pointer...
-    bs_file = f'{c.astral_dir(datadir)}/BSlistfiles'
-    # TODO: manage the fixed bootstrap number...
-    num_boot = 100
-
-    # Create bs_file
-    with open(bs_file, 'w') as f:
-        for i in glob.glob(f'{datadir}/raxml/bootstrap/*'):
-            f.write(f'{i}\n')
-
-    # Return to Parsl to be executed on the workflow
-    return f'{c.astral} -i {c.raxml_output(datadir)} -b {bs_file} -r {num_boot} -o {c.astral_output(datadir)}'
-
-
-# TODO: Export the parameter hmax (in .jl)
-@parsl.bash_app(executors=['snaq', 'snaq_l'])
-def snaq(datadir: str, num_threads=6, inputs=[], outputs=[], flags=False, stderr=parsl.AUTO_LOGNAME, stdout=parsl.AUTO_LOGNAME):
-    import bioconfig
-
-    c = bioconfig.BioConfig()
-
-    return f'{c.snaq} {datadir} {num_threads}'
+    return f"cd {mrbayes_dir}; {c.raxml} {flags} -p {p} -x {x} -s {input_file} -n {output_file}"
