@@ -34,16 +34,44 @@ __status__ = "Research"
 #
 # Parsl Bash and Python Applications Configuration
 #
-import borg
 from dataclasses import dataclass, field
 
 # TODO: self.mbblock = Prepare to read from a setup file.
 
 
+class borg(object):
+    def __init__(self, my_class):
+        self.my_class = my_class
+        self.my_instance = None
+
+    def __call__(self, *args, **kwargs):
+        if self.my_instance == None:
+            self.my_instance = self.my_class(*args, **kwargs)
+        return self.my_instance
+
+
 @dataclass
 class BioConfig:
     data_dir:           str
+    env_path:           str
+    environ:            str
     script_dir:         str
+    workload_path:      str
+    workload:           field(default_factory=list)
+    workflow_name:      str
+    workflow_monitor:   bool
+    workflow_part_f:    str
+    workflow_part_t:    str
+    workflow_part_l:    str
+    workflow_wall_t_f:  str
+    workflow_wall_t_t:  str
+    workflow_wall_t_l:  str
+    workflow_core_f:    int
+    workflow_core_t:    int
+    workflow_core_l:    int
+    workflow_node_f:    int
+    workflow_node_t:    int
+    workflow_node_l:    int
     raxml:              str
     raxml_param:        str
     raxml_phase1:       str
@@ -58,18 +86,18 @@ class BioConfig:
     astral_dir:         str
     astral_output:      str
     snaq:               str
+    snaq_threads:       int
     mbblock:            str
     mrbayes:            str
 
 
-@borg.borg
+@borg
 class ConfigFactory:
 
-    def __init__(self, data_dir: str, config_file: str = 'config/default.ini') -> None:
+    def __init__(self, config_file: str = "config/default.ini") -> None:
         import configparser
 
         self.config_file = config_file
-        self.data_dir = data_dir
         self.config = configparser.ConfigParser()
         self.config.read(self.config_file)
 
@@ -77,92 +105,97 @@ class ConfigFactory:
 
     def build_config(self) -> BioConfig:
 
-        dd = self.data_dir
+        cf = self.config
+        sd = cf['GENERAL']['ScriptDir']
 
-        script_dir = self.config['GENERAL']['ScriptDir']
-        raxml = self.config['RAXML']['RaxmlExecutable']
-        raxml_param = self.config['RAXML']['RaxmlParameters']
-        raxml_phase1 = f"perl {self.config['RAXML']['RaxmlPhase1']} {raxml_param}"
-        raxml_dir = f"{dd}/{self.config['RAXML']['RaxmlDir']}"
-        raxml_output = f"{raxml_dir}/{self.config['RAXML']['RaxmlOutput']}"
-        raxml_theads = self.config['RAXML']['RaxmlThreads']
-        raxml_exec_param = self.config['RAXML']['RaxmlExecParam']
-        astral_phase1 = self.config['ASTRAL']['AstralScript']
-        astral_exec_dir = self.config['ASTRAL']['AstralExecDir']
-        astral_jar = self.config['ASTRAL']['AstralJar']
+        env_path = cf['GENERAL']['Environ']
+        environ = ""  # empty
+        with open(f"{env_path}", "r") as f:
+            environ = f.read()
+
+        # Read where datasets are...
+        workload_path = cf['GENERAL']['Workload']
+        workload = list()
+        with open(f"{workload_path}", "r") as f:
+            for line in f:
+                if line[0] == '#':
+                    continue
+                workload.append(line.strip())
+
+        perl_int = cf['SYSTEM']['PerlInter']
+
+        workflow_name = cf["WORKFLOW"]["Name"]
+        workflow_monitor = cf["WORKFLOW"].getboolean("Monitor")
+        workflow_part_f = cf["WORKFLOW"]["PartitionFast"]
+        workflow_part_t = cf["WORKFLOW"]["PartitionThread"]
+        workflow_part_l = cf["WORKFLOW"]["PartitionLong"]
+        workflow_wall_t_f = cf["WORKFLOW"]["WalltimeFast"]
+        workflow_wall_t_t = cf["WORKFLOW"]["WalltimeThread"]
+        workflow_wall_t_l = cf["WORKFLOW"]["WalltineLong"]
+        workflow_core_f = int(cf["WORKFLOW"]["PartCoreFast"])
+        workflow_core_t = int(cf["WORKFLOW"]["PartCoreThread"])
+        workflow_core_l = int(cf["WORKFLOW"]["PartCoreLong"])
+        workflow_node_f = int(cf["WORKFLOW"]["PartNodeFast"])
+        workflow_node_t = int(cf["WORKFLOW"]["PartNodeThread"])
+        workflow_node_l = int(cf["WORKFLOW"]["PartNodeLong"])
+
+        raxml = cf['RAXML']['RaxmlExecutable']
+        raxml_param = cf['RAXML']['RaxmlParameters']
+        raxml_phase1 = f"{perl_int} {cf['RAXML']['RaxmlPhase1']} {raxml_param}"
+        raxml_dir = cf['RAXML']['RaxmlDir']
+        raxml_output = f"{raxml_dir}/{cf['RAXML']['RaxmlOutput']}"
+        raxml_threads = cf['RAXML']['RaxmlThreads']
+        raxml_exec_param = cf['RAXML']['RaxmlExecParam']
+
+        astral_phase1 = cf['ASTRAL']['AstralScript']
+        astral_exec_dir = cf['ASTRAL']['AstralExecDir']
+        astral_jar = cf['ASTRAL']['AstralJar']
         astral = f"cd {astral_exec_dir}; java -jar {astral_jar}"
-        astral_dir = f"{dd}/{self.config['ASTRAL']['AstralDir']}"
-        astral_output = f"{astral_dir}/{self.config['ASTRAL']['AstralOutput']}"
-        snaq = f"{script_dir}/{self.config['SNAQ']['SnaqScript']}"
-        mbblock = f"{script_dir}/{self.config['MRBAYES']['MrBlock']}"
-        mrbayes = f"perl {script_dir}/{self.config['MRBAYES']['MrDriver']}"
+        astral_dir = cf['ASTRAL']['AstralDir']
+        astral_output = f"{astral_dir}/{cf['ASTRAL']['AstralOutput']}"
 
-        self.bioconfig = BioConfig(self.data_dir,
-                                   script_dir,
-                                   raxml,
-                                   raxml_param,
-                                   raxml_phase1,
-                                   raxml_dir,
-                                   raxml_output,
-                                   raxml_theads,
-                                   raxml_exec_param,
-                                   astral_phase1,
-                                   astral_exec_dir,
-                                   astral_jar,
-                                   astral,
-                                   astral_dir,
-                                   astral_output,
-                                   snaq,
-                                   mbblock,
-                                   mrbayes)
+        snaq = f"{sd}/{cf['SNAQ']['SnaqScript']}"
+        snaq_threads = int(cf['SNAQ']['SnaqThreads'])
+
+        mbblock = ""  # empty
+        with open(f"{sd}/{cf['MRBAYES']['MrBlock']}", "r") as f:
+            mbblock = f.read()
+        mrbayes = f"{perl_int} {sd}/{cf['MRBAYES']['MrDriver']}"
+
+        self.bioconfig = BioConfig(script_dir=sd,
+                                   workload_path=workload_path,
+                                   workload=workload,
+                                   env_path=env_path,
+                                   environ=environ,
+                                   workflow_monitor=workflow_monitor,
+                                   workflow_name=workflow_name,
+                                   workflow_part_f=workflow_part_f,
+                                   workflow_part_t=workflow_part_t,
+                                   workflow_part_l=workflow_part_l,
+                                   workflow_wall_t_f=workflow_wall_t_f,
+                                   workflow_wall_t_t=workflow_wall_t_t,
+                                   workflow_wall_t_l=workflow_wall_t_l,
+                                   workflow_core_f=workflow_core_f,
+                                   workflow_core_t=workflow_core_t,
+                                   workflow_core_l=workflow_core_l,
+                                   workflow_node_f=workflow_node_f,
+                                   workflow_node_t=workflow_node_t,
+                                   workflow_node_l=workflow_node_l,
+                                   raxml=raxml,
+                                   raxml_param=raxml_param,
+                                   raxml_phase1=raxml_phase1,
+                                   raxml_dir=raxml_dir,
+                                   raxml_output=raxml_output,
+                                   raxml_threads=raxml_threads,
+                                   raxml_exec_param=raxml_exec_param,
+                                   astral_phase1=astral_phase1,
+                                   astral_exec_dir=astral_exec_dir,
+                                   astral_jar=astral_jar,
+                                   astral=astral,
+                                   astral_dir=astral_dir,
+                                   astral_output=astral_output,
+                                   snaq=snaq,
+                                   snaq_threads=snaq_threads,
+                                   mbblock=mbblock,
+                                   mrbayes=mrbayes)
         return self.bioconfig
-
-
-class suBioConfig(object):
-    def __init__(self,
-                 script_dir='/scratch/cenapadrjsd/diego.carvalho/biocomp/scripts/') -> None:
-        self.script_dir = script_dir
-        return
-
-    @property
-    def raxml(self) -> str:
-        return 'raxmlHPC-PTHREADS'
-
-    @property
-    def raxml_phase1(self) -> str:
-        return f"perl {self.script_dir}/raxml-phase1.pl --seqdir=input/nexus --raxmldir=raxml --astraldir=astral"
-
-    def raxml_dir(self, datadir) -> str:
-        return f'{datadir}/raxml'
-
-    def raxml_output(self, datadir) -> str:
-        return f'{datadir}/raxml/besttrees.tre'
-
-    @property
-    def astral_phase1(self) -> str:
-        return f"{self.script_dir}/setup_astral_data.sh"
-
-    @property
-    def astral(self) -> str:
-        astral_exec_dir = '/scratch/cenapadrjsd/diego.carvalho/biocomp/Astral/'
-        astral_jar = 'astral.5.7.4.jar'
-
-        return f"cd {astral_exec_dir}; java -jar {astral_jar}"
-
-    def astral_dir(self, datadir) -> str:
-        return f'{datadir}/astral'
-
-    def astral_output(self, datadir) -> str:
-        return f'{datadir}/astral/astral.tre'
-
-    @property
-    def snaq(self) -> str:
-        return f"/scratch/cenapadrjsd/diego.carvalho/biocomp/scripts/snaq.sh"
-
-    @property
-    def mbblock(self) -> str:
-        return f"/scratch/cenapadrjsd/diego.carvalho/biocomp/scripts/mbblock.txt"
-
-    @property
-    def mrbayes(self) -> str:
-        return f"perl {self.script_dir}/mb.pl"
