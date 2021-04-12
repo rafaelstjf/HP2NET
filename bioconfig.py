@@ -52,7 +52,6 @@ class borg(object):
 
 @dataclass
 class BioConfig:
-    data_dir:           str
     env_path:           str
     environ:            str
     script_dir:         str
