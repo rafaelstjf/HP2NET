@@ -187,8 +187,9 @@ def astral(basedir: str,
             f.write(f'{i}\n')
 
     exec_astral = config.astral
-    raxml_output = config.raxml_output
-    astral_output = config.astral_output
+    raxml_output = f"{basedir}/{config.raxml_output}"
+    astral_output = f"{basedir}/{config.astral_output}"
+
     # Return to Parsl to be executed on the workflow
     return f'{exec_astral} -i {raxml_output} -b {bs_file} -r {num_boot} -o {astral_output}'
 
