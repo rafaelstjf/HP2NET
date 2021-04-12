@@ -195,7 +195,7 @@ def astral(basedir: str,
 
 
 # TODO: Export the parameter hmax (in .jl)
-@parsl.bash_app(executors=['snaq', 'snaq_l'])
+@parsl.bash_app(executors=['snaq'])
 def snaq(basedir: str,
          config: BioConfig,
          inputs=[],

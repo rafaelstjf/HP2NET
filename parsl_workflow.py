@@ -34,7 +34,7 @@ def main():
             ret_rax.append(apps.raxml(basedir, bio_config, input_file))
         ret_sad = apps.setup_astral_data(basedir, bio_config, inputs=ret_rax)
         ret_ast = apps.astral(basedir, bio_config, inputs=[ret_sad])
-        ret_snq = apps.snaq(basedir, inputs=[ret_ast])
+        ret_snq = apps.snaq(basedir, bio_config, inputs=[ret_ast])
         result.append(ret_snq)
     wait_for_all(result)
 
