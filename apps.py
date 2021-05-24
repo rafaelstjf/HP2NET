@@ -251,7 +251,7 @@ def mrbayes(basedir: str,
     # Return to Parsl to be executed on the workflow
     return f"cd {mrbayes_dir}; {c.raxml} -p {p} -x {x} -s {input_file} -n {output_file}"
 
-@parsl.bash_app(executors=['single_thread'])
+@parsl.python_app(executors=['single_thread'])
 def setup_phylonet_data(basedir: str,
                       config: BioConfig,
                       inputs=[],
@@ -262,8 +262,8 @@ def setup_phylonet_data(basedir: str,
     phylonet_phase1 = config.phylonet_phase1
     gene_trees = f"{basedir}/{config.raxml_dir}/{config.raxml_output}"
     out_dir = f"{basedir}/phylonet_phase_1.nex"
-    return f"{phylonet_phase1} -i {gene_trees} -o {out_dir} -r {config.phylonet_threads} -t {config.phylonet_threads} -hm {config.phylonet_hmax}'
-
+    return f"{phylonet_phase1} -i {gene_trees} -o {out_dir} -r {config.phylonet_threads} -t {config.phylonet_threads} -hm {config.phylonet_hmax}"
+    
 @parsl.bash_app(executors=['snaq'])
 def phylonet(basedir: str,
          config: BioConfig,

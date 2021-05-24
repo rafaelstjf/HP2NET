@@ -56,6 +56,7 @@ class BioConfig:
     environ:            str
     script_dir:         str
     workload_path:      str
+    network_method:     str
     workload:           field(default_factory=list)
     workflow_name:      str
     workflow_monitor:   bool
@@ -117,7 +118,8 @@ class ConfigFactory:
         environ = ""  # empty
         with open(f"{env_path}", "r") as f:
             environ = f.read()
-
+        #Choose which method is going to be used to construct the network (Phylonet, SNAQ and others)
+        network_method = cf["GENERAL"]["NetworkMethod"]
         # Read where datasets are...
         workload_path = cf['GENERAL']['Workload']
         workload = list()
@@ -128,7 +130,6 @@ class ConfigFactory:
                 workload.append(line.strip())
 
         perl_int = cf['SYSTEM']['PerlInter']
-
         workflow_name = cf["WORKFLOW"]["Name"]
         workflow_monitor = cf["WORKFLOW"].getboolean("Monitor")
         workflow_part_f = cf["WORKFLOW"]["PartitionFast"]
@@ -176,6 +177,7 @@ class ConfigFactory:
 
         self.bioconfig = BioConfig(script_dir=sd,
                                    workload_path=workload_path,
+                                   network_method=network_method,
                                    workload=workload,
                                    env_path=env_path,
                                    environ=environ,
@@ -209,7 +211,7 @@ class ConfigFactory:
                                    snaq=snaq,
                                    snaq_threads=snaq_threads,
                                    mbblock=mbblock,
-                                   mrbayes=mrbayes,,
+                                   mrbayes=mrbayes,
                                    phylonet_phase1=phylonet_phase1,
                                    phylonet=phylonet,
                                    phylonet_exec_dir=phylonet_exec_dir,
