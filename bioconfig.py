@@ -88,6 +88,10 @@ class BioConfig:
     snaq_threads:       int
     mbblock:            str
     mrbayes:            str
+    phylonet:           str
+    phylonet_exec_dir:  str
+    phylonet_jar:       str
+    phylonet_threads:   str
 
 
 @borg
@@ -161,6 +165,11 @@ class ConfigFactory:
             mbblock = f.read()
         mrbayes = f"{perl_int} {sd}/{cf['MRBAYES']['MrDriver']}"
 
+        phylonet_exec_dir = cf['PHYLONET']['PhyloNetExecDir']
+        phylonet_jar = cf['PHYLONET']['PhyloNetJar']
+        phylonet = f"cd {astral_exec_dir}; java -jar {astral_jar}"
+        phylonet_threads = cf['PHYLONET']['PhyloNetThreads']
+
         self.bioconfig = BioConfig(script_dir=sd,
                                    workload_path=workload_path,
                                    workload=workload,
@@ -196,5 +205,9 @@ class ConfigFactory:
                                    snaq=snaq,
                                    snaq_threads=snaq_threads,
                                    mbblock=mbblock,
-                                   mrbayes=mrbayes)
+                                   mrbayes=mrbayes,
+                                   phylonet=phylonet,
+                                   phylonet_exec_dir=phylonet_exec_dir,
+                                   phylonet_jar=phylonet_jar,
+                                   phylonet_threads=phylonet_threads)
         return self.bioconfig
