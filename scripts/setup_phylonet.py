@@ -12,16 +12,18 @@ try:
     in_file = open(args.input, 'r')
 except IOError:
     print("Error! Could not open input file")
+    exit(1)
 try:
     out_file = open(args.output, 'w+')
 except IOError:
     print("Error! Could not open output file")
+    exit(1)
 
-tree_index = 1
+tree_index = 0
 buffer = "#NEXUS\nBEGIN TREES;\n"
 for tree in in_file.readlines():
-    buffer+="geneTree" + str(tree_index) + " = " + tree
     tree_index+=1
+    buffer+="geneTree" + str(tree_index) + " = " + tree
 in_file.close()
 buffer+='END;\nBEGIN PHYLONET;\nInferNetwork_ML ('
 
@@ -33,7 +35,3 @@ output_network = os.path.join(output_dir, 'PhyloNet' + args.hmax + ".nex")
 buffer+="geneTree" + str(tree_index) +') ' + args.hmax + " -pl " + args.threads + " -x " + args.runs + " " + output_network + ';\nEND;'
 out_file.write(buffer)
 out_file.close()
-
-
-
-
