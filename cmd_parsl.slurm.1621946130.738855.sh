@@ -1,1 +1,0 @@
-process_worker_pool.py  --max_workers=48 -a 172.20.4.1 -p 0 -c 6 -m None --poll 10 --task_port=54815 --result_port=54175 --logdir=/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp/runinfo/018/raxml --block_id=0 --hb_period=30  --hb_threshold=120 
