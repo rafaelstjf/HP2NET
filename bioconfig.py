@@ -119,7 +119,7 @@ class ConfigFactory:
         with open(f"{env_path}", "r") as f:
             environ = f.read()
         #Choose which method is going to be used to construct the network (Phylonet, SNAQ and others)
-        network_method = cf["GENERAL"]["NetworkMethod"]
+        network_method = cf['GENERAL']['NetworkMethod']
         # Read where datasets are...
         workload_path = cf['GENERAL']['Workload']
         workload = list()

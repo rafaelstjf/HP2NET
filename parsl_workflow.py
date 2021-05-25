@@ -22,7 +22,7 @@ def main():
     work_list = bio_config.workload
 
     if(bio_config.network_method == "MPL"):
-        print("Maximum Pseudo Likelihood Method")
+        logging.info("Using the Maximum Pseudo Likelihood Method")
         result = list()
         for basedir in work_list:
             result.append(apps.setup_phylip_data(basedir, bio_config))
@@ -30,7 +30,7 @@ def main():
         result = list()
         for basedir in work_list:
             ret_rax = list()
-            datalist = glob.glob(basedir + '/input/phylip/*')
+            datalist = glob.glob(basedir + '/input/phylip/*.phy')
             for input_file in datalist:
                 ret_rax.append(apps.raxml(basedir, bio_config, input_file))
             ret_sad = apps.setup_astral_data(basedir, bio_config, inputs=ret_rax)
@@ -39,7 +39,7 @@ def main():
             result.append(ret_snq)
         wait_for_all(result)
     elif(bio_config.network_method == "MP"):
-        print("Maximum Parsimony Method")
+        logging.info("Using the Maximum Parsimony Method")
         result = list()
         for basedir in work_list:
             result.append(apps.setup_phylip_data(basedir, bio_config))
@@ -47,7 +47,7 @@ def main():
         result = list()
         for basedir in work_list:
             ret_rax = list()
-            datalist = glob.glob(basedir + '/input/phylip/*')
+            datalist = glob.glob(basedir + '/input/phylip/*.phy')
             for input_file in datalist:
                 ret_rax.append(apps.raxml(basedir, bio_config, input_file))
             ret_spd = apps.setup_phylonet_data(basedir, bio_config, inputs=ret_rax)

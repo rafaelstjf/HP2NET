@@ -259,10 +259,16 @@ def setup_phylonet_data(basedir: str,
                       stderr=parsl.AUTO_LOGNAME,
                       stdout=parsl.AUTO_LOGNAME):
     #Get the raxml's output and create a NEXUS file as output in the basedir
+    import os
     phylonet_phase1 = config.phylonet_phase1
-    gene_trees = f"{basedir}/{config.raxml_dir}/{config.raxml_output}"
+    gene_trees = os.path.join(basedir, config.raxml_output)
     out_dir = f"{basedir}/phylonet_phase_1.nex"
-    return f"{phylonet_phase1} -i {gene_trees} -o {out_dir} -r {config.phylonet_threads} -t {config.phylonet_threads} -hm {config.phylonet_hmax}"
+    import sys
+    sys.path.append(os.path.dirname(phylonet_phase1))
+    import setup_phylonet_data as st
+    st.create_raxml_file(gene_trees)
+    st.compress_files(gene_trees, out_dir, config.phylonet_hmax, config.phylonet_threads, config.phylonet_threads)
+    return
     
 @parsl.bash_app(executors=['snaq'])
 def phylonet(basedir: str,
