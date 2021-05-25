@@ -21,22 +21,40 @@ def main():
     # Read where datasets are...
     work_list = bio_config.workload
 
-    result = list()
-    for basedir in work_list:
-        result.append(apps.setup_phylip_data(basedir, bio_config))
-    wait_for_all(result)
+    if(bio_config.network_method == "MPL"):
+        logging.info("Using the Maximum Pseudo Likelihood Method")
+        result = list()
+        for basedir in work_list:
+            result.append(apps.setup_phylip_data(basedir, bio_config))
+        wait_for_all(result)
+        result = list()
+        for basedir in work_list:
+            ret_rax = list()
+            datalist = glob.glob(basedir + '/input/phylip/*.phy')
+            for input_file in datalist:
+                ret_rax.append(apps.raxml(basedir, bio_config, input_file))
+            ret_sad = apps.setup_astral_data(basedir, bio_config, inputs=ret_rax)
+            ret_ast = apps.astral(basedir, bio_config, inputs=[ret_sad])
+            ret_snq = apps.snaq(basedir, bio_config, inputs=[ret_ast])
+            result.append(ret_snq)
+        wait_for_all(result)
+    elif(bio_config.network_method == "MP"):
+        logging.info("Using the Maximum Parsimony Method")
+        result = list()
+        for basedir in work_list:
+            result.append(apps.setup_phylip_data(basedir, bio_config))
+        wait_for_all(result)
+        result = list()
+        for basedir in work_list:
+            ret_rax = list()
+            datalist = glob.glob(basedir + '/input/phylip/*.phy')
+            for input_file in datalist:
+                ret_rax.append(apps.raxml(basedir, bio_config, input_file))
+            ret_spd = apps.setup_phylonet_data(basedir, bio_config, inputs=ret_rax)
+            ret_phylonet = apps.phylonet(basedir, bio_config, inputs=[ret_spd])
+            result.append(ret_phylonet)
+        wait_for_all(result)
 
-    result = list()
-    for basedir in work_list:
-        ret_rax = list()
-        datalist = glob.glob(basedir + '/input/phylip/*')
-        for input_file in datalist:
-            ret_rax.append(apps.raxml(basedir, bio_config, input_file))
-        ret_sad = apps.setup_astral_data(basedir, bio_config, inputs=ret_rax)
-        ret_ast = apps.astral(basedir, bio_config, inputs=[ret_sad])
-        ret_snq = apps.snaq(basedir, bio_config, inputs=[ret_ast])
-        result.append(ret_snq)
-    wait_for_all(result)
 
     return
 

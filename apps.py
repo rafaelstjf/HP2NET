@@ -250,3 +250,36 @@ def mrbayes(basedir: str,
 
     # Return to Parsl to be executed on the workflow
     return f"cd {mrbayes_dir}; {c.raxml} -p {p} -x {x} -s {input_file} -n {output_file}"
+
+@parsl.python_app(executors=['single_thread'])
+def setup_phylonet_data(basedir: str,
+                      config: BioConfig,
+                      inputs=[],
+                      outputs=[],
+                      stderr=parsl.AUTO_LOGNAME,
+                      stdout=parsl.AUTO_LOGNAME):
+    #Get the raxml's output and create a NEXUS file as output in the basedir
+    import os
+    phylonet_phase1 = config.phylonet_phase1
+    gene_trees = os.path.join(basedir, config.raxml_output)
+    out_dir = f"{basedir}/phylonet_phase_1.nex"
+    import sys
+    sys.path.append(os.path.dirname(phylonet_phase1))
+    import setup_phylonet_data as st
+    st.create_raxml_file(gene_trees)
+    st.compress_files(gene_trees, out_dir, config.phylonet_hmax, config.phylonet_threads, config.phylonet_threads)
+    return
+    
+@parsl.bash_app(executors=['snaq'])
+def phylonet(basedir: str,
+         config: BioConfig,
+         inputs=[],
+         outputs=[],
+         stderr=parsl.AUTO_LOGNAME,
+         stdout=parsl.AUTO_LOGNAME):
+
+    exec_phylonet = config.phylonet
+    input_file = f"{basedir}/phylonet_phase_1.nex"
+
+    # Return to Parsl to be executed on the workflow
+    return f'{exec_phylonet} {input_file}'
