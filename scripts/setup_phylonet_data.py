@@ -11,6 +11,14 @@ def remove_files_dir(folder):
     except Exception:
         print(f"Error! Impossible to remove files from {folder}")
 
+def create_folders(parent_dir, folder_list):
+    for folder in folder_list:
+        full_path = os.path.join(parent_dir, folder)
+        try:
+            Path(full_path).mkdir(exist_ok=True)
+        except Exception:
+            print(f'Impossible to create {full_path} folder')
+
 def nexus_to_phylip(folder):
     path_ = os.path.dirname(folder)
     full_path = os.path.join(path_, "phylip")
@@ -24,9 +32,8 @@ def nexus_to_phylip(folder):
     except Exception:
         print("Impossible to convert nexus files to phylip!")
     
-
 def create_raxml_file(input_):
-    #create the raxml input_ file from the input directory
+    #create the raxml output file from the input directory
     raxml_dir = os.path.dirname(input_)
     bootstrap_dir = os.path.join(raxml_dir, "bootstrap")
     Path(bootstrap_dir).mkdir(exist_ok=True)
