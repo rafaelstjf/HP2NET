@@ -267,7 +267,7 @@ def setup_phylonet_data(basedir: str,
     sys.path.append(os.path.dirname(phylonet_phase1))
     import setup_phylonet_data as st
     st.create_raxml_file(gene_trees)
-    st.compress_files(gene_trees, out_dir, config.phylonet_hmax, config.phylonet_threads, config.phylonet_threads)
+    st.create_phylonet_input(gene_trees, out_dir, config.phylonet_hmax, config.phylonet_threads, config.phylonet_threads)
     return
     
 @parsl.bash_app(executors=['snaq'])
