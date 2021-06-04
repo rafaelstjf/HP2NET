@@ -33,5 +33,5 @@ In view of the complexity in modeling network experiments, the present work intr
 
 #### Running the workflow
 
-After setting up the workflow, just run ```python parsl_workflow.py`` in a login machine. Parsl will be responsible to submit the job of the tasks
+After setting up the workflow, just run ``python parsl_workflow.py`` in a login machine. Parsl will be responsible to submit the job of the tasks
 
