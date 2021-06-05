@@ -57,6 +57,7 @@ class BioConfig:
     script_dir:         str
     workload_path:      str
     network_method:     str
+    tree_method:        str
     workload:           field(default_factory=list)
     workflow_name:      str
     workflow_monitor:   bool
@@ -120,6 +121,7 @@ class ConfigFactory:
             environ = f.read()
         #Choose which method is going to be used to construct the network (Phylonet, SNAQ and others)
         network_method = cf['GENERAL']['NetworkMethod']
+        tree_method = cf['GENERAL']['TreeMethod']
         # Read where datasets are...
         workload_path = cf['GENERAL']['Workload']
         workload = list()
@@ -178,6 +180,7 @@ class ConfigFactory:
         self.bioconfig = BioConfig(script_dir=sd,
                                    workload_path=workload_path,
                                    network_method=network_method,
+                                   tree_method=tree_method,
                                    workload=workload,
                                    env_path=env_path,
                                    environ=environ,

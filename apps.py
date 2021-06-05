@@ -265,7 +265,7 @@ def setup_phylonet_data(basedir: str,
     out_dir = f"{basedir}/phylonet_phase_1.nex"
     import sys
     sys.path.append(os.path.dirname(phylonet_phase1))
-    import setup_phylonet_data as st
+    import dm_functions as st
     st.create_raxml_file(gene_trees)
     st.create_phylonet_input(gene_trees, out_dir, config.phylonet_hmax, config.phylonet_threads, config.phylonet_threads)
     return
@@ -283,3 +283,15 @@ def phylonet(basedir: str,
 
     # Return to Parsl to be executed on the workflow
     return f'{exec_phylonet} {input_file}'
+
+@parsl.python_app(executors=['single_thread'])
+def clear_temporary_files(basedir: str,
+                      config: BioConfig,
+                      inputs=[],
+                      outputs=[],
+                      stderr=parsl.AUTO_LOGNAME,
+                      stdout=parsl.AUTO_LOGNAME):
+    #Get the raxml's output and create a NEXUS file as output in the basedir
+    import dm_functions as dm
+    dm.clear_execution(config.network_method, config.tree_method, basedir)
+    return
