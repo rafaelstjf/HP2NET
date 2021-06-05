@@ -53,8 +53,6 @@ def create_raxml_file(besttree_file):
                 os.remove(f)
     except Exception:
         print("Error! Directory does not exist or not enough privileges")
-
-
     #append all the besttrees into a single file(in the working dir), compress the files and remove them
     try:
         raxml_input = open(besttree_file, 'w+')
@@ -103,3 +101,19 @@ def create_phylonet_input(input_, output, hmax, threads, runs):
     buffer+="geneTree" + str(tree_index) +') ' + hmax + " -pl " + threads + " -x " + runs + " " + output_network + ';\nEND;'
     out_file.write(buffer)
     out_file.close()
+
+def create_iqtree_file(besttree_file):
+    working_dir = os.path.dirname(besttree_file)
+    iqtree_dir = os.path.join(working_dir, 'iqtree')
+    try:
+        iq_input = open(besttree_file, 'w+')
+        files = glob.glob(os.path.join(iqtree_dir, '/*.treefile'))
+        trees = ""
+        for f in files:
+            gen_tree = open(f, 'r')
+            trees += gen_tree.readline()
+            gen_tree.close()
+        iq_input.write(trees)
+        iq_input.close()
+    except IOError:
+        print("Error! Failed to create the input file")
