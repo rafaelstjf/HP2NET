@@ -32,29 +32,33 @@ def nexus_to_phylip(folder):
     except Exception:
         print("Impossible to convert nexus files to phylip!")
     
-def create_raxml_file(input_):
-    #create the raxml output file from the input directory
-    raxml_dir = os.path.dirname(input_)
+def create_raxml_file(besttree_file):
+    working_dir = os.path.dirname(besttree_file)
+    raxml_dir = os.path.join(working_dir, 'raxml')
     bootstrap_dir = os.path.join(raxml_dir, "bootstrap")
     Path(bootstrap_dir).mkdir(exist_ok=True)
     # remove old files
     remove_files_dir(bootstrap_dir)
     # move the new files
-    files = glob.glob(f'{raxml_dir}/RAxML_bootstrap.*')
-    for f in files:
-        os.rename(f, os.path.join(bootstrap_dir, os.path.basename(f)))
-    # compress and remove the bootstrap files
-    with tarfile.open(os.path.join(raxml_dir, "contrees.tgz"), "w:gz") as tar:
-        files = glob.glob(f'{raxml_dir}/RAxML_bipartitions.*')
-        for f in files:
-            tar.add(f, arcname=os.path.basename(f))
-        for f in files:
-            os.remove(f)
-
-    #append all the besttrees into a single file, compress the files and remove them
     try:
-        raxml_input = open(input_, 'w+')
-        files = glob.glob(f'{raxml_dir}/RAxML_bestTree.*')
+        files = glob.glob(f'{raxml_dir}/RAxML_bootstrap.*')
+        for f in files:
+            os.rename(f, os.path.join(bootstrap_dir, os.path.basename(f)))
+        # compress and remove the bootstrap files
+        with tarfile.open(os.path.join(raxml_dir, "contrees.tgz"), "w:gz") as tar:
+            files = glob.glob(f'{raxml_dir}/RAxML_bipartitions.*')
+            for f in files:
+                tar.add(f, arcname=os.path.basename(f))
+            for f in files:
+                os.remove(f)
+    except Exception:
+        print("Error! Directory does not exist or not enough privileges")
+
+
+    #append all the besttrees into a single file(in the working dir), compress the files and remove them
+    try:
+        raxml_input = open(besttree_file, 'w+')
+        files = glob.glob(os.path.join(raxml_dir, '/RAxML_bestTree.*'))
         trees = ""
         for f in files:
             gen_tree = open(f, 'r')
@@ -63,12 +67,11 @@ def create_raxml_file(input_):
         raxml_input.write(trees)
         raxml_input.close()
         with tarfile.open(os.path.join(raxml_dir, "besttrees.tgz"), "w:gz") as tar:
-            files = glob.glob(f'{raxml_dir}/RAxML_bestTree.*')
+            files = glob.glob(os.path.join(raxml_dir, '/RAxML_bestTree.*'))
             for f in files:
                 tar.add(f, arcname=os.path.basename(f))
             for f in files:
                 os.remove(f)
-
     except IOError:
         print("Error! Failed to create the input file")
 
@@ -100,20 +103,3 @@ def create_phylonet_input(input_, output, hmax, threads, runs):
     buffer+="geneTree" + str(tree_index) +') ' + hmax + " -pl " + threads + " -x " + runs + " " + output_network + ';\nEND;'
     out_file.write(buffer)
     out_file.close()
-
-
-
-def main():
-    #get the files as arguments, hmax, threads and number of runs
-    parser = argparse.ArgumentParser(description='Input and output files.')
-    parser.add_argument("-i","--input", required=True, help='Name of the input file')
-    parser.add_argument("-o", "--output", required=True, help='Name of the output file')
-    parser.add_argument("-hm", "--hmax", required=True, help='Maximum number of hybridizations')
-    parser.add_argument("-t", "--threads", required=True, help='Number of threads')
-    parser.add_argument("-r", "--runs", required=True, help='Number of runs')
-    args = parser.parse_args()
-    create_raxml_file(args.input)
-    create_phylonet_input(args.input, args.output, args.hmax, args.threads, args.runs)
-
-if __name__ == '__main__':
-    main()
