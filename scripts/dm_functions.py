@@ -119,12 +119,14 @@ def create_iqtree_file(besttree_file):
 
 def clear_execution(network_method, tree_method, basedir):
     try:
-        if tree_method == 'RAXML':
+        if tree_method == 'ML-RAXML':
             os.rmdir(os.path.join(basedir, 'raxml'))
-        elif tree_method == 'IQTREE':
+        elif tree_method == 'ML-IQTREE':
             os.rmdir(os.path.join(basedir, 'iqtree'))
-        elif tree_method == 'TNT':
+        elif tree_method == 'MP-TNT':
             os.rmdir(os.path.join(basedir, 'tnt'))
+        elif tree_method == 'BI':
+            pass
         if network_method == 'MPL':
             os.rmdir(os.path.join(basedir, 'astral'))
         elif network_method == 'MP':

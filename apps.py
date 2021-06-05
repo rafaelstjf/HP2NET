@@ -262,7 +262,7 @@ def setup_phylonet_data(basedir: str,
     import os
     phylonet_phase1 = config.phylonet_phase1
     gene_trees = os.path.join(basedir, config.raxml_output)
-    out_dir = f"{basedir}/phylonet_phase_1.nex"
+    out_dir = os.path.join(basedir,"phylonet_phase_1.nex")
     import sys
     sys.path.append(os.path.dirname(phylonet_phase1))
     import dm_functions as st
@@ -279,7 +279,8 @@ def phylonet(basedir: str,
          stdout=parsl.AUTO_LOGNAME):
 
     exec_phylonet = config.phylonet
-    input_file = f"{basedir}/phylonet_phase_1.nex"
+    import os
+    input_file = os.path.join(basedir,"phylonet_phase_1.nex")
 
     # Return to Parsl to be executed on the workflow
     return f'{exec_phylonet} {input_file}'
@@ -291,7 +292,19 @@ def clear_temporary_files(basedir: str,
                       outputs=[],
                       stderr=parsl.AUTO_LOGNAME,
                       stdout=parsl.AUTO_LOGNAME):
-    #Get the raxml's output and create a NEXUS file as output in the basedir
     import dm_functions as dm
     dm.clear_execution(config.network_method, config.tree_method, basedir)
     return
+
+
+@parsl.bash_app(executors=['raxml'])
+def iqtree(basedir: str, config: BioConfig,
+          input_file: str,
+          inputs=[],
+          stderr=parsl.AUTO_LOGNAME,
+          stdout=parsl.AUTO_LOGNAME):
+    import os
+    iqtree_dir = os.path.join(basedir, config.iqtree_dir)
+    flags = f"-T {config.iqtree_threads} {config.iqtree_exec_param} -s {input_file}"
+    # Return to Parsl to be executed on the workflow
+    return f"cd {iqtree_dir}; {config.iqtree} {flags}"

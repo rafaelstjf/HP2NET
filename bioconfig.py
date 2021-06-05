@@ -80,6 +80,11 @@ class BioConfig:
     raxml_output:       str
     raxml_threads:      int
     raxml_exec_param:   str
+    iqtree:             str
+    iqtree_dir:         str
+    iqtree_exec_param:  str
+    iqtree_threads:     int
+    iqtree_output:      str
     astral_phase1:      str
     astral_exec_dir:    str
     astral_jar:         str
@@ -155,6 +160,12 @@ class ConfigFactory:
         raxml_threads = cf['RAXML']['RaxmlThreads']
         raxml_exec_param = cf['RAXML']['RaxmlExecParam']
 
+        iqtree = cf['IQTREE']['IqTreeExecutable']
+        iqtree_dir = cf['IQTREE']['IqTreeDir']
+        iqtree_exec_param = cf['IQTREE']['IqTreeParameters']
+        iqtree_threads = cf['IQTREE']['IqTreeThreads']
+        iqtree_output = cf['IQTREE']['iqTreeOutput']
+
         astral_phase1 = cf['ASTRAL']['AstralScript']
         astral_exec_dir = cf['ASTRAL']['AstralExecDir']
         astral_jar = cf['ASTRAL']['AstralJar']
@@ -205,6 +216,11 @@ class ConfigFactory:
                                    raxml_output=raxml_output,
                                    raxml_threads=raxml_threads,
                                    raxml_exec_param=raxml_exec_param,
+                                   iqtree=iqtree,
+                                   iqtree_dir=iqtree_dir,
+                                   iqtree_exec_param=iqtree_exec_param,
+                                   iqtree_threads=iqtree_threads,
+                                   iqtree_output=iqtree_output,
                                    astral_phase1=astral_phase1,
                                    astral_exec_dir=astral_exec_dir,
                                    astral_jar=astral_jar,
