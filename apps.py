@@ -38,18 +38,16 @@ from bioconfig import BioConfig
 # setup_phylip_data bash app
 
 
-@parsl.bash_app(executors=['single_thread'])
+@parsl.python_app(executors=['single_thread'])
 def setup_phylip_data(basedir: str, config: BioConfig,
                       stderr=parsl.AUTO_LOGNAME,
                       stdout=parsl.AUTO_LOGNAME):
-    """Convert the nexus format to phylip in order to run Raxml on a directory.
+    """Convert the gene alignments from the nexus format to the phylip format.
 
     Parameters:
-        config: BioConfig --- config.data_dir is the directory where raxml-phase1 
-        is going to search for a tar file with nexus files. The script will create:
+        cbasedir: it is going to search for a tar file with nexus files. The script will create:
             seqdir=input/nexus
-            raxmldir=raxml
-            astraldir=astral
+            seqdir=input/phylip
     Returns:
         returns an parsl's AppFuture.
 
@@ -67,30 +65,22 @@ def setup_phylip_data(basedir: str, config: BioConfig,
     import glob
     from appsexception import PhylipMissingData
 
-    raxml_phase1 = config.raxml_phase1
-
-    input_dir = basedir + '/input'
-    input_nexus_dir = input_dir + '/nexus'
-    phylip_dir = input_dir + '/phylip'
-
-    # If we find phylip_dir, we suppose the input is Ok.
-    if not os.path.isfile(phylip_dir):
-
-        # So, some work must be done. Build the Nexus directory
-        if not os.path.isdir(input_nexus_dir):
-            os.mkdir(input_nexus_dir)
-
-            # List all tar.gz files, they are supposed to be the input
-            tar_file_list = glob.glob(f'{input_dir}/*.tar.gz')
-            if len(tar_file_list) == 0:
-                raise PhylipMissingData(input_dir)
-
-            # So, loop over and untar every file
-            for tar_file in tar_file_list:
-                os.system(f'cd {input_nexus_dir}; tar zxvf {tar_file}')
-
-    # Now, use the modified script to convert nexus to phylip.
-    return f'cd {basedir}; {raxml_phase1}'
+    input_dir = os.path.jooin(basedir,'/input')
+    input_nexus_dir = os.path.join(input_dir, '/nexus')
+    # So, some work must be done. Build the Nexus directory
+    if not os.path.isdir(input_nexus_dir):
+        os.mkdir(input_nexus_dir)
+        # List all tar.gz files, they are supposed to be the input
+        tar_file_list = glob.glob(f'{input_dir}/*.tar.gz')
+        if len(tar_file_list) == 0:
+            raise PhylipMissingData(input_dir)
+        # So, loop over and untar every file
+        for tar_file in tar_file_list:
+            os.system(f'cd {input_nexus_dir}; tar zxvf {tar_file}')
+    # Now, use the function to convert nexus to phylip.
+    import dm_functions as st
+    st.nexus_to_phylip(input_nexus_dir) 
+    return
 
 
 # raxml bash app
@@ -296,7 +286,17 @@ def clear_temporary_files(basedir: str,
     dm.clear_execution(config.network_method, config.tree_method, basedir)
     return
 
-
+@parsl.python_app(executors=['single_thread'])
+def create_folders(basedir: str,
+                      config: BioConfig,
+                      folders=[],
+                      inputs=[],
+                      outputs=[],
+                      stderr=parsl.AUTO_LOGNAME,
+                      stdout=parsl.AUTO_LOGNAME):
+    import dm_functions as dm
+    dm.create_folders(basedir, folders)
+    return
 @parsl.bash_app(executors=['raxml'])
 def iqtree(basedir: str, config: BioConfig,
           input_file: str,

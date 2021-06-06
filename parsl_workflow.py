@@ -23,24 +23,38 @@ def main():
     result = list()
     for basedir in work_list:
         result.append(apps.setup_phylip_data(basedir, bio_config))
+        folder_list = []
+        if(bio_config.tree_method == 'ML-RAXML'):
+            folder_list.append('raxml')
+        elif(bio_config.tree_method == 'ML-IQTREE'):
+            folder_list.append('iqtree')
+        if(bio_config.network_method == "MPL"):
+            folder_list.append('astral')
+        result.append(apps.create_folders(folder_list))
+
     wait_for_all(result)
     result = list()
     for basedir in work_list:
-        ret_rax = list()
+        ret_tree = list()
         datalist = glob.glob(basedir + '/input/phylip/*.phy')
-        for input_file in datalist:
-            ret_rax.append(apps.raxml(basedir, bio_config, input_file))
+        if(bio_config.tree_method == 'ML-RAXML'):            
+            for input_file in datalist:
+                ret_tree.append(apps.raxml(basedir, bio_config, input_file))
+        elif(bio_config.tree_method == 'ML-IQTREE'):
+                ret_tree.append(apps.iqtree(basedir, bio_config, input_file))
         if(bio_config.network_method == "MPL"):
             logging.info("Using the Maximum Pseudo Likelihood Method")
-            ret_sad = apps.setup_astral_data(basedir, bio_config, inputs=ret_rax)
+            ret_sad = apps.setup_astral_data(basedir, bio_config, inputs=ret_tree)
             ret_ast = apps.astral(basedir, bio_config, inputs=[ret_sad])
             ret_snq = apps.snaq(basedir, bio_config, inputs=[ret_ast])
-            result.append(ret_snq)
+            ret_clear = apps.clear_temporary_files(basedir, bio_config, inputs=ret_snq)
+            result.append(ret_clear)
         elif(bio_config.network_method == "MP"):
             logging.info("Using the Maximum Parsimony Method")
-            ret_spd = apps.setup_phylonet_data(basedir, bio_config, inputs=ret_rax)
+            ret_spd = apps.setup_phylonet_data(basedir, bio_config, inputs=ret_tree)
             ret_phylonet = apps.phylonet(basedir, bio_config, inputs=[ret_spd])
-            result.append(ret_phylonet)
+            ret_clear = apps.clear_temporary_files(basedir, bio_config, inputs=ret_phylonet)
+            result.append(ret_clear)
     wait_for_all(result)
 
 

@@ -21,15 +21,15 @@ def create_folders(parent_dir, folder_list):
 def nexus_to_phylip(folder):
     path_ = os.path.dirname(folder)
     full_path = os.path.join(path_, "phylip")
-    Path(full_path).mkdir(exist_ok=True)
-    remove_files_dir(full_path)
-    files = glob.glob(f'{folder}/*.nex')
-    try:
-        for f in files:
-            out_name = os.path.basename(f).split('.')[0]
-            AlignIO.convert(f, "nexus", os.path.join(full_path, f'{out_name}.phy'), "phylip-sequential")
-    except Exception:
-        print("Impossible to convert nexus files to phylip!")
+    if not os.path.isdir(full_path):
+        Path(full_path).mkdir(exist_ok=True)
+        files = glob.glob(f'{folder}/*.nex')
+        try:
+            for f in files:
+                out_name = os.path.basename(f).split('.')[0]
+                AlignIO.convert(f, "nexus", os.path.join(full_path, f'{out_name}.phy'), "phylip-sequential")
+        except Exception:
+            print("Impossible to convert nexus files to phylip!")
     
 def create_raxml_file(besttree_file):
     base_dir = os.path.dirname(besttree_file)
