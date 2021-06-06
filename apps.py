@@ -65,8 +65,8 @@ def setup_phylip_data(basedir: str, config: BioConfig,
     import glob
     from appsexception import PhylipMissingData
 
-    input_dir = os.path.join(basedir,'/input')
-    input_nexus_dir = os.path.join(input_dir, '/nexus')
+    input_dir = os.path.join(basedir,'input')
+    input_nexus_dir = os.path.join(input_dir, 'nexus')
     # So, some work must be done. Build the Nexus directory
     if not os.path.isdir(input_nexus_dir):
         os.mkdir(input_nexus_dir)
@@ -78,6 +78,8 @@ def setup_phylip_data(basedir: str, config: BioConfig,
         for tar_file in tar_file_list:
             os.system(f'cd {input_nexus_dir}; tar zxvf {tar_file}')
     # Now, use the function to convert nexus to phylip.
+    import sys
+    sys.path.append(os.path.dirname(phylonet_phase1))
     import dm_functions as st
     st.nexus_to_phylip(input_nexus_dir) 
     return
@@ -282,6 +284,9 @@ def clear_temporary_files(basedir: str,
                       outputs=[],
                       stderr=parsl.AUTO_LOGNAME,
                       stdout=parsl.AUTO_LOGNAME):
+    import sys
+    import os
+    sys.path.append(os.path.dirname(phylonet_phase1))
     import dm_functions as dm
     dm.clear_execution(config.network_method, config.tree_method, basedir)
     return
@@ -294,6 +299,9 @@ def create_folders(basedir: str,
                       outputs=[],
                       stderr=parsl.AUTO_LOGNAME,
                       stdout=parsl.AUTO_LOGNAME):
+    import os
+    import sys
+    sys.path.append(os.path.dirname(phylonet_phase1))
     import dm_functions as dm
     dm.create_folders(basedir, folders)
     return
