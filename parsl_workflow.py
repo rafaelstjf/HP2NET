@@ -30,7 +30,7 @@ def main():
             folder_list.append('iqtree')
         if(bio_config.network_method == "MPL"):
             folder_list.append('astral')
-        result.append(apps.create_folders(folder_list))
+        result.append(apps.create_folders(basedir, bio_config,folders=folder_list))
 
     wait_for_all(result)
     result = list()
