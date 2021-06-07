@@ -75,7 +75,6 @@ class BioConfig:
     workflow_node_l:    int
     raxml:              str
     raxml_param:        str
-    raxml_phase1:       str
     raxml_dir:          str
     raxml_output:       str
     raxml_threads:      int
@@ -85,7 +84,6 @@ class BioConfig:
     iqtree_exec_param:  str
     iqtree_threads:     int
     iqtree_output:      str
-    astral_phase1:      str
     astral_exec_dir:    str
     astral_jar:         str
     astral:             str
@@ -95,12 +93,12 @@ class BioConfig:
     snaq_threads:       int
     mbblock:            str
     mrbayes:            str
-    phylonet_phase1:    str
     phylonet:           str
     phylonet_exec_dir:  str
     phylonet_jar:       str
     phylonet_threads:   str
     phylonet_hmax:      str
+    phylonet_input:     str
 
 
 @borg
@@ -118,7 +116,7 @@ class ConfigFactory:
     def build_config(self) -> BioConfig:
 
         cf = self.config
-        sd = cf['GENERAL']['ScriptDir']
+        script_dir = cf['GENERAL']['ScriptDir']
 
         env_path = cf['GENERAL']['Environ']
         environ = ""  # empty
@@ -154,7 +152,6 @@ class ConfigFactory:
 
         raxml = cf['RAXML']['RaxmlExecutable']
         raxml_param = cf['RAXML']['RaxmlParameters']
-        raxml_phase1 = f"{perl_int} {cf['RAXML']['RaxmlPhase1']} {raxml_param}"
         raxml_dir = cf['RAXML']['RaxmlDir']
         raxml_output = f"{raxml_dir}/{cf['RAXML']['RaxmlOutput']}"
         raxml_threads = cf['RAXML']['RaxmlThreads']
@@ -166,35 +163,35 @@ class ConfigFactory:
         iqtree_threads = cf['IQTREE']['IqTreeThreads']
         iqtree_output = cf['IQTREE']['iqTreeOutput']
 
-        astral_phase1 = cf['ASTRAL']['AstralScript']
         astral_exec_dir = cf['ASTRAL']['AstralExecDir']
         astral_jar = cf['ASTRAL']['AstralJar']
         astral = f"cd {astral_exec_dir}; java -jar {astral_jar}"
         astral_dir = cf['ASTRAL']['AstralDir']
         astral_output = f"{astral_dir}/{cf['ASTRAL']['AstralOutput']}"
 
-        snaq = f"{sd}/{cf['SNAQ']['SnaqScript']}"
+        snaq = f"{script_dir}/{cf['SNAQ']['SnaqScript']}"
         snaq_threads = int(cf['SNAQ']['SnaqThreads'])
 
         mbblock = ""  # empty
-        with open(f"{sd}/{cf['MRBAYES']['MrBlock']}", "r") as f:
+        with open(f"{script_dir}/{cf['MRBAYES']['MrBlock']}", "r") as f:
             mbblock = f.read()
-        mrbayes = f"{perl_int} {sd}/{cf['MRBAYES']['MrDriver']}"
+        mrbayes = f"{perl_int} {script_dir}/{cf['MRBAYES']['MrDriver']}"
 
-        phylonet_phase1 = cf['PHYLONET']['PhyloNetScript']
         phylonet_exec_dir = cf['PHYLONET']['PhyloNetExecDir']
         phylonet_jar = cf['PHYLONET']['PhyloNetJar']
         phylonet = f"cd {phylonet_exec_dir}; java -jar {phylonet_jar}"
         phylonet_threads = cf['PHYLONET']['PhyloNetThreads']
         phylonet_hmax = cf['PHYLONET']['PhyloNetHMax']
+        phylonet_input = cf['PHYLONET']['PhyloNetInput']
 
-        self.bioconfig = BioConfig(script_dir=sd,
+        self.bioconfig = BioConfig(script_dir=script_dir,
                                    workload_path=workload_path,
                                    network_method=network_method,
                                    tree_method=tree_method,
                                    workload=workload,
                                    env_path=env_path,
                                    environ=environ,
+                                   script_dir=script_dir,
                                    workflow_monitor=workflow_monitor,
                                    workflow_name=workflow_name,
                                    workflow_part_f=workflow_part_f,
@@ -211,7 +208,6 @@ class ConfigFactory:
                                    workflow_node_l=workflow_node_l,
                                    raxml=raxml,
                                    raxml_param=raxml_param,
-                                   raxml_phase1=raxml_phase1,
                                    raxml_dir=raxml_dir,
                                    raxml_output=raxml_output,
                                    raxml_threads=raxml_threads,
@@ -221,7 +217,6 @@ class ConfigFactory:
                                    iqtree_exec_param=iqtree_exec_param,
                                    iqtree_threads=iqtree_threads,
                                    iqtree_output=iqtree_output,
-                                   astral_phase1=astral_phase1,
                                    astral_exec_dir=astral_exec_dir,
                                    astral_jar=astral_jar,
                                    astral=astral,
@@ -231,10 +226,10 @@ class ConfigFactory:
                                    snaq_threads=snaq_threads,
                                    mbblock=mbblock,
                                    mrbayes=mrbayes,
-                                   phylonet_phase1=phylonet_phase1,
                                    phylonet=phylonet,
                                    phylonet_exec_dir=phylonet_exec_dir,
                                    phylonet_jar=phylonet_jar,
                                    phylonet_threads=phylonet_threads,
-                                   phylonet_hmax=phylonet_hmax)
+                                   phylonet_hmax=phylonet_hmax,
+                                   phylonet_input=phylonet_input)
         return self.bioconfig

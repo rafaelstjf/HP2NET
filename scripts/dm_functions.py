@@ -1,3 +1,4 @@
+from apps import raxml
 import os, sys, argparse, glob, tarfile
 from pathlib import Path
 from Bio import AlignIO
@@ -31,10 +32,10 @@ def nexus_to_phylip(folder):
         except Exception:
             print("Impossible to convert nexus files to phylip!")
     
-def create_raxml_file(besttree_file):
-    base_dir = os.path.dirname(besttree_file)
-    raxml_dir = os.path.join(base_dir, 'raxml')
+def setup_raxml_output(basedir, RaxmlDir, RaxmlOutput):
+    raxml_dir = os.path.join(base_dir, RaxmlDir)
     bootstrap_dir = os.path.join(raxml_dir, "bootstrap")
+    besttree_file = os.path.join(raxml_dir, RaxmlOutput)
     Path(bootstrap_dir).mkdir(exist_ok=True)
     # remove old files
     remove_files_dir(bootstrap_dir)
@@ -55,7 +56,7 @@ def create_raxml_file(besttree_file):
     #append all the besttrees into a single file(in the working dir), compress the files and remove them
     try:
         raxml_input = open(besttree_file, 'w+')
-        files = glob.glob(os.path.join(raxml_dir, '/RAxML_bestTree.*'))
+        files = glob.glob(os.path.join(raxml_dir, 'RAxML_bestTree.*'))
         trees = ""
         for f in files:
             gen_tree = open(f, 'r')
@@ -64,7 +65,7 @@ def create_raxml_file(besttree_file):
         raxml_input.write(trees)
         raxml_input.close()
         with tarfile.open(os.path.join(raxml_dir, "besttrees.tgz"), "w:gz") as tar:
-            files = glob.glob(os.path.join(raxml_dir, '/RAxML_bestTree.*'))
+            files = glob.glob(os.path.join(raxml_dir, 'RAxML_bestTree.*'))
             for f in files:
                 tar.add(f, arcname=os.path.basename(f))
             for f in files:
@@ -101,12 +102,14 @@ def create_phylonet_input(input_, output, hmax, threads, runs):
     out_file.write(buffer)
     out_file.close()
 
-def create_iqtree_file(besttree_file):
-    base_dir = os.path.dirname(besttree_file)
-    iqtree_dir = os.path.join(base_dir, 'iqtree')
+def setup_iqtree_output(basedir, IqtreeDir, IqtreeOutupt):
+    
+
+    iqtree_dir = os.path.join(basedir, IqtreeDir)
+    besttree_file = os.path.join(iqtree_dir, IqtreeOutupt)
     try:
         iq_input = open(besttree_file, 'w+')
-        files = glob.glob(os.path.join(iqtree_dir, '/*.treefile'))
+        files = glob.glob(os.path.join(iqtree_dir, '*.treefile'))
         trees = ""
         for f in files:
             gen_tree = open(f, 'r')

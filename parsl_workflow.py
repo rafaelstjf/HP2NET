@@ -39,12 +39,15 @@ def main():
         datalist = glob.glob(basedir + '/input/phylip/*.phy')
         if(bio_config.tree_method == 'ML-RAXML'):            
             for input_file in datalist:
-                ret_tree.append(apps.raxml(basedir, bio_config, input_file))
+                ret = apps.raxml(basedir, bio_config, input_file)
+                ret_tree.append()
         elif(bio_config.tree_method == 'ML-IQTREE'):
-                ret_tree.append(apps.iqtree(basedir, bio_config, input_file))
+            for input_file in datalist:
+                ret  = apps.iqtree(basedir, bio_config, input_file)
+                ret_tree.append()
+        ret_sad = apps.setup_tree_output(basedir, bio_config, inputs=ret_tree)
         if(bio_config.network_method == "MPL"):
             logging.info("Using the Maximum Pseudo Likelihood Method")
-            ret_sad = apps.setup_astral_data(basedir, bio_config, inputs=ret_tree)
             ret_ast = apps.astral(basedir, bio_config, inputs=[ret_sad])
             ret_snq = apps.snaq(basedir, bio_config, inputs=[ret_ast])
             ret_clear = apps.clear_temporary_files(basedir, bio_config, inputs=ret_snq)
