@@ -80,8 +80,8 @@ def setup_phylip_data(basedir: str, config: BioConfig,
     # Now, use the function to convert nexus to phylip.
     import sys
     sys.path.append(config.script_dir)
-    import dm_functions as st
-    st.nexus_to_phylip(input_nexus_dir) 
+    import data_management as dm
+    dm.nexus_to_phylip(input_nexus_dir) 
     return
 
 
@@ -152,11 +152,11 @@ def setup_tree_output(basedir: str,
     import os
     import sys
     sys.path.append(config.script_dir)
-    import dm_functions as st
+    import data_management as dm
     if(config.tree_method == "ML-RAXML"):
-        st.create_raxml_file(basedir, config.raxml_dir, config.raxml_output) 
+        dm.setup_raxml_output(basedir, config.raxml_dir, config.raxml_output) 
     elif(config.tree_method == "ML-IQTREE"):
-        st.setup_iqtree_output(basedir, config.iqtree_dir, config.iqtree_output)
+        dm.setup_iqtree_output(basedir, config.iqtree_dir, config.iqtree_output)
     return
 
 @parsl.bash_app(executors=['single_thread'])
@@ -202,8 +202,6 @@ def astral(basedir: str,
     # Return to Parsl to be executed on the workflow
     return f'{exec_astral} -i {raxml_output} -b {bs_file} -r {num_boot} -o {astral_output}'
 
-
-# TODO: Export the parameter hmax (in .jl)
 @parsl.bash_app(executors=['snaq'])
 def snaq(basedir: str,
          config: BioConfig,
@@ -211,11 +209,24 @@ def snaq(basedir: str,
          outputs=[],
          stderr=parsl.AUTO_LOGNAME,
          stdout=parsl.AUTO_LOGNAME):
-
+    #set environment variables
+    import os
+    from pathlib import Path
+    os.environ["JULIA_SETUP"] = config.julia_setup
+    os.environ["JULIA_PKGDIR"] = config.julia_pkgdir
+    os.environ["JULIA_SYSIMAGE"] = config.julia_sysimage
+    #create snaq folder
+    Path(os.path.join(basedir, "snaq")).mkdir(exist_ok=True)
+    #run the julia script with PhyloNetworks
     snaq_exec = config.snaq
     num_threads = config.snaq_threads
-    return f'{snaq_exec} {basedir} {num_threads}'
-
+    hmax = config.snaq_hmax
+    if config.tree_method == "ML-RAXML":
+        return f'julia {config.julia_sysimage} --threads {num_threads} {snaq_exec} 0 {basedir}/{config.raxml_output} {basedir}/{config.astral_output} {basedir} {num_threads} {hmax}'
+    elif config.tree_method == "ML-IQTREE":
+        return f'julia {config.julia_sysimage} --threads {num_threads} {snaq_exec} 0 {basedir}/{config.iqtree_output} {basedir}/{config.astral_output} {basedir} {num_threads} {hmax}'
+    else:
+        pass
 
 # Mr.Bayes bash app
 @parsl.bash_app(executors=['raxml'])
@@ -291,8 +302,8 @@ def setup_phylonet_data(basedir: str,
     out_dir = os.path.join(basedir,config.phylonet_input)
     import sys
     sys.path.append(config.script_dir)
-    import dm_functions as st
-    st.create_phylonet_input(gene_trees, out_dir, config.phylonet_hmax, config.phylonet_threads, config.phylonet_threads)
+    import data_management as dm
+    dm.create_phylonet_input(gene_trees, out_dir, config.phylonet_hmax, config.phylonet_threads, config.phylonet_threads)
     return
     
 @parsl.bash_app(executors=['snaq'])
@@ -332,7 +343,7 @@ def clear_temporary_files(basedir: str,
     import sys
     import os
     sys.path.append(config.script_dir)
-    import dm_functions as dm
+    import data_management as dm
     dm.clear_execution(config.network_method, config.tree_method, basedir)
     return
 
@@ -347,7 +358,7 @@ def create_folders(basedir: str,
     import os
     import sys
     sys.path.append(config.script_dir)
-    import dm_functions as dm
+    import data_management as dm
     dm.create_folders(basedir, folders)
     return
     

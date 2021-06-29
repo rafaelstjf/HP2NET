@@ -55,6 +55,9 @@ class BioConfig:
     env_path:           str
     environ:            str
     script_dir:         str
+    julia_setup:        str
+    julia_pkgdir:       str
+    julia_sysimage:     str
     workload_path:      str
     network_method:     str
     tree_method:        str
@@ -91,6 +94,7 @@ class BioConfig:
     astral_output:      str
     snaq:               str
     snaq_threads:       int
+    snaq_hmax:          int
     mbblock:            str
     mrbayes:            str
     phylonet:           str
@@ -133,8 +137,13 @@ class ConfigFactory:
                 if line[0] == '#':
                     continue
                 workload.append(line.strip())
-
+        
+        #SYSTEM
+        julia_setup = cf['SYSTEM']['JuliaSetup']
+        julia_pkgdir = cf['SYSTEM']['JuliaPkgDir']
+        julia_sysimage = cf['SYSTEM']['JuliaSysImage']
         perl_int = cf['SYSTEM']['PerlInter']
+        #WORKFLOW
         workflow_name = cf["WORKFLOW"]["Name"]
         workflow_monitor = cf["WORKFLOW"].getboolean("Monitor")
         workflow_part_f = cf["WORKFLOW"]["PartitionFast"]
@@ -149,41 +158,42 @@ class ConfigFactory:
         workflow_node_f = int(cf["WORKFLOW"]["PartNodeFast"])
         workflow_node_t = int(cf["WORKFLOW"]["PartNodeThread"])
         workflow_node_l = int(cf["WORKFLOW"]["PartNodeLong"])
-
+        #RAXML
         raxml = cf['RAXML']['RaxmlExecutable']
         raxml_param = cf['RAXML']['RaxmlParameters']
         raxml_dir = cf['RAXML']['RaxmlDir']
         raxml_output = f"{raxml_dir}/{cf['RAXML']['RaxmlOutput']}"
         raxml_threads = cf['RAXML']['RaxmlThreads']
         raxml_exec_param = cf['RAXML']['RaxmlExecParam']
-
+        #IQTREE
         iqtree = cf['IQTREE']['IqTreeExecutable']
         iqtree_dir = cf['IQTREE']['IqTreeDir']
         iqtree_exec_param = cf['IQTREE']['IqTreeParameters']
         iqtree_threads = cf['IQTREE']['IqTreeThreads']
         iqtree_output = cf['IQTREE']['iqTreeOutput']
-
+        #ASTRAL
         astral_exec_dir = cf['ASTRAL']['AstralExecDir']
         astral_jar = cf['ASTRAL']['AstralJar']
         astral = f"cd {astral_exec_dir}; java -jar {astral_jar}"
         astral_dir = cf['ASTRAL']['AstralDir']
         astral_output = f"{astral_dir}/{cf['ASTRAL']['AstralOutput']}"
-
-        snaq = f"{script_dir}/{cf['SNAQ']['SnaqScript']}"
+        #SNAQ
+        snaq = f"{cf['SNAQ']['SnaqScript']}"
         snaq_threads = int(cf['SNAQ']['SnaqThreads'])
-
-        mbblock = ""  # empty
-        with open(f"{script_dir}/{cf['MRBAYES']['MrBlock']}", "r") as f:
-            mbblock = f.read()
-        mrbayes = f"{perl_int} {script_dir}/{cf['MRBAYES']['MrDriver']}"
-
+        snaq_hmax = int(cf['SNAQ']['SnaqHMax'])
+        #PHYLONET
         phylonet_exec_dir = cf['PHYLONET']['PhyloNetExecDir']
         phylonet_jar = cf['PHYLONET']['PhyloNetJar']
         phylonet = f"cd {phylonet_exec_dir}; java -jar {phylonet_jar}"
         phylonet_threads = cf['PHYLONET']['PhyloNetThreads']
         phylonet_hmax = cf['PHYLONET']['PhyloNetHMax']
         phylonet_input = cf['PHYLONET']['PhyloNetInput']
-
+        #MRBAYES
+        mbblock = ""  # empty
+        with open(f"{script_dir}/{cf['MRBAYES']['MrBlock']}", "r") as f:
+            mbblock = f.read()
+        mrbayes = f"{perl_int} {script_dir}/{cf['MRBAYES']['MrDriver']}"
+    
         self.bioconfig = BioConfig(script_dir=script_dir,
                                    workload_path=workload_path,
                                    network_method=network_method,
@@ -192,6 +202,9 @@ class ConfigFactory:
                                    env_path=env_path,
                                    environ=environ,
                                    script_dir=script_dir,
+                                   julia_setup=julia_setup,
+                                   julia_pkgdir=julia_pkgdir,
+                                   julia_sysimage=julia_sysimage,
                                    workflow_monitor=workflow_monitor,
                                    workflow_name=workflow_name,
                                    workflow_part_f=workflow_part_f,
@@ -224,6 +237,7 @@ class ConfigFactory:
                                    astral_output=astral_output,
                                    snaq=snaq,
                                    snaq_threads=snaq_threads,
+                                   snaq_hmax=snaq_hmax,
                                    mbblock=mbblock,
                                    mrbayes=mrbayes,
                                    phylonet=phylonet,
