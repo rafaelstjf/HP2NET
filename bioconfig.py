@@ -95,8 +95,8 @@ class BioConfig:
     snaq:               str
     snaq_threads:       int
     snaq_hmax:          int
-    mbblock:            str
     mrbayes:            str
+    mrbayes_parameters: str
     phylonet:           str
     phylonet_exec_dir:  str
     phylonet_jar:       str
@@ -189,10 +189,8 @@ class ConfigFactory:
         phylonet_hmax = cf['PHYLONET']['PhyloNetHMax']
         phylonet_input = cf['PHYLONET']['PhyloNetInput']
         #MRBAYES
-        mbblock = ""  # empty
-        with open(f"{script_dir}/{cf['MRBAYES']['MrBlock']}", "r") as f:
-            mbblock = f.read()
-        mrbayes = f"{perl_int} {script_dir}/{cf['MRBAYES']['MrDriver']}"
+        mrbayes = cf['MRBAYES']['MBExecutable']
+        mrbayes_parameters = cf['MRBAYES']['MBParameters']
     
         self.bioconfig = BioConfig(script_dir=script_dir,
                                    workload_path=workload_path,
@@ -238,8 +236,8 @@ class ConfigFactory:
                                    snaq=snaq,
                                    snaq_threads=snaq_threads,
                                    snaq_hmax=snaq_hmax,
-                                   mbblock=mbblock,
                                    mrbayes=mrbayes,
+                                   mrbayes_parameters=mrbayes_parameters,
                                    phylonet=phylonet,
                                    phylonet_exec_dir=phylonet_exec_dir,
                                    phylonet_jar=phylonet_jar,

@@ -250,26 +250,18 @@ def mrbayes(basedir: str,
         named according to task id and saved under task_logs in the run directory.
     """
     import os
-    import random
-    import logging
-    import bioconfig
-
-    c = bioconfig.BioConfig()
-
-    logging.info(f'mrbayes called with {basedir}')
-    mrbayes_dir = f"{basedir}/mrbayes"
-
-    # If we find phylip_dir, we suppose the input is Ok.
-    if not os.path.isdir(mrbayes_dir):
-        os.mkdir(mrbayes_dir)
-
-    p = random.randint(1, 10000)
-    x = random.randint(1, 10000)
-
-    output_file = os.path.basename(input_file).split('.')[0]
-
-    # Return to Parsl to be executed on the workflow
-    return f"cd {mrbayes_dir}; {c.raxml} -p {p} -x {x} -s {input_file} -n {output_file}"
+    from pathlib import Path
+    gene_name = os.path.basename(input_file)
+    mb_folder = os.path.join(basedir, "mrbayes")
+    Path(mb_folder).mkdir(exist_ok=True)
+    gene_file = open(input_file, 'r')
+    gene_string = gene_file.read()
+    gene_file.close()
+    gene_par = open(os.path.join(mb_folder, gene_name), 'w+')
+    gene_par.write(gene_string)
+    par = f"begin mrbayes;\nset nowarnings=yes;\nset autoclose=yes;\nlset nst=2;\n{config.MrBParameters};\nmcmc;\nsumt;\nend;"
+    gene_par.write(par)
+    return f"{config.MBExecutable} {os.path.join(mb_folder), gene_name}"
 
 
 @parsl.python_app(executors=['single_thread'])
