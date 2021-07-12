@@ -229,7 +229,7 @@ def snaq(basedir: str,
         pass
 
 # Mr.Bayes bash app
-@parsl.bash_app(executors=['raxml'])
+@parsl.bash_app(executors=['single_thread'])
 def mrbayes(basedir: str,
             config: BioConfig,
             input_file: str,
@@ -259,9 +259,96 @@ def mrbayes(basedir: str,
     gene_file.close()
     gene_par = open(os.path.join(mb_folder, gene_name), 'w+')
     gene_par.write(gene_string)
-    par = f"begin mrbayes;\nset nowarnings=yes;\nset autoclose=yes;\nlset nst=2;\n{config.MrBParameters};\nmcmc;\nsumt;\nend;"
+    par = f"begin mrbayes;\nset nowarnings=yes;\nset autoclose=yes;\nlset nst=2;\n{config.mrbayes_parameters};\nmcmc;\nsumt;\nend;"
     gene_par.write(par)
-    return f"{config.MBExecutable} {os.path.join(mb_folder), gene_name}"
+    return f"{config.MBExecutable} {os.path.join(mb_folder, gene_name)} 2>&1 | tee {os.path.join(mb_folder, gene_name + '.log')}"
+
+# mbsum bash app
+@parsl.bash_app(executors=['single_thread'])
+def mbsum(basedir: str,
+            config: BioConfig,
+            input_file: str,
+            inputs=[],
+            stderr=parsl.AUTO_LOGNAME,
+            stdout=parsl.AUTO_LOGNAME):
+    """Runs the mbsum' executable (RPS) on a directory (input)
+
+    Parameters:
+        TODO:
+    Returns:
+        returns an parsl's AppFuture
+
+    TODO: Provide provenance.
+
+    NB:
+        Stdout and Stderr are defaulted to parsl.AUTO_LOGNAME, so the log will be automatically 
+        named according to task id and saved under task_logs in the run directory.
+    """
+    import os
+    from pathlib import Path
+    import glob
+    gene_name = os.path.basename(input_file)
+    mbsum_folder = os.path.join(basedir, "mbsum")
+    mrbayes_folder = os.path.join(basedir, "mrbayes")
+    Path(mbsum_folder).mkdir(exist_ok=True)
+    par = config.mrbayes_parameters.split(' ')
+    par_dir = {}
+    for p in par:
+        P_split = p.split('=')
+        par_dir[p[0]] = float(p[1])
+    trim =(( (par_dir['ngen']/par_dir['samplefreq'])*par_dir['nruns']*par_dir['burninfrac'])/par_dir['nruns']) +1 
+    trees = glob.glob(os.path.join(mrbayes_folder, gene_name + '*.t'))
+    return f"mbsum {(' ').join(trees)} -n {trim} -o {os.path.join(mbsum_folder, gene_name + '.sum')}"
+# bucky bash app
+@parsl.bash_app(executors=['single_thread'])
+def bucky(basedir: str,
+            config: BioConfig,
+            inputs=[],
+            stderr=parsl.AUTO_LOGNAME,
+            stdout=parsl.AUTO_LOGNAME):
+    """Runs the mbsum' executable (RPS) on a directory (input)
+
+    Parameters:
+        TODO:
+    Returns:
+        returns an parsl's AppFuture
+
+    TODO: Provide provenance.
+
+    NB:
+        Stdout and Stderr are defaulted to parsl.AUTO_LOGNAME, so the log will be automatically 
+        named according to task id and saved under task_logs in the run directory.
+    """
+    import re
+    import os
+    from pathlib import Path
+    import glob
+    from itertools import combinations
+    #parse the sumarized taxa by mbsum
+
+    mbsum_folder = os.path.join(basedir, "mbsum")
+    files = glob.glob(os.path.join(mbsum_folder, '*.sum'))
+    taxa = {}
+    selected_taxa = {}
+    pattern = re.compile('translate(\n\s*\d+\s+\w+(,|;))+')
+    taxa_pattern = re.compile('(\w+(,|;))')
+    for file in files:
+        gene_sum = open(file, 'r')
+        text = gene_sum.read()
+        gene_sum.close()
+        translate_block = pattern.search(text)
+        for match in re.findall(taxa_pattern, translate_block[0]):
+            key = re.sub(re.compile('(,|;)'), '',match[0])
+            if key in taxa:
+                taxa[key]+=1
+            else:
+                taxa[key]=1
+    #select the taxa shared across all genes
+    for t in taxa:
+        if(taxa[t] == len(files)):
+            selected_taxa[t] = taxa[t]
+    quartets = combinations(taxa, 4)
+    return
 
 
 @parsl.python_app(executors=['single_thread'])
