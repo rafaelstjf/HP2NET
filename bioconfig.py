@@ -17,6 +17,8 @@ You should have received a copy of the GNU General Public License along with
 this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
+#from apps import quartet_maxcut
+from apps import quartet_maxcut
 from parsl import bash_app, python_app
 import parsl
 
@@ -97,6 +99,9 @@ class BioConfig:
     snaq_hmax:          int
     mrbayes:            str
     mrbayes_parameters: str
+    bucky:              str
+    mbsum:              str
+    quartet_maxcut:     str
     phylonet:           str
     phylonet_exec_dir:  str
     phylonet_jar:       str
@@ -191,7 +196,12 @@ class ConfigFactory:
         #MRBAYES
         mrbayes = cf['MRBAYES']['MBExecutable']
         mrbayes_parameters = cf['MRBAYES']['MBParameters']
-    
+        #BUCKY
+        bucky = cf['BUCKY']['BuckyExecutable']
+        #MBSUM
+        mbsum = cf['BUCKY']['MbSumExecutable']
+        #QUARTET MAXCUT
+        quartet_maxcut = cf['QUARTETMAXCUT']['QmcExecutable']
         self.bioconfig = BioConfig(script_dir=script_dir,
                                    workload_path=workload_path,
                                    network_method=network_method,
@@ -238,6 +248,9 @@ class ConfigFactory:
                                    snaq_hmax=snaq_hmax,
                                    mrbayes=mrbayes,
                                    mrbayes_parameters=mrbayes_parameters,
+                                   bucky=bucky,
+                                   mbsum=mbsum,
+                                   quartet_maxcut=quartet_maxcut,
                                    phylonet=phylonet,
                                    phylonet_exec_dir=phylonet_exec_dir,
                                    phylonet_jar=phylonet_jar,

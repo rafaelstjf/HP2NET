@@ -31,6 +31,7 @@ __status__ = "Research"
 #
 # Parsl Bash and Python Applications
 #
+from pandas.core import base
 import parsl
 from bioconfig import BioConfig
 
@@ -299,6 +300,7 @@ def mbsum(basedir: str,
     trim =(( (par_dir['ngen']/par_dir['samplefreq'])*par_dir['nruns']*par_dir['burninfrac'])/par_dir['nruns']) +1 
     trees = glob.glob(os.path.join(mrbayes_folder, gene_name + '*.t'))
     return f"mbsum {(' ').join(trees)} -n {trim} -o {os.path.join(mbsum_folder, gene_name + '.sum')}"
+
 # bucky bash app
 @parsl.bash_app(executors=['single_thread'])
 def bucky(basedir: str,
@@ -325,7 +327,6 @@ def bucky(basedir: str,
     import glob
     from itertools import combinations
     #parse the sumarized taxa by mbsum
-
     mbsum_folder = os.path.join(basedir, "mbsum")
     files = glob.glob(os.path.join(mbsum_folder, '*.sum'))
     taxa = {}
@@ -349,6 +350,114 @@ def bucky(basedir: str,
             selected_taxa[t] = taxa[t]
     quartets = combinations(taxa, 4)
     return
+
+@parsl.python_app(executors=['single_thread'])
+def setup_qmc_data(basedir: str,
+                    config: BioConfig,
+                    inputs=[],
+                    outputs=[],
+                    stderr = parsl.AUTO_LOGNAME,
+                    stdout=parsl.AUTO_LOGNAME):
+    import pandas as pd
+    import json
+    import os
+    from pathlib import Path
+    dir_name = os.path.basename(basedir)
+    bucky_folder = os.path.join(basedir, "bucky")
+    table_filename = os.path.join(bucky_folder, f'{dir_name}.csv')
+    try:
+        table = pd.read_csv(table_filename, delimiter=',', dtype = 'string')   
+    except Exception:
+        print("Failed to open CF table")
+    table = pd.read_csv(table_filename, delimiter=',', dtype = 'string')
+    #parse the table
+    quartets = []
+    taxa = {}
+    for index, row in table.iterrows():
+        for i in range (1, 5):
+            if row['taxon' + str(i)] in taxa:
+                taxa[row['taxon' + str(i)]]+=1
+            else:
+                taxa[row['taxon' + str(i)]]=1
+        cf = {'CF12.34': float(row['CF12.34']), 'CF13.24': float(row['CF13.24']), 'CF14.23': float(row['CF14.23'])}
+        cf_sorted = [k for k in sorted(cf, key=cf.get, reverse=True)]
+        cf_1 = row[cf_sorted[0]]
+        cf_2 = row[cf_sorted[1]]
+        cf_3 = row[cf_sorted[2]]
+        split_1 = f"{row['taxon' + cf_sorted[0][2]]},{row['taxon' + cf_sorted[0][3]]}|{row['taxon' + cf_sorted[0][5]]},{row['taxon' + cf_sorted[0][6]]}"
+        split_2 = f"{row['taxon' + cf_sorted[1][2]]},{row['taxon' + cf_sorted[1][3]]}|{row['taxon' + cf_sorted[1][5]]},{row['taxon' + cf_sorted[1][6]]}"
+        split_3 = f"{row['taxon' + cf_sorted[2][2]]},{row['taxon' + cf_sorted[2][3]]}|{row['taxon' + cf_sorted[2][5]]},{row['taxon' + cf_sorted[2][6]]}"
+        if(cf_1 == cf_2 == cf_3):
+            quartets.extend([split_1, split_2, split_3])	
+        elif (cf_1 == cf_2):
+            quartets.extend([split_1, split_2])
+        else:
+            quartets.append(split_1)
+    #change taxon names to ids	
+    taxa_id = 1
+    taxon_to_id = {}
+    dir_name = os.basedir
+    for k in sorted(taxa):
+        taxon_to_id[k] = taxa_id
+        taxa_id+=1
+    for i in range(0, len(quartets)):
+        tmp1 = quartets[i].split('|')
+        old_quartets = []
+        old_quartets.extend(tmp1[0].split(','))
+        old_quartets.extend(tmp1[1].split(','))
+        quartets[i] = f"{taxon_to_id[old_quartets[0]]},{taxon_to_id[old_quartets[1]]}|{taxon_to_id[old_quartets[2]]},{taxon_to_id[old_quartets[3]]}"
+    qmc_folder = os.path.join(basedir, "qmc")
+    Path(qmc_folder).mkdir(exist_ok=True)
+
+    qmc_input = os.path.join(qmc_folder, f'{dir_name}.txt')
+    qmc_input_file = open(qmc_input, 'w+')
+    qmc_input_file.write((' ').join(quartets))
+    qmc_input_file.close()
+    #dump ids
+    with open(os.path.join(qmc_folder, f'{dir_name}.json'), "w+") as outfile: 
+        json.dump(taxon_to_id, outfile)
+    return
+
+@parsl.bash_app(executors=['single_thread'])
+def quartet_maxcut(basedir: str,
+                      config: BioConfig,
+                      inputs=[],
+                      outputs=[],
+                      stderr=parsl.AUTO_LOGNAME,
+                      stdout=parsl.AUTO_LOGNAME):
+    import os
+    dir_name = os.basedir
+    qmc_folder = os.path.join(basedir, "qmc")
+    qmc_input = os.path.join(qmc_folder, f'{dir_name}.txt')
+    qmc_output = os.path.join(qmc_folder, f'{dir_name}.txt')
+    exec_qmc = config.quartet_maxcut
+    return f'{exec_qmc} qrtt={input_file} otre={qmc_output}'
+
+@parsl.python_app(executors=['single_thread'])
+def setup_qmc_output(basedir: str,
+                      config: BioConfig,
+                      inputs=[],
+                      outputs=[],
+                      stderr=parsl.AUTO_LOGNAME,
+                      stdout=parsl.AUTO_LOGNAME):
+    import os
+    import pandas as pd
+    import re
+    dir_name = os.basedir
+    qmc_folder = os.path.join(basedir, "qmc")
+    qmc_input = os.path.join(qmc_folder, f'{dir_name}.txt')
+    qmc_output = os.path.join(qmc_folder, f'{dir_name}.txt')
+    taxon_json = os.path.join(qmc_folder, f'{dir_name}.json')
+    taxon_to_id = pd.read_json (taxon_json)
+    tree_file = open(qmc_output, 'r+')
+    lines = tree_file.read()
+    tree_file.close()
+    tree_file = open(qmc_output, 'w')
+    for k in sorted(taxon_to_id, key=taxon_to_id.get, reverse=True):
+        lines = re.sub(str(taxon_to_id[k]), k, lines)
+    tree_file.write(lines)
+    tree_file.close()
+    return 
 
 
 @parsl.python_app(executors=['single_thread'])
