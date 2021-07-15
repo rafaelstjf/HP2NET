@@ -37,8 +37,6 @@ from bioconfig import BioConfig
 
 
 # setup_phylip_data bash app
-
-
 @parsl.python_app(executors=['single_thread'])
 def setup_phylip_data(basedir: str, config: BioConfig,
                       stderr=parsl.AUTO_LOGNAME,
@@ -301,9 +299,8 @@ def mbsum(basedir: str,
     trees = glob.glob(os.path.join(mrbayes_folder, gene_name + '*.t'))
     return f"mbsum {(' ').join(trees)} -n {trim} -o {os.path.join(mbsum_folder, gene_name + '.sum')}"
 
-# bucky bash app
-@parsl.bash_app(executors=['single_thread'])
-def bucky(basedir: str,
+@parsl.python_app(executors=['single_thread'])
+def setup_bucky_data(basedir: str,
             config: BioConfig,
             inputs=[],
             stderr=parsl.AUTO_LOGNAME,
@@ -328,6 +325,7 @@ def bucky(basedir: str,
     from itertools import combinations
     #parse the sumarized taxa by mbsum
     mbsum_folder = os.path.join(basedir, "mbsum")
+    bucky_folder = os.path.join(basedir, "bucky")
     files = glob.glob(os.path.join(mbsum_folder, '*.sum'))
     taxa = {}
     selected_taxa = {}
@@ -347,9 +345,122 @@ def bucky(basedir: str,
     #select the taxa shared across all genes
     for t in taxa:
         if(taxa[t] == len(files)):
-            selected_taxa[t] = taxa[t]
-    quartets = combinations(taxa, 4)
+            selected_taxa[t] = t
+    quartets = combinations(selected_taxa, 4)
+    for quartet in quartets:
+        prune_tree_output = "translate\n"
+        count = 0
+        filename = ""
+        for member in tuple(quartet):
+            filename += member
+            count+=1
+            prune_tree_output+= f" {count} {member}"
+            if count == 4:
+                prune_tree_output+= ";\n"
+            else:
+                filename +="--"
+                prune_tree_output+= ",\n"
+        prune_file_path = os.path.join(bucky_folder,f"{filename}-prune.txt")
+        output_file = os.path.join(bucky_folder, filename)
+        prune_file = open(prune_file_path, 'w')
+        prune_file.write(prune_tree_output)
+        prune_file.close()
     return
+
+@parsl.bash_app(executors=['single_thread'])
+def bucky(basedir: str,
+                    config: BioConfig,
+                    prune_file: str,
+                    inputs=[],
+                    outputs=[],
+                    stderr = parsl.AUTO_LOGNAME,
+                    stdout=parsl.AUTO_LOGNAME):
+    import os
+    import glob
+    import re
+    mbsum_folder = os.path.join(basedir, "mbsum")
+    bucky_folder = os.path.join(basedir, "bucky")
+    files = glob.glob(os.path.join(mbsum_folder, '*.sum'))
+    output_file = os.path.basedir(prune_file)
+    output_file = re.sub("-prune.txt", "", output_file)
+    output_file = os.path.join(bucky_folder, output_file)
+    return f"{config.bucky} -a 1 -n 1000000 -cf 0 -o {output_file} -p {prune_file} {(' ').join(files)}"
+
+@parsl.python_app(executors=['single_thread'])
+def setup_bucky_output(basedir: str,
+                    config: BioConfig,
+                    inputs=[],
+                    outputs=[],
+                    stderr = parsl.AUTO_LOGNAME,
+                    stdout=parsl.AUTO_LOGNAME):
+    import re
+    import os
+    import glob
+    bucky_folder = os.path.join(basedir, "bucky")
+    pattern = re.compile("Read \d+ genes with a ")
+    out_files = glob.glob(os.path.join(bucky_folder, "*.out"))
+    table_string = "taxon1,taxon2,taxon3,taxon4,CF12.34,CF12.34_lo,CF12.34_hi,CF13.24,CF13.24_lo,CF13.24_hi,CF14.23,CF14.23_lo,CF14.23_hi,ngenes\n"
+    cf_95_pattern = re.compile("(95% CI for CF = \(\w+,\w+\))")
+    mean_num_loci_pattern = re.compile("(=\s+\d+\.\d+\s+\(number of loci\))")
+    translate_block_pattern = re.compile("translate\n(\s*\w+\s*\w+(,|;)\n*)+")
+    for out_file in out_files:
+        taxa = []
+        splits = {}
+        f = open(out_file, 'r')
+        lines = f.read()
+        f.close()
+        num_genes = re.search(pattern, lines).group(0)
+        num_genes = re.search("\d+",num_genes).group(0)
+        name_wo_extension = re.sub(".out|", "", os.path.basename(out_file))
+        concordance_file = os.path.join(os.path.dirname(out_file), f"{name_wo_extension}.concordance")
+        f = open(concordance_file, 'r')
+        lines = f.read()
+        f.close()
+        translate_block = re.search(translate_block_pattern, lines).group(0)
+        translate_block = re.sub("(,|;|translate\n)", "", translate_block)
+        taxon_list = translate_block.split('\n')
+        for taxon in taxon_list:
+            if(taxon == ""):
+                break;
+            t = taxon.split(" ")
+            taxa.append(t[2])
+        all_splits_block= lines.split("All Splits:\n")[1]
+        split = re.findall("{\w+,\w+\|\w+,\w+}", all_splits_block)
+        cf = re.findall(mean_num_loci_pattern, all_splits_block)
+        cf_95 = re.findall(cf_95_pattern, all_splits_block)
+        for i in range(0, len(split)):
+            split[i] = re.sub("({|,|})", "", split[i])
+            split_dict = {}
+            cf[i] = re.sub("(=|\(number of loci\)|\s+)", "", cf[i])
+            cf_95[i] = re.sub("(95% CI for CF = \(|\))", "", cf_95[i])
+            cf_95_list = cf_95[i].split(',')
+            print(cf_95_list)
+            split_dict['CF'] = float(cf[i])/float(num_genes)
+            split_dict['95_CI_LO'] = float(cf_95_list[0])/float(num_genes)
+            split_dict['95_CI_HI'] = float(cf_95_list[1])/float(num_genes)
+            splits[split[i]] = split_dict
+        parsed_line = (',').join(taxa)
+        parsed_line+=','
+        if "12|34" in splits:
+            parsed_line+= f"{splits['12|34']['CF']},{splits['12|34']['95_CI_LO']},{splits['12|34']['95_CI_HI']},"
+        else:
+            parsed_line+= "0,0,0,"
+        if "13|24" in splits:
+                    parsed_line+= f"{splits['13|24']['CF']},{splits['13|24']['95_CI_LO']},{splits['13|24']['95_CI_HI']},"
+
+        else:
+            parsed_line+= "0,0,0,"
+        if "14|23" in splits:
+                    parsed_line+= f"{splits['14|23']['CF']},{splits['14|23']['95_CI_LO']},{splits['14|23']['95_CI_HI']}"
+        else:
+            parsed_line+= "0,0,0"
+        parsed_line+= f",{num_genes}\n"
+        table_string+=parsed_line
+    table_name = os.path.basename(basedir)
+    table_name = os.path.join(bucky_folder, f"{table_name}.csv")
+    table_file = open(table_name, 'w')
+    table_file.write(table_string)
+    table_file.close()
 
 @parsl.python_app(executors=['single_thread'])
 def setup_qmc_data(basedir: str,
@@ -396,7 +507,7 @@ def setup_qmc_data(basedir: str,
     #change taxon names to ids	
     taxa_id = 1
     taxon_to_id = {}
-    dir_name = os.basedir
+    dir_name = os.path.basename(basedir)
     for k in sorted(taxa):
         taxon_to_id[k] = taxa_id
         taxa_id+=1
@@ -426,12 +537,12 @@ def quartet_maxcut(basedir: str,
                       stderr=parsl.AUTO_LOGNAME,
                       stdout=parsl.AUTO_LOGNAME):
     import os
-    dir_name = os.basedir
+    dir_name = os.path.basename(basedir)
     qmc_folder = os.path.join(basedir, "qmc")
     qmc_input = os.path.join(qmc_folder, f'{dir_name}.txt')
     qmc_output = os.path.join(qmc_folder, f'{dir_name}.txt')
     exec_qmc = config.quartet_maxcut
-    return f'{exec_qmc} qrtt={input_file} otre={qmc_output}'
+    return f'{exec_qmc} qrtt={qmc_input} otre={qmc_output}'
 
 @parsl.python_app(executors=['single_thread'])
 def setup_qmc_output(basedir: str,
