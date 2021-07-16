@@ -214,8 +214,6 @@ def snaq(basedir: str,
     os.environ["JULIA_SETUP"] = config.julia_setup
     os.environ["JULIA_PKGDIR"] = config.julia_pkgdir
     os.environ["JULIA_SYSIMAGE"] = config.julia_sysimage
-    #create snaq folder
-    Path(os.path.join(basedir, "snaq")).mkdir(exist_ok=True)
     #run the julia script with PhyloNetworks
     snaq_exec = config.snaq
     num_threads = config.snaq_threads
@@ -252,7 +250,6 @@ def mrbayes(basedir: str,
     from pathlib import Path
     gene_name = os.path.basename(input_file)
     mb_folder = os.path.join(basedir, "mrbayes")
-    Path(mb_folder).mkdir(exist_ok=True)
     gene_file = open(input_file, 'r')
     gene_string = gene_file.read()
     gene_file.close()
@@ -290,7 +287,6 @@ def mbsum(basedir: str,
     gene_name = os.path.basename(input_file)
     mbsum_folder = os.path.join(basedir, "mbsum")
     mrbayes_folder = os.path.join(basedir, "mrbayes")
-    Path(mbsum_folder).mkdir(exist_ok=True)
     #get the mrbayes parameters
     par = config.mrbayes_parameters.split(' ')
     par_dir = {}
@@ -328,7 +324,6 @@ def setup_bucky_data(basedir: str,
     from itertools import combinations
     mbsum_folder = os.path.join(basedir, "mbsum")
     bucky_folder = os.path.join(basedir, "bucky")
-    Path(bucky_folder).mkdir(exist_ok=True)
     #parse the sumarized taxa by mbsum
     files = glob.glob(os.path.join(mbsum_folder, '*.sum'))
     taxa = {}
@@ -526,8 +521,6 @@ def setup_qmc_data(basedir: str,
         old_quartets.extend(tmp1[1].split(','))
         quartets[i] = f"{taxon_to_id[old_quartets[0]]},{taxon_to_id[old_quartets[1]]}|{taxon_to_id[old_quartets[2]]},{taxon_to_id[old_quartets[3]]}"
     qmc_folder = os.path.join(basedir, "qmc")
-    Path(qmc_folder).mkdir(exist_ok=True)
-
     qmc_input = os.path.join(qmc_folder, f'{dir_name}.txt')
     qmc_input_file = open(qmc_input, 'w+')
     qmc_input_file.write((' ').join(quartets))
