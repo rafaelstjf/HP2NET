@@ -222,6 +222,13 @@ def snaq(basedir: str,
         return f'julia {config.julia_sysimage} --threads {num_threads} {snaq_exec} 0 {basedir}/{config.raxml_output} {basedir}/{config.astral_output} {basedir} {num_threads} {hmax}'
     elif config.tree_method == "ML-IQTREE":
         return f'julia {config.julia_sysimage} --threads {num_threads} {snaq_exec} 0 {basedir}/{config.iqtree_output} {basedir}/{config.astral_output} {basedir} {num_threads} {hmax}'
+    elif config.tree_method == "BI_MRBAYES":
+        dir_name = os.path.basename(basedir)
+        qmc_folder = os.path.join(basedir, "qmc")
+        qmc_output = os.path.join(qmc_folder, f'{dir_name}.tre')
+        bucky_folder = os.path.join(basedir, "bucky")
+        bucky_table = os.path.join(bucky_folder, f"{dir_name}.csv")
+        return f'julia {config.julia_sysimage} --threads {num_threads} {snaq_exec} 1 {bucky_table} {qmc_output} {basedir} {num_threads} {hmax}'
     else:
         pass
 
@@ -541,7 +548,7 @@ def quartet_maxcut(basedir: str,
     dir_name = os.path.basename(basedir)
     qmc_folder = os.path.join(basedir, "qmc")
     qmc_input = os.path.join(qmc_folder, f'{dir_name}.txt')
-    qmc_output = os.path.join(qmc_folder, f'{dir_name}.txt')
+    qmc_output = os.path.join(qmc_folder, f'{dir_name}.tre')
     exec_qmc = config.quartet_maxcut
     return f'{exec_qmc} qrtt={qmc_input} otre={qmc_output}'
 
