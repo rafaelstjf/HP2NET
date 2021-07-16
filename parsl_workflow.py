@@ -1,7 +1,6 @@
 import logging
 import parsl
 
-
 def main():
     import apps
     import glob

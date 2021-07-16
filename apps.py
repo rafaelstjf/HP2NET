@@ -91,7 +91,7 @@ def raxml(basedir: str, config: BioConfig,
           inputs=[],
           stderr=parsl.AUTO_LOGNAME,
           stdout=parsl.AUTO_LOGNAME):
-    """Runs the Raxml's executable (RPS) on a directory (input)
+    """Runs the Raxml's executable (RPS) on a gene alignment
 
     Parameters:
         TODO:
@@ -235,10 +235,10 @@ def mrbayes(basedir: str,
             inputs=[],
             stderr=parsl.AUTO_LOGNAME,
             stdout=parsl.AUTO_LOGNAME):
-    """Runs the Mr. Bayes' executable (RPS) on a directory (input)
+    """Runs the Mr. Bayes' executable (RPS) on a gene alignment file
 
     Parameters:
-        TODO:
+        input_file
     Returns:
         returns an parsl's AppFuture
 
@@ -256,6 +256,7 @@ def mrbayes(basedir: str,
     gene_file = open(input_file, 'r')
     gene_string = gene_file.read()
     gene_file.close()
+    #open the gene alignment file, read its contents and create a new file with mrbayes parameters
     gene_par = open(os.path.join(mb_folder, gene_name), 'w+')
     gene_par.write(gene_string)
     par = f"begin mrbayes;\nset nowarnings=yes;\nset autoclose=yes;\nlset nst=2;\n{config.mrbayes_parameters};\nmcmc;\nsumt;\nend;"
@@ -290,12 +291,14 @@ def mbsum(basedir: str,
     mbsum_folder = os.path.join(basedir, "mbsum")
     mrbayes_folder = os.path.join(basedir, "mrbayes")
     Path(mbsum_folder).mkdir(exist_ok=True)
+    #get the mrbayes parameters
     par = config.mrbayes_parameters.split(' ')
     par_dir = {}
     for p in par:
         P_split = p.split('=')
         par_dir[p[0]] = float(p[1])
     trim =(( (par_dir['ngen']/par_dir['samplefreq'])*par_dir['nruns']*par_dir['burninfrac'])/par_dir['nruns']) +1 
+    #select all the mrbayes .t files of the gene alignment file
     trees = glob.glob(os.path.join(mrbayes_folder, gene_name + '*.t'))
     return f"mbsum {(' ').join(trees)} -n {trim} -o {os.path.join(mbsum_folder, gene_name + '.sum')}"
 
@@ -323,9 +326,10 @@ def setup_bucky_data(basedir: str,
     from pathlib import Path
     import glob
     from itertools import combinations
-    #parse the sumarized taxa by mbsum
     mbsum_folder = os.path.join(basedir, "mbsum")
     bucky_folder = os.path.join(basedir, "bucky")
+    Path(bucky_folder).mkdir(exist_ok=True)
+    #parse the sumarized taxa by mbsum
     files = glob.glob(os.path.join(mbsum_folder, '*.sum'))
     taxa = {}
     selected_taxa = {}
@@ -346,6 +350,7 @@ def setup_bucky_data(basedir: str,
     for t in taxa:
         if(taxa[t] == len(files)):
             selected_taxa[t] = t
+    #create all the selected quartets combinations
     quartets = combinations(selected_taxa, 4)
     for quartet in quartets:
         prune_tree_output = "translate\n"
@@ -360,6 +365,7 @@ def setup_bucky_data(basedir: str,
             else:
                 filename +="--"
                 prune_tree_output+= ",\n"
+        #create the prune tree file necessary for bucky
         prune_file_path = os.path.join(bucky_folder,f"{filename}-prune.txt")
         output_file = os.path.join(bucky_folder, filename)
         prune_file = open(prune_file_path, 'w')
@@ -403,6 +409,7 @@ def setup_bucky_output(basedir: str,
     cf_95_pattern = re.compile("(95% CI for CF = \(\w+,\w+\))")
     mean_num_loci_pattern = re.compile("(=\s+\d+\.\d+\s+\(number of loci\))")
     translate_block_pattern = re.compile("translate\n(\s*\w+\s*\w+(,|;)\n*)+")
+    #open all the bucky's output files and parse them 
     for out_file in out_files:
         taxa = []
         splits = {}
@@ -456,6 +463,7 @@ def setup_bucky_output(basedir: str,
             parsed_line+= "0,0,0"
         parsed_line+= f",{num_genes}\n"
         table_string+=parsed_line
+    #create the table folder
     table_name = os.path.basename(basedir)
     table_name = os.path.join(bucky_folder, f"{table_name}.csv")
     table_file = open(table_name, 'w')
