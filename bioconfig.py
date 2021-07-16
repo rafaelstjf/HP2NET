@@ -18,7 +18,6 @@ this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
 #from apps import quartet_maxcut
-from apps import quartet_maxcut
 from parsl import bash_app, python_app
 import parsl
 
