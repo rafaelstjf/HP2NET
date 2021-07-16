@@ -209,7 +209,6 @@ class ConfigFactory:
                                    workload=workload,
                                    env_path=env_path,
                                    environ=environ,
-                                   script_dir=script_dir,
                                    julia_setup=julia_setup,
                                    julia_pkgdir=julia_pkgdir,
                                    julia_sysimage=julia_sysimage,
