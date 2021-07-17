@@ -9,7 +9,7 @@ def main():
     import bioconfig
     import os
     from workflow import workflow_config, wait_for_all
-    logging.info('Starting the Workflow Orchastration')
+    logging.info('Starting the Workflow Orchestration')
 
     cf = bioconfig.ConfigFactory()
 
@@ -24,22 +24,19 @@ def main():
     work_list = bio_config.workload
     result = list()
     for basedir in work_list:
-        convert_to_phylip = True
         #Create folders
         folder_list = []
-        if(bio_config.tree_method == 'ML-RAXML'):
+        if(bio_config.tree_method == 'ML_RAXML'):
             folder_list.append('raxml')
-        elif(bio_config.tree_method == 'ML-IQTREE'):
+        elif(bio_config.tree_method == 'ML_IQTREE'):
             folder_list.append('iqtree')
+        elif(bio_config.tree_method == "BI_MRBAYES"):
+            folder_list.extend(['mrbayes', 'bucky', 'mbsum', 'qmc'])
         if(bio_config.network_method == "MPL"):
             if(bio_config.network_method != "BI_MRBAYES"):
                 folder_list.append('astral')
             folder_list.append('snaq')
-        elif(bio_config.tree_method == "BI_MRBAYES"):
-            convert_to_phylip = False
-            folder_list.extend(['mrbayes', 'bucky', 'mbsum', 'qmc'])
-        if not convert_to_phylip:
-            result.append(apps.setup_phylip_data(basedir, bio_config))
+        result.append(apps.setup_phylip_data(basedir, bio_config))
         result.append(apps.create_folders(basedir, bio_config,folders=folder_list))
     wait_for_all(result)
     result = list()
@@ -55,12 +52,12 @@ def main():
             dir_ = os.path.join(basedir, "input")
             dir_ = os.path.join(dir_, "phylip")
             datalist = glob.glob(os.path.join(dir_, '*.phy'))
-        if(bio_config.tree_method == 'ML-RAXML'):            
+        if(bio_config.tree_method == 'ML_RAXML'):            
             for input_file in datalist:
                 ret = apps.raxml(basedir, bio_config, input_file)
                 ret_tree.append(ret)
             wait_for_all(ret_tree)
-        elif(bio_config.tree_method == 'ML-IQTREE'):
+        elif(bio_config.tree_method == 'ML_IQTREE'):
             for input_file in datalist:
                 ret  = apps.iqtree(basedir, bio_config, input_file)
                 ret_tree.append(ret)

@@ -41,10 +41,10 @@ from bioconfig import BioConfig
 def setup_phylip_data(basedir: str, config: BioConfig,
                       stderr=parsl.AUTO_LOGNAME,
                       stdout=parsl.AUTO_LOGNAME):
-    """Convert the gene alignments from the nexus format to the phylip format.
+    """Extract the sequence alignments tar file and convert the gene alignments from the nexus format to the phylip format.
 
     Parameters:
-        cbasedir: it is going to search for a tar file with nexus files. The script will create:
+            basedir: it is going to search for a tar file with nexus files. The script will create:
             seqdir=input/nexus
             seqdir=input/phylip
     Returns:
@@ -55,7 +55,6 @@ def setup_phylip_data(basedir: str, config: BioConfig,
 
 
     TODO: Provide provenance.
-
     NB:
         Stdout and Stderr are defaulted to parsl.AUTO_LOGNAME, so the log will be automatically 
         named according to task id and saved under task_logs in the run directory.
@@ -91,13 +90,14 @@ def raxml(basedir: str, config: BioConfig,
           inputs=[],
           stderr=parsl.AUTO_LOGNAME,
           stdout=parsl.AUTO_LOGNAME):
-    """Runs the Raxml's executable (RPS) on a gene alignment
 
+    """Runs the Raxml's executable on a sequence alignment in phylip format
     Parameters:
-        TODO:
-    Returns:
-        returns an parsl's AppFuture
+        basedir: current working directory
+        input_file: a sequence alignment in phylip format
 
+    Returns:
+        an parsl's AppFuture
     TODO: Provide provenance.
 
     NB:
@@ -134,10 +134,10 @@ def setup_tree_output(basedir: str,
                             outputs=[],
                             stderr=parsl.AUTO_LOGNAME,
                             stdout=parsl.AUTO_LOGNAME):
-    """Create the phylogenetic tree software (raxml, iqtree,...) output file and organize the temporary files to subsequent softwares 
+    """Create the phylogenetic tree software (raxml, iqtree,...) best tree file and organize the temporary files to subsequent softwares 
 
     Parameters:
-        TODO:
+        basedir: current working directory
     Returns:
         returns an parsl's AppFuture
 
@@ -152,9 +152,9 @@ def setup_tree_output(basedir: str,
     import sys
     sys.path.append(config.script_dir)
     import data_management as dm
-    if(config.tree_method == "ML-RAXML"):
+    if(config.tree_method == "ML_RAXML"):
         dm.setup_raxml_output(basedir, config.raxml_dir, config.raxml_output) 
-    elif(config.tree_method == "ML-IQTREE"):
+    elif(config.tree_method == "ML_IQTREE"):
         dm.setup_iqtree_output(basedir, config.iqtree_dir, config.iqtree_output)
     return
 
@@ -165,10 +165,10 @@ def astral(basedir: str,
            outputs=[],
            stderr=parsl.AUTO_LOGNAME,
            stdout=parsl.AUTO_LOGNAME):
-    """Runs the Astral's executable (RPS) on a directory (input)
+    """Runs the Astral's executable using the besttree file and create the species tree in the astral folder
 
     Parameters:
-        TODO:
+        basedir: current working directory
     Returns:
         returns an parsl's AppFuture
 
@@ -195,11 +195,15 @@ def astral(basedir: str,
             f.write(f'{i}\n')
 
     exec_astral = config.astral
-    raxml_output = f"{basedir}/{config.raxml_output}"
+    tree_output = ""
+    if(config.tree_method == "ML_RAXML"):
+        tree_output = f"{basedir}/{config.raxml_output}"
+    elif(config.tree_method == "ML_IQTREE"):
+        tree_output = f"{basedir}/{config.iqtree_output}"
     astral_output = f"{basedir}/{config.astral_output}"
 
     # Return to Parsl to be executed on the workflow
-    return f'{exec_astral} -i {raxml_output} -b {bs_file} -r {num_boot} -o {astral_output}'
+    return f'{exec_astral} -i {tree_output} -b {bs_file} -r {num_boot} -o {astral_output}'
 
 @parsl.bash_app(executors=['snaq'])
 def snaq(basedir: str,
@@ -208,6 +212,19 @@ def snaq(basedir: str,
          outputs=[],
          stderr=parsl.AUTO_LOGNAME,
          stdout=parsl.AUTO_LOGNAME):
+    """Runs the phylonetwork algorithm (snaq) and create the phylogenetic network in newick format
+
+    Parameters:
+        basedir: current working directory
+    Returns:
+        returns an parsl's AppFuture
+
+    TODO: Provide provenance.
+
+    NB:
+        Stdout and Stderr are defaulted to parsl.AUTO_LOGNAME, so the log will be automatically 
+        named according to task id and saved under task_logs in the run directory.
+    """
     #set environment variables
     import os
     from pathlib import Path
@@ -218,9 +235,9 @@ def snaq(basedir: str,
     snaq_exec = config.snaq
     num_threads = config.snaq_threads
     hmax = config.snaq_hmax
-    if config.tree_method == "ML-RAXML":
+    if config.tree_method == "ML_RAXML":
         return f'julia {config.julia_sysimage} --threads {num_threads} {snaq_exec} 0 {basedir}/{config.raxml_output} {basedir}/{config.astral_output} {basedir} {num_threads} {hmax}'
-    elif config.tree_method == "ML-IQTREE":
+    elif config.tree_method == "ML_IQTREE":
         return f'julia {config.julia_sysimage} --threads {num_threads} {snaq_exec} 0 {basedir}/{config.iqtree_output} {basedir}/{config.astral_output} {basedir} {num_threads} {hmax}'
     elif config.tree_method == "BI_MRBAYES":
         dir_name = os.path.basename(basedir)
@@ -230,7 +247,7 @@ def snaq(basedir: str,
         bucky_table = os.path.join(bucky_folder, f"{dir_name}.csv")
         return f'julia {config.julia_sysimage} --threads {num_threads} {snaq_exec} 1 {bucky_table} {qmc_output} {basedir} {num_threads} {hmax}'
     else:
-        pass
+        return
 
 # Mr.Bayes bash app
 @parsl.bash_app(executors=['single_thread'])
@@ -240,7 +257,7 @@ def mrbayes(basedir: str,
             inputs=[],
             stderr=parsl.AUTO_LOGNAME,
             stdout=parsl.AUTO_LOGNAME):
-    """Runs the Mr. Bayes' executable (RPS) on a gene alignment file
+    """Runs the Mr. Bayes' executable on a sequence alignment file
 
     Parameters:
         input_file
@@ -275,10 +292,11 @@ def mbsum(basedir: str,
             inputs=[],
             stderr=parsl.AUTO_LOGNAME,
             stdout=parsl.AUTO_LOGNAME):
-    """Runs the mbsum' executable (RPS) on a directory (input)
+    """Runs the mbsum's executable on the Mr.Bayes output for a certain sequence alignment
 
     Parameters:
-        TODO:
+        basedir: current working directory
+        input_file: a sequence alignment in nexus format
     Returns:
         returns an parsl's AppFuture
 
@@ -311,10 +329,10 @@ def setup_bucky_data(basedir: str,
             inputs=[],
             stderr=parsl.AUTO_LOGNAME,
             stdout=parsl.AUTO_LOGNAME):
-    """Runs the mbsum' executable (RPS) on a directory (input)
+    """Prepares bucky's input, creating a prune tree for each selected quartet
 
     Parameters:
-        TODO:
+        basedir: current working directory
     Returns:
         returns an parsl's AppFuture
 
@@ -383,6 +401,20 @@ def bucky(basedir: str,
                     outputs=[],
                     stderr = parsl.AUTO_LOGNAME,
                     stdout=parsl.AUTO_LOGNAME):
+    """Runs bucky's executable using as input a certain prune tree file
+
+    Parameters:
+        basedir: current working directory
+        prune_file:  prune tree file
+    Returns:
+        returns an parsl's AppFuture
+
+    TODO: Provide provenance.
+
+    NB:
+        Stdout and Stderr are defaulted to parsl.AUTO_LOGNAME, so the log will be automatically 
+        named according to task id and saved under task_logs in the run directory.
+    """
     import os
     import glob
     import re
@@ -401,6 +433,19 @@ def setup_bucky_output(basedir: str,
                     outputs=[],
                     stderr = parsl.AUTO_LOGNAME,
                     stdout=parsl.AUTO_LOGNAME):
+    """Create the Concordance Factor table using bucky's outputs
+
+    Parameters:
+        basedir: current working directory
+    Returns:
+        returns an parsl's AppFuture
+
+    TODO: Provide provenance.
+
+    NB:
+        Stdout and Stderr are defaulted to parsl.AUTO_LOGNAME, so the log will be automatically 
+        named according to task id and saved under task_logs in the run directory.
+    """
     import re
     import os
     import glob
@@ -471,6 +516,7 @@ def setup_bucky_output(basedir: str,
     table_file = open(table_name, 'w')
     table_file.write(table_string)
     table_file.close()
+    return
 
 @parsl.python_app(executors=['single_thread'])
 def setup_qmc_data(basedir: str,
@@ -479,6 +525,18 @@ def setup_qmc_data(basedir: str,
                     outputs=[],
                     stderr = parsl.AUTO_LOGNAME,
                     stdout=parsl.AUTO_LOGNAME):
+    """Prepares the Quartet MaxCut input
+
+    Parameters:
+        basedir: current working directory    Returns:
+        returns an parsl's AppFuture
+
+    TODO: Provide provenance.
+
+    NB:
+        Stdout and Stderr are defaulted to parsl.AUTO_LOGNAME, so the log will be automatically 
+        named according to task id and saved under task_logs in the run directory.
+    """
     import pandas as pd
     import json
     import os
@@ -544,6 +602,18 @@ def quartet_maxcut(basedir: str,
                       outputs=[],
                       stderr=parsl.AUTO_LOGNAME,
                       stdout=parsl.AUTO_LOGNAME):
+    """Runs quartet maxcut's executable
+    Parameters:
+        basedir: current working directory
+    Returns:
+        returns an parsl's AppFuture
+
+    TODO: Provide provenance.
+
+    NB:
+        Stdout and Stderr are defaulted to parsl.AUTO_LOGNAME, so the log will be automatically 
+        named according to task id and saved under task_logs in the run directory.
+    """
     import os
     dir_name = os.path.basename(basedir)
     qmc_folder = os.path.join(basedir, "qmc")
@@ -559,6 +629,19 @@ def setup_qmc_output(basedir: str,
                       outputs=[],
                       stderr=parsl.AUTO_LOGNAME,
                       stdout=parsl.AUTO_LOGNAME):
+    """Prepare quartet maxcut's output file
+
+    Parameters:
+        basedir: current working directory
+    Returns:
+        returns an parsl's AppFuture
+
+    TODO: Provide provenance.
+
+    NB:
+        Stdout and Stderr are defaulted to parsl.AUTO_LOGNAME, so the log will be automatically 
+        named according to task id and saved under task_logs in the run directory.
+    """
     import os
     import pandas as pd
     import re
@@ -589,7 +672,7 @@ def setup_phylonet_data(basedir: str,
     """Get the raxml/iqtree's output and create a NEXUS file as output for the phylonet in the basedir
 
     Parameters:
-        TODO:
+        basedir: current working directory
     Returns:
         returns an parsl's AppFuture
 
@@ -600,7 +683,7 @@ def setup_phylonet_data(basedir: str,
         named according to task id and saved under task_logs in the run directory.
     """
     import os
-    if(config.tree_method == "ML-RAXML"):        
+    if(config.tree_method == "ML_RAXML"):        
         gene_trees = os.path.join(basedir, config.raxml_dir)
         gene_trees = os.path.join(gene_trees, config.raxml_output)
     else:
@@ -620,10 +703,10 @@ def phylonet(basedir: str,
          outputs=[],
          stderr=parsl.AUTO_LOGNAME,
          stdout=parsl.AUTO_LOGNAME):
-    """Run PhyloNet using as input the phylonet_input variable
+    """Runs PhyloNet using as input the phylonet_input variable
 
     Parameters:
-        TODO:
+        basedir: current working directory
     Returns:
         returns an parsl's AppFuture
 
@@ -639,6 +722,31 @@ def phylonet(basedir: str,
 
     # Return to Parsl to be executed on the workflow
     return f'{exec_phylonet} {input_file}'
+
+@parsl.bash_app(executors=['raxml'])
+def iqtree(basedir: str, config: BioConfig,
+          input_file: str,
+          inputs=[],
+          stderr=parsl.AUTO_LOGNAME,
+          stdout=parsl.AUTO_LOGNAME):
+    """Runs IQ-TREE's executable using as input a sequence alignment in phylip format
+
+    Parameters:
+        basedir: current working directory
+    Returns:
+        returns an parsl's AppFuture
+
+    TODO: Provide provenance.
+
+    NB:
+        Stdout and Stderr are defaulted to parsl.AUTO_LOGNAME, so the log will be automatically 
+        named according to task id and saved under task_logs in the run directory.
+    """
+    import os
+    iqtree_dir = os.path.join(basedir, config.iqtree_dir)
+    flags = f"-T {config.iqtree_threads} {config.iqtree_exec_param} -s {input_file}"
+    # Return to Parsl to be executed on the workflow
+    return f"cd {iqtree_dir}; {config.iqtree} {flags}"
 
 @parsl.python_app(executors=['single_thread'])
 def clear_temporary_files(basedir: str,
@@ -669,14 +777,3 @@ def create_folders(basedir: str,
     dm.create_folders(basedir, folders)
     return
     
-@parsl.bash_app(executors=['raxml'])
-def iqtree(basedir: str, config: BioConfig,
-          input_file: str,
-          inputs=[],
-          stderr=parsl.AUTO_LOGNAME,
-          stdout=parsl.AUTO_LOGNAME):
-    import os
-    iqtree_dir = os.path.join(basedir, config.iqtree_dir)
-    flags = f"-T {config.iqtree_threads} {config.iqtree_exec_param} -s {input_file}"
-    # Return to Parsl to be executed on the workflow
-    return f"cd {iqtree_dir}; {config.iqtree} {flags}"
