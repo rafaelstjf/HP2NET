@@ -94,8 +94,6 @@ def main():
             ret_clear = apps.clear_temporary_files(basedir, bio_config, inputs=ret_phylonet)
             result.append(ret_clear)
     wait_for_all(result)
-
-
     return
 
 

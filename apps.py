@@ -619,7 +619,7 @@ def quartet_maxcut(basedir: str,
     qmc_folder = os.path.join(basedir, "qmc")
     qmc_input = os.path.join(qmc_folder, f'{dir_name}.txt')
     qmc_output = os.path.join(qmc_folder, f'{dir_name}.tre')
-    exec_qmc = config.quartet_maxcut
+    exec_qmc = os.path.join(config.quartet_maxcut_exec_dir, config.quartet_maxcut)
     return f'{exec_qmc} qrtt={qmc_input} otre={qmc_output}'
 
 @parsl.python_app(executors=['single_thread'])

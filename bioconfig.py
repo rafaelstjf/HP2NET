@@ -101,6 +101,7 @@ class BioConfig:
     bucky:              str
     mbsum:              str
     quartet_maxcut:     str
+    quartet_maxcut_exec_dir: str
     phylonet:           str
     phylonet_exec_dir:  str
     phylonet_jar:       str
@@ -201,6 +202,7 @@ class ConfigFactory:
         mbsum = cf['BUCKY']['MbSumExecutable']
         #QUARTET MAXCUT
         quartet_maxcut = cf['QUARTETMAXCUT']['QmcExecutable']
+        quartet_maxcut_exec_dir = cf['QUARTETMAXCUT']['QmcExecDir']
         self.bioconfig = BioConfig(script_dir=script_dir,
                                    workload_path=workload_path,
                                    network_method=network_method,
@@ -249,6 +251,7 @@ class ConfigFactory:
                                    bucky=bucky,
                                    mbsum=mbsum,
                                    quartet_maxcut=quartet_maxcut,
+                                   quartet_maxcut_exec_dir=quartet_maxcut_exec_dir,
                                    phylonet=phylonet,
                                    phylonet_exec_dir=phylonet_exec_dir,
                                    phylonet_jar=phylonet_jar,
