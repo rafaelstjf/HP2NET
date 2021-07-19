@@ -308,16 +308,18 @@ def mbsum(basedir: str,
     """
     import os
     from pathlib import Path
+    import re
     import glob
     gene_name = os.path.basename(input_file)
     mbsum_folder = os.path.join(basedir, "mbsum")
     mrbayes_folder = os.path.join(basedir, "mrbayes")
     #get the mrbayes parameters
-    par = config.mrbayes_parameters.split(' ')
+    par_0 = re.sub("mcmcp ", "", config.mrbayes_parameters)
+    par = par_0.split(' ')
     par_dir = {}
     for p in par:
-        P_split = p.split('=')
-        par_dir[p[0]] = float(p[1])
+        p_split = p.split('=')
+        par_dir[p_split[0]] = float(p_split[1])
     trim =(( (par_dir['ngen']/par_dir['samplefreq'])*par_dir['nruns']*par_dir['burninfrac'])/par_dir['nruns']) +1 
     #select all the mrbayes .t files of the gene alignment file
     trees = glob.glob(os.path.join(mrbayes_folder, gene_name + '*.t'))
