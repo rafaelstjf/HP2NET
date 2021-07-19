@@ -78,8 +78,8 @@ def main():
             wait_for_all(ret_bucky)
             ret_post_bucky = apps.setup_bucky_output(basedir, bio_config, inputs = ret_bucky)
             ret_pre_qmc = apps.setup_qmc_data(basedir, bio_config, inputs = [ret_post_bucky])
-            ret_qmc = apps.setup_qmc(basedir, bio_config, inputs = [ret_pre_qmc])
-            ret_tree.append(apps.setup_qmc(basedir, bio_config, inputs = [ret_qmc]))
+            ret_qmc = apps.quartet_maxcut(basedir, bio_config, inputs = [ret_pre_qmc])
+            ret_tree.append(apps.setup_qmc_output(basedir, bio_config, inputs = [ret_qmc]))
             wait_for_all(ret_tree)
         else:
             ret_sad = apps.setup_tree_output(basedir, bio_config, inputs=ret_tree)
