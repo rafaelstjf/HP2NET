@@ -423,7 +423,7 @@ def bucky(basedir: str,
     mbsum_folder = os.path.join(basedir, "mbsum")
     bucky_folder = os.path.join(basedir, "bucky")
     files = glob.glob(os.path.join(mbsum_folder, '*.sum'))
-    output_file = os.path.basedir(prune_file)
+    output_file = os.path.basename(prune_file)
     output_file = re.sub("-prune.txt", "", output_file)
     output_file = os.path.join(bucky_folder, output_file)
     return f"{config.bucky} -a 1 -n 1000000 -cf 0 -o {output_file} -p {prune_file} {(' ').join(files)}"
