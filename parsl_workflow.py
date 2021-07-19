@@ -69,6 +69,7 @@ def main():
                 ret_mbsum.append(apps.mbsum(basedir, bio_config, input_file = input_file, inputs = [ret_mb]))
             wait_for_all(ret_mbsum)
             ret_pre_bucky = apps.setup_bucky_data(basedir, bio_config, inputs = ret_mbsum)
+            wait_for_all([ret_pre_bucky])
             bucky_folder = os.path.join(basedir, "bucky")	
             prune_trees = glob.glob(os.path.join(bucky_folder, "*.txt"))
             ret_bucky = list()
