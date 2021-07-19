@@ -33,7 +33,7 @@ def main():
         elif(bio_config.tree_method == "BI_MRBAYES"):
             folder_list.extend(['mrbayes', 'bucky', 'mbsum', 'qmc'])
         if(bio_config.network_method == "MPL"):
-            if(bio_config.network_method != "BI_MRBAYES"):
+            if(bio_config.tree_method != "BI_MRBAYES"):
                 folder_list.append('astral')
             folder_list.append('snaq')
         result.append(apps.setup_phylip_data(basedir, bio_config))
@@ -69,13 +69,13 @@ def main():
                 ret_mbsum.append(apps.mbsum(basedir, bio_config, input_file = input_file, inputs = [ret_mb]))
             wait_for_all(ret_mbsum)
             ret_pre_bucky = apps.setup_bucky_data(basedir, bio_config, inputs = ret_mbsum)
-	    bucky_folder = os.path.join(basedir, "bucky")	
-	    prune_trees = glob.glob(os.path.join(buck_folder, "*.txt"))
+            bucky_folder = os.path.join(basedir, "bucky")	
+            prune_trees = glob.glob(os.path.join(bucky_folder, "*.txt"))
             ret_bucky = list()
             for prune_tree in prune_trees:
                 ret_bucky.append(apps.bucky(basedir, bio_config, prune_file = prune_tree, inputs = [ret_pre_bucky]))
             wait_for_all(ret_bucky)
-            ret_post_bucky = apps.setup_bucky_output(basedir, bio_config, inputs = [ret_bucky])
+            ret_post_bucky = apps.setup_bucky_output(basedir, bio_config, inputs = ret_bucky)
             ret_pre_qmc = apps.setup_qmc_data(basedir, bio_config, inputs = [ret_post_bucky])
             ret_qmc = apps.setup_qmc(basedir, bio_config, inputs = [ret_pre_qmc])
             ret_tree.append(apps.setup_qmc(basedir, bio_config, inputs = [ret_qmc]))
@@ -86,14 +86,14 @@ def main():
             logging.info("Using the Maximum Pseudo Likelihood Method")
             ret_ast = apps.astral(basedir, bio_config, inputs=[ret_sad])
             ret_snq = apps.snaq(basedir, bio_config, inputs=[ret_ast])
-            ret_clear = apps.clear_temporary_files(basedir, bio_config, inputs=ret_snq)
-            result.append(ret_clear)
+            #ret_clear = apps.clear_temporary_files(basedir, bio_config, inputs=ret_snq)
+            result.append(ret_snq)
         elif(bio_config.network_method == "MP"):
             logging.info("Using the Maximum Parsimony Method")
             ret_spd = apps.setup_phylonet_data(basedir, bio_config, inputs=ret_tree)
             ret_phylonet = apps.phylonet(basedir, bio_config, inputs=[ret_spd])
-            ret_clear = apps.clear_temporary_files(basedir, bio_config, inputs=ret_phylonet)
-            result.append(ret_clear)
+            #ret_clear = apps.clear_temporary_files(basedir, bio_config, inputs=ret_phylonet)
+            result.append(ret_phylonet)
     wait_for_all(result)
     return
 
