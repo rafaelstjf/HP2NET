@@ -649,8 +649,7 @@ def setup_qmc_output(basedir: str,
     import re
     dir_name = os.path.basename(basedir)
     qmc_folder = os.path.join(basedir, "qmc")
-    qmc_input = os.path.join(qmc_folder, f'{dir_name}.txt')
-    qmc_output = os.path.join(qmc_folder, f'{dir_name}.txt')
+    qmc_output = os.path.join(qmc_folder, f'{dir_name}.tre')
     taxon_json = os.path.join(qmc_folder, f'{dir_name}.json')
     taxon_to_id = pd.read_json (taxon_json)
     tree_file = open(qmc_output, 'r+')
