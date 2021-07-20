@@ -647,7 +647,7 @@ def setup_qmc_output(basedir: str,
     import os
     import pandas as pd
     import re
-    dir_name = os.basedir
+    dir_name = os.path.basename(basedir)
     qmc_folder = os.path.join(basedir, "qmc")
     qmc_input = os.path.join(qmc_folder, f'{dir_name}.txt')
     qmc_output = os.path.join(qmc_folder, f'{dir_name}.txt')
