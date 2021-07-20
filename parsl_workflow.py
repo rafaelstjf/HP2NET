@@ -52,6 +52,7 @@ def main():
             dir_ = os.path.join(basedir, "input")
             dir_ = os.path.join(dir_, "phylip")
             datalist = glob.glob(os.path.join(dir_, '*.phy'))
+        #create trees
         if(bio_config.tree_method == 'ML_RAXML'):            
             for input_file in datalist:
                 ret = apps.raxml(basedir, bio_config, input_file)
@@ -62,7 +63,7 @@ def main():
                 ret  = apps.iqtree(basedir, bio_config, input_file)
                 ret_tree.append(ret)
             wait_for_all(ret_tree)
-        elif(bio_config.tree_method == "BI_MRBAYES"):
+        if(bio_config.tree_method == "BI_MRBAYES"):
             ret_mbsum = list()
             for input_file in datalist:
                 ret_mb = apps.mrbayes(basedir, bio_config, input_file = input_file, inputs = [])
@@ -85,11 +86,14 @@ def main():
             ret_sad = apps.setup_tree_output(basedir, bio_config, inputs=ret_tree)
         if(bio_config.network_method == "MPL"):
             logging.info("Using the Maximum Pseudo Likelihood Method")
-            ret_ast = apps.astral(basedir, bio_config, inputs=[ret_sad])
-            ret_snq = apps.snaq(basedir, bio_config, inputs=[ret_ast])
-            #ret_clear = apps.clear_temporary_files(basedir, bio_config, inputs=ret_snq)
+            if(bio_config.tree_method == "BI_MRBAYES"):
+                ret_snq = apps.snaq(basedir, bio_config, inputs=ret_tree)
+            else:
+                ret_ast = apps.astral(basedir, bio_config, inputs=[ret_sad])
+                ret_snq = apps.snaq(basedir, bio_config, inputs=[ret_ast])
+                #ret_clear = apps.clear_temporary_files(basedir, bio_config, inputs=ret_snq)
             result.append(ret_snq)
-        elif(bio_config.network_method == "MP"):
+        elif(bio_config.network_method == "MP" and bio_config.tree_method == "BI_MRBAYES"):
             logging.info("Using the Maximum Parsimony Method")
             ret_spd = apps.setup_phylonet_data(basedir, bio_config, inputs=ret_tree)
             ret_phylonet = apps.phylonet(basedir, bio_config, inputs=[ret_spd])

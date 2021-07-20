@@ -63,7 +63,7 @@ def setup_phylip_data(basedir: str, config: BioConfig,
     import glob
     from appsexception import PhylipMissingData
 
-    input_dir = os.path.join(basedir,'input')
+    input_dir = os.path.join(basedir, 'input')
     input_nexus_dir = os.path.join(input_dir, 'nexus')
     # So, some work must be done. Build the Nexus directory
     if not os.path.isdir(input_nexus_dir):
@@ -79,7 +79,7 @@ def setup_phylip_data(basedir: str, config: BioConfig,
     import sys
     sys.path.append(config.script_dir)
     import data_management as dm
-    dm.nexus_to_phylip(input_nexus_dir) 
+    dm.nexus_to_phylip(input_nexus_dir)
     return
 
 
@@ -90,7 +90,6 @@ def raxml(basedir: str, config: BioConfig,
           inputs=[],
           stderr=parsl.AUTO_LOGNAME,
           stdout=parsl.AUTO_LOGNAME):
-
     """Runs the Raxml's executable on a sequence alignment in phylip format
     Parameters:
         basedir: current working directory
@@ -129,11 +128,11 @@ def raxml(basedir: str, config: BioConfig,
 
 @parsl.python_app(executors=['single_thread'])
 def setup_tree_output(basedir: str,
-                            config: BioConfig,
-                            inputs=[],
-                            outputs=[],
-                            stderr=parsl.AUTO_LOGNAME,
-                            stdout=parsl.AUTO_LOGNAME):
+                      config: BioConfig,
+                      inputs=[],
+                      outputs=[],
+                      stderr=parsl.AUTO_LOGNAME,
+                      stdout=parsl.AUTO_LOGNAME):
     """Create the phylogenetic tree software (raxml, iqtree,...) best tree file and organize the temporary files to subsequent softwares 
 
     Parameters:
@@ -153,10 +152,12 @@ def setup_tree_output(basedir: str,
     sys.path.append(config.script_dir)
     import data_management as dm
     if(config.tree_method == "ML_RAXML"):
-        dm.setup_raxml_output(basedir, config.raxml_dir, config.raxml_output) 
+        dm.setup_raxml_output(basedir, config.raxml_dir, config.raxml_output)
     elif(config.tree_method == "ML_IQTREE"):
-        dm.setup_iqtree_output(basedir, config.iqtree_dir, config.iqtree_output)
+        dm.setup_iqtree_output(
+            basedir, config.iqtree_dir, config.iqtree_output)
     return
+
 
 @parsl.bash_app(executors=['single_thread'])
 def astral(basedir: str,
@@ -205,6 +206,7 @@ def astral(basedir: str,
     # Return to Parsl to be executed on the workflow
     return f'{exec_astral} -i {tree_output} -b {bs_file} -r {num_boot} -o {astral_output}'
 
+
 @parsl.bash_app(executors=['snaq'])
 def snaq(basedir: str,
          config: BioConfig,
@@ -225,13 +227,13 @@ def snaq(basedir: str,
         Stdout and Stderr are defaulted to parsl.AUTO_LOGNAME, so the log will be automatically 
         named according to task id and saved under task_logs in the run directory.
     """
-    #set environment variables
+    # set environment variables
     import os
     from pathlib import Path
     os.environ["JULIA_SETUP"] = config.julia_setup
     os.environ["JULIA_PKGDIR"] = config.julia_pkgdir
     os.environ["JULIA_SYSIMAGE"] = config.julia_sysimage
-    #run the julia script with PhyloNetworks
+    # run the julia script with PhyloNetworks
     snaq_exec = config.snaq
     num_threads = config.snaq_threads
     hmax = config.snaq_hmax
@@ -250,6 +252,8 @@ def snaq(basedir: str,
         return
 
 # Mr.Bayes bash app
+
+
 @parsl.bash_app(executors=['single_thread'])
 def mrbayes(basedir: str,
             config: BioConfig,
@@ -277,7 +281,7 @@ def mrbayes(basedir: str,
     gene_file = open(input_file, 'r')
     gene_string = gene_file.read()
     gene_file.close()
-    #open the gene alignment file, read its contents and create a new file with mrbayes parameters
+    # open the gene alignment file, read its contents and create a new file with mrbayes parameters
     gene_par = open(os.path.join(mb_folder, gene_name), 'w+')
     gene_par.write(gene_string)
     par = f"begin mrbayes;\nset nowarnings=yes;\nset autoclose=yes;\nlset nst=2;\n{config.mrbayes_parameters};\nmcmc;\nsumt;\nend;"
@@ -285,13 +289,15 @@ def mrbayes(basedir: str,
     return f"{config.mrbayes} {os.path.join(mb_folder, gene_name)} 2>&1 | tee {os.path.join(mb_folder, gene_name + '.log')}"
 
 # mbsum bash app
+
+
 @parsl.bash_app(executors=['single_thread'])
 def mbsum(basedir: str,
-            config: BioConfig,
-            input_file: str,
-            inputs=[],
-            stderr=parsl.AUTO_LOGNAME,
-            stdout=parsl.AUTO_LOGNAME):
+          config: BioConfig,
+          input_file: str,
+          inputs=[],
+          stderr=parsl.AUTO_LOGNAME,
+          stdout=parsl.AUTO_LOGNAME):
     """Runs the mbsum's executable on the Mr.Bayes output for a certain sequence alignment
 
     Parameters:
@@ -313,24 +319,26 @@ def mbsum(basedir: str,
     gene_name = os.path.basename(input_file)
     mbsum_folder = os.path.join(basedir, "mbsum")
     mrbayes_folder = os.path.join(basedir, "mrbayes")
-    #get the mrbayes parameters
+    # get the mrbayes parameters
     par_0 = re.sub("mcmcp ", "", config.mrbayes_parameters)
     par = par_0.split(' ')
     par_dir = {}
     for p in par:
         p_split = p.split('=')
         par_dir[p_split[0]] = float(p_split[1])
-    trim =(( (par_dir['ngen']/par_dir['samplefreq'])*par_dir['nruns']*par_dir['burninfrac'])/par_dir['nruns']) +1 
-    #select all the mrbayes .t files of the gene alignment file
+    trim = (((par_dir['ngen']/par_dir['samplefreq']) *
+            par_dir['nruns']*par_dir['burninfrac'])/par_dir['nruns']) + 1
+    # select all the mrbayes .t files of the gene alignment file
     trees = glob.glob(os.path.join(mrbayes_folder, gene_name + '*.t'))
     return f"mbsum {(' ').join(trees)} -n {trim} -o {os.path.join(mbsum_folder, gene_name + '.sum')}"
 
+
 @parsl.python_app(executors=['single_thread'])
 def setup_bucky_data(basedir: str,
-            config: BioConfig,
-            inputs=[],
-            stderr=parsl.AUTO_LOGNAME,
-            stdout=parsl.AUTO_LOGNAME):
+                     config: BioConfig,
+                     inputs=[],
+                     stderr=parsl.AUTO_LOGNAME,
+                     stdout=parsl.AUTO_LOGNAME):
     """Prepares bucky's input, creating a prune tree for each selected quartet
 
     Parameters:
@@ -351,7 +359,7 @@ def setup_bucky_data(basedir: str,
     from itertools import combinations
     mbsum_folder = os.path.join(basedir, "mbsum")
     bucky_folder = os.path.join(basedir, "bucky")
-    #parse the sumarized taxa by mbsum
+    # parse the sumarized taxa by mbsum
     files = glob.glob(os.path.join(mbsum_folder, '*.sum'))
     taxa = {}
     selected_taxa = {}
@@ -363,16 +371,16 @@ def setup_bucky_data(basedir: str,
         gene_sum.close()
         translate_block = pattern.search(text)
         for match in re.findall(taxa_pattern, translate_block[0]):
-            key = re.sub(re.compile('(,|;)'), '',match[0])
+            key = re.sub(re.compile('(,|;)'), '', match[0])
             if key in taxa:
-                taxa[key]+=1
+                taxa[key] += 1
             else:
-                taxa[key]=1
-    #select the taxa shared across all genes
+                taxa[key] = 1
+    # select the taxa shared across all genes
     for t in taxa:
         if(taxa[t] == len(files)):
             selected_taxa[t] = t
-    #create all the selected quartets combinations
+    # create all the selected quartets combinations
     quartets = combinations(selected_taxa, 4)
     for quartet in quartets:
         prune_tree_output = "translate\n"
@@ -380,29 +388,30 @@ def setup_bucky_data(basedir: str,
         filename = ""
         for member in tuple(quartet):
             filename += member
-            count+=1
-            prune_tree_output+= f" {count} {member}"
+            count += 1
+            prune_tree_output += f" {count} {member}"
             if count == 4:
-                prune_tree_output+= ";\n"
+                prune_tree_output += ";\n"
             else:
-                filename +="--"
-                prune_tree_output+= ",\n"
-        #create the prune tree file necessary for bucky
-        prune_file_path = os.path.join(bucky_folder,f"{filename}-prune.txt")
+                filename += "--"
+                prune_tree_output += ",\n"
+        # create the prune tree file necessary for bucky
+        prune_file_path = os.path.join(bucky_folder, f"{filename}-prune.txt")
         output_file = os.path.join(bucky_folder, filename)
         prune_file = open(prune_file_path, 'w')
         prune_file.write(prune_tree_output)
         prune_file.close()
     return
 
+
 @parsl.bash_app(executors=['single_thread'])
 def bucky(basedir: str,
-                    config: BioConfig,
-                    prune_file: str,
-                    inputs=[],
-                    outputs=[],
-                    stderr = parsl.AUTO_LOGNAME,
-                    stdout=parsl.AUTO_LOGNAME):
+          config: BioConfig,
+          prune_file: str,
+          inputs=[],
+          outputs=[],
+          stderr=parsl.AUTO_LOGNAME,
+          stdout=parsl.AUTO_LOGNAME):
     """Runs bucky's executable using as input a certain prune tree file
 
     Parameters:
@@ -428,13 +437,14 @@ def bucky(basedir: str,
     output_file = os.path.join(bucky_folder, output_file)
     return f"{config.bucky} -a 1 -n 1000000 -cf 0 -o {output_file} -p {prune_file} {(' ').join(files)}"
 
+
 @parsl.python_app(executors=['single_thread'])
 def setup_bucky_output(basedir: str,
-                    config: BioConfig,
-                    inputs=[],
-                    outputs=[],
-                    stderr = parsl.AUTO_LOGNAME,
-                    stdout=parsl.AUTO_LOGNAME):
+                       config: BioConfig,
+                       inputs=[],
+                       outputs=[],
+                       stderr=parsl.AUTO_LOGNAME,
+                       stdout=parsl.AUTO_LOGNAME):
     """Create the Concordance Factor table using bucky's outputs
 
     Parameters:
@@ -458,7 +468,7 @@ def setup_bucky_output(basedir: str,
     cf_95_pattern = re.compile("(95% CI for CF = \(\w+,\w+\))")
     mean_num_loci_pattern = re.compile("(=\s+\d+\.\d+\s+\(number of loci\))")
     translate_block_pattern = re.compile("translate\n(\s*\w+\s*\w+(,|;)\n*)+")
-    #open all the bucky's output files and parse them 
+    # open all the bucky's output files and parse them
     for out_file in out_files:
         taxa = []
         splits = {}
@@ -466,9 +476,10 @@ def setup_bucky_output(basedir: str,
         lines = f.read()
         f.close()
         num_genes = re.search(pattern, lines).group(0)
-        num_genes = re.search("\d+",num_genes).group(0)
+        num_genes = re.search("\d+", num_genes).group(0)
         name_wo_extension = re.sub(".out|", "", os.path.basename(out_file))
-        concordance_file = os.path.join(os.path.dirname(out_file), f"{name_wo_extension}.concordance")
+        concordance_file = os.path.join(os.path.dirname(
+            out_file), f"{name_wo_extension}.concordance")
         f = open(concordance_file, 'r')
         lines = f.read()
         f.close()
@@ -477,10 +488,10 @@ def setup_bucky_output(basedir: str,
         taxon_list = translate_block.split('\n')
         for taxon in taxon_list:
             if(taxon == ""):
-                break;
+                break
             t = taxon.split(" ")
             taxa.append(t[2])
-        all_splits_block= lines.split("All Splits:\n")[1]
+        all_splits_block = lines.split("All Splits:\n")[1]
         split = re.findall("{\w+,\w+\|\w+,\w+}", all_splits_block)
         cf = re.findall(mean_num_loci_pattern, all_splits_block)
         cf_95 = re.findall(cf_95_pattern, all_splits_block)
@@ -496,23 +507,23 @@ def setup_bucky_output(basedir: str,
             split_dict['95_CI_HI'] = float(cf_95_list[1])/float(num_genes)
             splits[split[i]] = split_dict
         parsed_line = (',').join(taxa)
-        parsed_line+=','
+        parsed_line += ','
         if "12|34" in splits:
-            parsed_line+= f"{splits['12|34']['CF']},{splits['12|34']['95_CI_LO']},{splits['12|34']['95_CI_HI']},"
+            parsed_line += f"{splits['12|34']['CF']},{splits['12|34']['95_CI_LO']},{splits['12|34']['95_CI_HI']},"
         else:
-            parsed_line+= "0,0,0,"
+            parsed_line += "0,0,0,"
         if "13|24" in splits:
-                    parsed_line+= f"{splits['13|24']['CF']},{splits['13|24']['95_CI_LO']},{splits['13|24']['95_CI_HI']},"
+            parsed_line += f"{splits['13|24']['CF']},{splits['13|24']['95_CI_LO']},{splits['13|24']['95_CI_HI']},"
 
         else:
-            parsed_line+= "0,0,0,"
+            parsed_line += "0,0,0,"
         if "14|23" in splits:
-                    parsed_line+= f"{splits['14|23']['CF']},{splits['14|23']['95_CI_LO']},{splits['14|23']['95_CI_HI']}"
+            parsed_line += f"{splits['14|23']['CF']},{splits['14|23']['95_CI_LO']},{splits['14|23']['95_CI_HI']}"
         else:
-            parsed_line+= "0,0,0"
-        parsed_line+= f",{num_genes}\n"
-        table_string+=parsed_line
-    #create the table folder
+            parsed_line += "0,0,0"
+        parsed_line += f",{num_genes}\n"
+        table_string += parsed_line
+    # create the table folder
     table_name = os.path.basename(basedir)
     table_name = os.path.join(bucky_folder, f"{table_name}.csv")
     table_file = open(table_name, 'w')
@@ -520,13 +531,14 @@ def setup_bucky_output(basedir: str,
     table_file.close()
     return
 
+
 @parsl.python_app(executors=['single_thread'])
 def setup_qmc_data(basedir: str,
-                    config: BioConfig,
-                    inputs=[],
-                    outputs=[],
-                    stderr = parsl.AUTO_LOGNAME,
-                    stdout=parsl.AUTO_LOGNAME):
+                   config: BioConfig,
+                   inputs=[],
+                   outputs=[],
+                   stderr=parsl.AUTO_LOGNAME,
+                   stdout=parsl.AUTO_LOGNAME):
     """Prepares the Quartet MaxCut input
 
     Parameters:
@@ -547,20 +559,21 @@ def setup_qmc_data(basedir: str,
     bucky_folder = os.path.join(basedir, "bucky")
     table_filename = os.path.join(bucky_folder, f'{dir_name}.csv')
     try:
-        table = pd.read_csv(table_filename, delimiter=',', dtype = 'string')   
+        table = pd.read_csv(table_filename, delimiter=',', dtype='string')
     except Exception:
         print("Failed to open CF table")
-    table = pd.read_csv(table_filename, delimiter=',', dtype = 'string')
-    #parse the table
+    table = pd.read_csv(table_filename, delimiter=',', dtype='string')
+    # parse the table
     quartets = []
     taxa = {}
     for index, row in table.iterrows():
-        for i in range (1, 5):
+        for i in range(1, 5):
             if row['taxon' + str(i)] in taxa:
-                taxa[row['taxon' + str(i)]]+=1
+                taxa[row['taxon' + str(i)]] += 1
             else:
-                taxa[row['taxon' + str(i)]]=1
-        cf = {'CF12.34': float(row['CF12.34']), 'CF13.24': float(row['CF13.24']), 'CF14.23': float(row['CF14.23'])}
+                taxa[row['taxon' + str(i)]] = 1
+        cf = {'CF12.34': float(row['CF12.34']), 'CF13.24': float(
+            row['CF13.24']), 'CF14.23': float(row['CF14.23'])}
         cf_sorted = [k for k in sorted(cf, key=cf.get, reverse=True)]
         cf_1 = row[cf_sorted[0]]
         cf_2 = row[cf_sorted[1]]
@@ -569,18 +582,18 @@ def setup_qmc_data(basedir: str,
         split_2 = f"{row['taxon' + cf_sorted[1][2]]},{row['taxon' + cf_sorted[1][3]]}|{row['taxon' + cf_sorted[1][5]]},{row['taxon' + cf_sorted[1][6]]}"
         split_3 = f"{row['taxon' + cf_sorted[2][2]]},{row['taxon' + cf_sorted[2][3]]}|{row['taxon' + cf_sorted[2][5]]},{row['taxon' + cf_sorted[2][6]]}"
         if(cf_1 == cf_2 == cf_3):
-            quartets.extend([split_1, split_2, split_3])	
+            quartets.extend([split_1, split_2, split_3])
         elif (cf_1 == cf_2):
             quartets.extend([split_1, split_2])
         else:
             quartets.append(split_1)
-    #change taxon names to ids	
+    # change taxon names to ids
     taxa_id = 1
     taxon_to_id = {}
     dir_name = os.path.basename(basedir)
     for k in sorted(taxa):
         taxon_to_id[k] = taxa_id
-        taxa_id+=1
+        taxa_id += 1
     for i in range(0, len(quartets)):
         tmp1 = quartets[i].split('|')
         old_quartets = []
@@ -592,18 +605,19 @@ def setup_qmc_data(basedir: str,
     qmc_input_file = open(qmc_input, 'w+')
     qmc_input_file.write((' ').join(quartets))
     qmc_input_file.close()
-    #dump ids
-    with open(os.path.join(qmc_folder, f'{dir_name}.json'), "w+") as outfile: 
+    # dump ids
+    with open(os.path.join(qmc_folder, f'{dir_name}.json'), "w+") as outfile:
         json.dump(taxon_to_id, outfile)
     return
 
+
 @parsl.bash_app(executors=['single_thread'])
 def quartet_maxcut(basedir: str,
-                      config: BioConfig,
-                      inputs=[],
-                      outputs=[],
-                      stderr=parsl.AUTO_LOGNAME,
-                      stdout=parsl.AUTO_LOGNAME):
+                   config: BioConfig,
+                   inputs=[],
+                   outputs=[],
+                   stderr=parsl.AUTO_LOGNAME,
+                   stdout=parsl.AUTO_LOGNAME):
     """Runs quartet maxcut's executable
     Parameters:
         basedir: current working directory
@@ -621,16 +635,18 @@ def quartet_maxcut(basedir: str,
     qmc_folder = os.path.join(basedir, "qmc")
     qmc_input = os.path.join(qmc_folder, f'{dir_name}.txt')
     qmc_output = os.path.join(qmc_folder, f'{dir_name}.tre')
-    exec_qmc = os.path.join(config.quartet_maxcut_exec_dir, config.quartet_maxcut)
+    exec_qmc = os.path.join(
+        config.quartet_maxcut_exec_dir, config.quartet_maxcut)
     return f'{exec_qmc} qrtt={qmc_input} otre={qmc_output}'
+
 
 @parsl.python_app(executors=['single_thread'])
 def setup_qmc_output(basedir: str,
-                      config: BioConfig,
-                      inputs=[],
-                      outputs=[],
-                      stderr=parsl.AUTO_LOGNAME,
-                      stdout=parsl.AUTO_LOGNAME):
+                     config: BioConfig,
+                     inputs=[],
+                     outputs=[],
+                     stderr=parsl.AUTO_LOGNAME,
+                     stdout=parsl.AUTO_LOGNAME):
     """Prepare quartet maxcut's output file
 
     Parameters:
@@ -651,7 +667,7 @@ def setup_qmc_output(basedir: str,
     qmc_folder = os.path.join(basedir, "qmc")
     qmc_output = os.path.join(qmc_folder, f'{dir_name}.tre')
     taxon_json = os.path.join(qmc_folder, f'{dir_name}.json')
-    taxon_to_id = pd.read_json (taxon_json)
+    taxon_to_id = pd.read_json(taxon_json)
     tree_file = open(qmc_output, 'r+')
     lines = tree_file.read()
     tree_file.close()
@@ -660,16 +676,16 @@ def setup_qmc_output(basedir: str,
         lines = re.sub(str(taxon_to_id[k]), k, lines)
     tree_file.write(lines)
     tree_file.close()
-    return 
+    return
 
 
 @parsl.python_app(executors=['single_thread'])
 def setup_phylonet_data(basedir: str,
-                      config: BioConfig,
-                      inputs=[],
-                      outputs=[],
-                      stderr=parsl.AUTO_LOGNAME,
-                      stdout=parsl.AUTO_LOGNAME):
+                        config: BioConfig,
+                        inputs=[],
+                        outputs=[],
+                        stderr=parsl.AUTO_LOGNAME,
+                        stdout=parsl.AUTO_LOGNAME):
     """Get the raxml/iqtree's output and create a NEXUS file as output for the phylonet in the basedir
 
     Parameters:
@@ -684,26 +700,28 @@ def setup_phylonet_data(basedir: str,
         named according to task id and saved under task_logs in the run directory.
     """
     import os
-    if(config.tree_method == "ML_RAXML"):        
+    if(config.tree_method == "ML_RAXML"):
         gene_trees = os.path.join(basedir, config.raxml_dir)
         gene_trees = os.path.join(gene_trees, config.raxml_output)
-    else:
+    elif(config.tree_method == "ML_IQTREE"):
         gene_trees = os.path.join(basedir, config.iqtree_dir)
         gene_trees = os.path.join(gene_trees, config.iqtree_output)
-    out_dir = os.path.join(basedir,config.phylonet_input)
+    out_dir = os.path.join(basedir, config.phylonet_input)
     import sys
     sys.path.append(config.script_dir)
     import data_management as dm
-    dm.create_phylonet_input(gene_trees, out_dir, config.phylonet_hmax, config.phylonet_threads, config.phylonet_threads)
+    dm.create_phylonet_input(gene_trees, out_dir, config.phylonet_hmax,
+                             config.phylonet_threads, config.phylonet_threads)
     return
-    
+
+
 @parsl.bash_app(executors=['snaq'])
 def phylonet(basedir: str,
-         config: BioConfig,
-         inputs=[],
-         outputs=[],
-         stderr=parsl.AUTO_LOGNAME,
-         stdout=parsl.AUTO_LOGNAME):
+             config: BioConfig,
+             inputs=[],
+             outputs=[],
+             stderr=parsl.AUTO_LOGNAME,
+             stdout=parsl.AUTO_LOGNAME):
     """Runs PhyloNet using as input the phylonet_input variable
 
     Parameters:
@@ -719,17 +737,18 @@ def phylonet(basedir: str,
     """
     exec_phylonet = config.phylonet
     import os
-    input_file = os.path.join(basedir,config.phylonet_input)
+    input_file = os.path.join(basedir, config.phylonet_input)
 
     # Return to Parsl to be executed on the workflow
     return f'{exec_phylonet} {input_file}'
 
+
 @parsl.bash_app(executors=['raxml'])
 def iqtree(basedir: str, config: BioConfig,
-          input_file: str,
-          inputs=[],
-          stderr=parsl.AUTO_LOGNAME,
-          stdout=parsl.AUTO_LOGNAME):
+           input_file: str,
+           inputs=[],
+           stderr=parsl.AUTO_LOGNAME,
+           stdout=parsl.AUTO_LOGNAME):
     """Runs IQ-TREE's executable using as input a sequence alignment in phylip format
 
     Parameters:
@@ -749,13 +768,14 @@ def iqtree(basedir: str, config: BioConfig,
     # Return to Parsl to be executed on the workflow
     return f"cd {iqtree_dir}; {config.iqtree} {flags}"
 
+
 @parsl.python_app(executors=['single_thread'])
 def clear_temporary_files(basedir: str,
-                      config: BioConfig,
-                      inputs=[],
-                      outputs=[],
-                      stderr=parsl.AUTO_LOGNAME,
-                      stdout=parsl.AUTO_LOGNAME):
+                          config: BioConfig,
+                          inputs=[],
+                          outputs=[],
+                          stderr=parsl.AUTO_LOGNAME,
+                          stdout=parsl.AUTO_LOGNAME):
     import sys
     import os
     sys.path.append(config.script_dir)
@@ -763,18 +783,18 @@ def clear_temporary_files(basedir: str,
     dm.clear_execution(config.network_method, config.tree_method, basedir)
     return
 
+
 @parsl.python_app(executors=['single_thread'])
 def create_folders(basedir: str,
-                      config: BioConfig,
-                      folders=[],
-                      inputs=[],
-                      outputs=[],
-                      stderr=parsl.AUTO_LOGNAME,
-                      stdout=parsl.AUTO_LOGNAME):
+                   config: BioConfig,
+                   folders=[],
+                   inputs=[],
+                   outputs=[],
+                   stderr=parsl.AUTO_LOGNAME,
+                   stdout=parsl.AUTO_LOGNAME):
     import os
     import sys
     sys.path.append(config.script_dir)
     import data_management as dm
     dm.create_folders(basedir, folders)
     return
-    
