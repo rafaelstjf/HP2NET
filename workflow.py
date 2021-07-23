@@ -36,28 +36,22 @@ from parsl.addresses import address_by_interface
 from parsl.executors import HighThroughputExecutor
 from parsl.providers import LocalProvider, SlurmProvider
 
+from bioconfig import BioConfig
+
 # PARSL CONFIGURATION
 
 
-def workflow_config(name: str,
-                    partition=['sequana_cpu', 'sequana_cpu',
-                               'sequana_cpu', 'sequana_cpu_long'],
-                    nodes=[1, 4, 1, 1],
-                    cores_per_node=[48, 48, 48, 48],
-                    walltime=['03:00:00', '04:00:00', '06:00:00', '06:00:00'],
-                    interval=30,
-                    monitor=False) -> parsl.config.Config:
+def workflow_config(config: BioConfig) -> parsl.config.Config:
     """ Configures and loads Parsl's Workflow configuration
 
     Parameters:
 
-    name: str            - Name of the executor
-    partition: list      - Partition name
-    nodes: list          - Number of Nodes in the Parsl's block
-    cores_per_node: list - Number of cores in each node (default: 48 cores)
-    interval: int        - Resource monitoring interval (default: 30 seconds)
-    monitor: bool        - Enable the monitoring infrastructure (default: False)
+    config: BioConfig    - Workflow configuration
     """
+
+    name = config.workflow_name
+    interval = 30
+    monitor = config.workflow_monitor
 
     parsl.set_stream_logger(level=logging.ERROR)
     parsl.set_file_logger(f'{name}_script.output', level=logging.DEBUG)
@@ -65,9 +59,7 @@ def workflow_config(name: str,
     logging.info('Configuring Parsl Workflow Infrastructure')
 
     # Read where datasets are...
-    env_str = str()
-    with open('parsl.env', 'r') as reader:
-        env_str = reader.read()
+    env_str = config.environ
 
     logging.info(f'Task Environment {env_str}')
 
@@ -87,22 +79,23 @@ def workflow_config(name: str,
                 # Optional: The network interface on node 0 which compute nodes can communicate with.
                 # address=address_by_interface('enp4s0f0' or 'ib0')
                 address=address_by_interface('ib0'),
-                max_workers=int(cores_per_node[0]),
+                max_workers=int(config.workflow_core_f),
                 cores_per_worker=1,
                 worker_debug=False,
                 interchange_port_range=(50000, 55000),
                 provider=SlurmProvider(
-                    partition=partition[0],
+                    partition=config.workflow_part_f,
                     # scheduler_options='',
                     parallelism=1,
                     init_blocks=1,
                     max_blocks=1,
-                    nodes_per_block=nodes[0],
+                    nodes_per_block=config.workflow_node_f,
                     cmd_timeout=120,
                     worker_init=env_str,
                     move_files=False,
-                    walltime=walltime[0],
-                    launcher=SrunLauncher(overrides=f'-c {cores_per_node[0]}'),
+                    walltime=config.workflow_wall_t_f,
+                    launcher=SrunLauncher(
+                        overrides=f'-c {config.workflow_core_f}'),
                 ),
             ),
             HighThroughputExecutor(
@@ -110,22 +103,23 @@ def workflow_config(name: str,
                 # Optional: The network interface on node 0 which compute nodes can communicate with.
                 # address=address_by_interface('enp4s0f0' or 'ib0')
                 address=address_by_interface('ib0'),
-                max_workers=int(cores_per_node[1]),
+                max_workers=int(config.workflow_core_t),
                 cores_per_worker=6,
                 worker_debug=False,
                 interchange_port_range=(55000, 60000),
                 provider=SlurmProvider(
-                    partition=partition[1],
+                    partition=config.workflow_part_t,
                     # scheduler_options='',
                     parallelism=1,
                     init_blocks=1,
                     max_blocks=1,
-                    nodes_per_block=nodes[1],
+                    nodes_per_block=config.workflow_node_t,
                     cmd_timeout=120,
                     worker_init=env_str,
                     move_files=False,
-                    walltime=walltime[1],
-                    launcher=SrunLauncher(overrides=f'-c {cores_per_node[1]}'),
+                    walltime=config.workflow_wall_t_t,
+                    launcher=SrunLauncher(
+                        overrides=f'-c {config.workflow_core_t}'),
                 ),
             ),
             HighThroughputExecutor(
@@ -133,47 +127,26 @@ def workflow_config(name: str,
                 # Optional: The network interface on node 0 which compute nodes can communicate with.
                 # address=address_by_interface('enp4s0f0' or 'ib0')
                 address=address_by_interface('ib0'),
-                max_workers=int(cores_per_node[2]),
+                max_workers=int(config.workflow_core_l),
                 cores_per_worker=6,
                 worker_debug=False,
                 interchange_port_range=(40000, 45000),
                 provider=SlurmProvider(
-                    partition=partition[2],
+                    partition=config.workflow_part_l,
                     # scheduler_options='',
                     parallelism=1,
                     init_blocks=1,
                     max_blocks=1,
-                    nodes_per_block=nodes[2],
+                    nodes_per_block=config.workflow_node_l,
                     cmd_timeout=120,
                     worker_init=env_str,
                     move_files=False,
-                    walltime=walltime[2],
-                    launcher=SrunLauncher(overrides=f'-c {cores_per_node[2]}'),
+                    walltime=config.workflow_wall_t_l,
+                    launcher=SrunLauncher(
+                        overrides=f'-c {config.workflow_core_l}'),
                 ),
             ),
-            HighThroughputExecutor(
-                label=f'snaq_l',
-                # Optional: The network interface on node 0 which compute nodes can communicate with.
-                # address=address_by_interface('enp4s0f0' or 'ib0')
-                address=address_by_interface('ib0'),
-                max_workers=int(cores_per_node[3]),
-                cores_per_worker=6,
-                worker_debug=False,
-                interchange_port_range=(45000, 50000),
-                provider=SlurmProvider(
-                    partition=partition[3],
-                    scheduler_options='',
-                    parallelism=1,
-                    init_blocks=1,
-                    max_blocks=1,
-                    nodes_per_block=nodes[3],
-                    cmd_timeout=120,
-                    worker_init=env_str,
-                    move_files=False,
-                    walltime=walltime[3],
-                    launcher=SrunLauncher(overrides=f'-c {cores_per_node[3]}'),
-                ),
-            ),
+
         ],
         monitoring=mon_hub,
         strategy=None,

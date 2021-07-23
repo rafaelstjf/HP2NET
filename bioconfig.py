@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" Appsexception.py. Parsl Application Functions (@) 2021
+""" BioConfig.py. Biocomp Application Configuration (@) 2021
 
 This module encapsulates all Parsl configuration stuff in order to provide a
 cluster configuration based in number of nodes and cores per node.
@@ -17,6 +17,7 @@ You should have received a copy of the GNU General Public License along with
 this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
+#from apps import quartet_maxcut
 from parsl import bash_app, python_app
 import parsl
 
@@ -25,7 +26,7 @@ __author__ = "Diego Carvalho"
 __copyright__ = "Copyright 2021, The Biocomp Informal Collaboration (CEFET/RJ and LNCC)"
 __credits__ = ["Diego Carvalho", "Carla Osthoff", "Kary Ocaña", "Rafael Terra"]
 __license__ = "GPL"
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 __maintainer__ = "Diego Carvalho"
 __email__ = "d.carvalho@ieee.org"
 __status__ = "Research"
@@ -34,44 +35,227 @@ __status__ = "Research"
 #
 # Parsl Bash and Python Applications Configuration
 #
+from dataclasses import dataclass, field
 
-class BioConfig(object):
-    def __init__(self,
-                 script_dir='/scratch/cenapadrjsd/diego.carvalho/biocomp/scripts/') -> None:
-        self.script_dir = script_dir
+# TODO: self.mbblock = Prepare to read from a setup file.
+
+
+class borg(object):
+    def __init__(self, my_class):
+        self.my_class = my_class
+        self.my_instance = None
+
+    def __call__(self, *args, **kwargs):
+        if self.my_instance == None:
+            self.my_instance = self.my_class(*args, **kwargs)
+        return self.my_instance
+
+
+@dataclass
+class BioConfig:
+    env_path:           str
+    environ:            str
+    script_dir:         str
+    julia_setup:        str
+    julia_pkgdir:       str
+    julia_sysimage:     str
+    workload_path:      str
+    network_method:     str
+    tree_method:        str
+    workload:           field(default_factory=list)
+    workflow_name:      str
+    workflow_monitor:   bool
+    workflow_part_f:    str
+    workflow_part_t:    str
+    workflow_part_l:    str
+    workflow_wall_t_f:  str
+    workflow_wall_t_t:  str
+    workflow_wall_t_l:  str
+    workflow_core_f:    int
+    workflow_core_t:    int
+    workflow_core_l:    int
+    workflow_node_f:    int
+    workflow_node_t:    int
+    workflow_node_l:    int
+    raxml:              str
+    raxml_param:        str
+    raxml_dir:          str
+    raxml_output:       str
+    raxml_threads:      int
+    raxml_exec_param:   str
+    iqtree:             str
+    iqtree_dir:         str
+    iqtree_exec_param:  str
+    iqtree_threads:     int
+    iqtree_output:      str
+    astral_exec_dir:    str
+    astral_jar:         str
+    astral:             str
+    astral_dir:         str
+    astral_output:      str
+    snaq:               str
+    snaq_threads:       int
+    snaq_hmax:          int
+    mrbayes:            str
+    mrbayes_parameters: str
+    bucky:              str
+    mbsum:              str
+    quartet_maxcut:     str
+    quartet_maxcut_exec_dir: str
+    phylonet:           str
+    phylonet_exec_dir:  str
+    phylonet_jar:       str
+    phylonet_threads:   str
+    phylonet_hmax:      str
+    phylonet_input:     str
+
+
+@borg
+class ConfigFactory:
+
+    def __init__(self, config_file: str = "config/default.ini") -> None:
+        import configparser
+
+        self.config_file = config_file
+        self.config = configparser.ConfigParser()
+        self.config.read(self.config_file)
+
         return
 
-    @property
-    def raxml(self) -> str:
-        return 'raxmlHPC-PTHREADS'
+    def build_config(self) -> BioConfig:
 
-    @property
-    def raxml_phase1(self) -> str:
-        return f"perl {self.script_dir}/raxml-phase1.pl --seqdir=input/nexus --raxmldir=raxml --astraldir=astral"
+        cf = self.config
+        script_dir = cf['GENERAL']['ScriptDir']
 
-    def raxml_dir(self, datadir) -> str:
-        return f'{datadir}/raxml'
-
-    def raxml_output(self, datadir) -> str:
-        return f'{datadir}/raxml/besttrees.tre'
-
-    @property
-    def astral_phase1(self) -> str:
-        return f"{self.script_dir}/setup_astral_data.sh"
-
-    @property
-    def astral(self) -> str:
-        astral_exec_dir = '/scratch/cenapadrjsd/diego.carvalho/biocomp/Astral/'
-        astral_jar = 'astral.5.7.4.jar'
-
-        return f"cd {astral_exec_dir}; java -jar {astral_jar}"
-
-    def astral_dir(self, datadir) -> str:
-        return f'{datadir}/astral'
-
-    def astral_output(self, datadir) -> str:
-        return f'{datadir}/astral/astral.tre'
-
-    @property
-    def snaq(self) -> str:
-        return f"/scratch/cenapadrjsd/diego.carvalho/biocomp/scripts/snaq.sh"
+        env_path = cf['GENERAL']['Environ']
+        environ = ""  # empty
+        with open(f"{env_path}", "r") as f:
+            environ = f.read()
+        #Choose which method is going to be used to construct the network (Phylonet, SNAQ and others)
+        network_method = cf['GENERAL']['NetworkMethod']
+        tree_method = cf['GENERAL']['TreeMethod']
+        # Read where datasets are...
+        workload_path = cf['GENERAL']['Workload']
+        workload = list()
+        with open(f"{workload_path}", "r") as f:
+            for line in f:
+                if line[0] == '#':
+                    continue
+                workload.append(line.strip())
+        
+        #SYSTEM
+        julia_setup = cf['SYSTEM']['JuliaSetup']
+        julia_pkgdir = cf['SYSTEM']['JuliaPkgDir']
+        julia_sysimage = cf['SYSTEM']['JuliaSysImage']
+        perl_int = cf['SYSTEM']['PerlInter']
+        #WORKFLOW
+        workflow_name = cf["WORKFLOW"]["Name"]
+        workflow_monitor = cf["WORKFLOW"].getboolean("Monitor")
+        workflow_part_f = cf["WORKFLOW"]["PartitionFast"]
+        workflow_part_t = cf["WORKFLOW"]["PartitionThread"]
+        workflow_part_l = cf["WORKFLOW"]["PartitionLong"]
+        workflow_wall_t_f = cf["WORKFLOW"]["WalltimeFast"]
+        workflow_wall_t_t = cf["WORKFLOW"]["WalltimeThread"]
+        workflow_wall_t_l = cf["WORKFLOW"]["WalltineLong"]
+        workflow_core_f = int(cf["WORKFLOW"]["PartCoreFast"])
+        workflow_core_t = int(cf["WORKFLOW"]["PartCoreThread"])
+        workflow_core_l = int(cf["WORKFLOW"]["PartCoreLong"])
+        workflow_node_f = int(cf["WORKFLOW"]["PartNodeFast"])
+        workflow_node_t = int(cf["WORKFLOW"]["PartNodeThread"])
+        workflow_node_l = int(cf["WORKFLOW"]["PartNodeLong"])
+        #RAXML
+        raxml = cf['RAXML']['RaxmlExecutable']
+        raxml_param = cf['RAXML']['RaxmlParameters']
+        raxml_dir = cf['RAXML']['RaxmlDir']
+        raxml_output = f"{raxml_dir}/{cf['RAXML']['RaxmlOutput']}"
+        raxml_threads = cf['RAXML']['RaxmlThreads']
+        raxml_exec_param = cf['RAXML']['RaxmlExecParam']
+        #IQTREE
+        iqtree = cf['IQTREE']['IqTreeExecutable']
+        iqtree_dir = cf['IQTREE']['IqTreeDir']
+        iqtree_exec_param = cf['IQTREE']['IqTreeParameters']
+        iqtree_threads = cf['IQTREE']['IqTreeThreads']
+        iqtree_output = cf['IQTREE']['iqTreeOutput']
+        #ASTRAL
+        astral_exec_dir = cf['ASTRAL']['AstralExecDir']
+        astral_jar = cf['ASTRAL']['AstralJar']
+        astral = f"cd {astral_exec_dir}; java -jar {astral_jar}"
+        astral_dir = cf['ASTRAL']['AstralDir']
+        astral_output = f"{astral_dir}/{cf['ASTRAL']['AstralOutput']}"
+        #SNAQ
+        snaq = f"{cf['SNAQ']['SnaqScript']}"
+        snaq_threads = int(cf['SNAQ']['SnaqThreads'])
+        snaq_hmax = int(cf['SNAQ']['SnaqHMax'])
+        #PHYLONET
+        phylonet_exec_dir = cf['PHYLONET']['PhyloNetExecDir']
+        phylonet_jar = cf['PHYLONET']['PhyloNetJar']
+        phylonet = f"cd {phylonet_exec_dir}; java -jar {phylonet_jar}"
+        phylonet_threads = cf['PHYLONET']['PhyloNetThreads']
+        phylonet_hmax = cf['PHYLONET']['PhyloNetHMax']
+        phylonet_input = cf['PHYLONET']['PhyloNetInput']
+        #MRBAYES
+        mrbayes = cf['MRBAYES']['MBExecutable']
+        mrbayes_parameters = cf['MRBAYES']['MBParameters']
+        #BUCKY
+        bucky = cf['BUCKY']['BuckyExecutable']
+        #MBSUM
+        mbsum = cf['BUCKY']['MbSumExecutable']
+        #QUARTET MAXCUT
+        quartet_maxcut = cf['QUARTETMAXCUT']['QmcExecutable']
+        quartet_maxcut_exec_dir = cf['QUARTETMAXCUT']['QmcExecDir']
+        self.bioconfig = BioConfig(script_dir=script_dir,
+                                   workload_path=workload_path,
+                                   network_method=network_method,
+                                   tree_method=tree_method,
+                                   workload=workload,
+                                   env_path=env_path,
+                                   environ=environ,
+                                   julia_setup=julia_setup,
+                                   julia_pkgdir=julia_pkgdir,
+                                   julia_sysimage=julia_sysimage,
+                                   workflow_monitor=workflow_monitor,
+                                   workflow_name=workflow_name,
+                                   workflow_part_f=workflow_part_f,
+                                   workflow_part_t=workflow_part_t,
+                                   workflow_part_l=workflow_part_l,
+                                   workflow_wall_t_f=workflow_wall_t_f,
+                                   workflow_wall_t_t=workflow_wall_t_t,
+                                   workflow_wall_t_l=workflow_wall_t_l,
+                                   workflow_core_f=workflow_core_f,
+                                   workflow_core_t=workflow_core_t,
+                                   workflow_core_l=workflow_core_l,
+                                   workflow_node_f=workflow_node_f,
+                                   workflow_node_t=workflow_node_t,
+                                   workflow_node_l=workflow_node_l,
+                                   raxml=raxml,
+                                   raxml_param=raxml_param,
+                                   raxml_dir=raxml_dir,
+                                   raxml_output=raxml_output,
+                                   raxml_threads=raxml_threads,
+                                   raxml_exec_param=raxml_exec_param,
+                                   iqtree=iqtree,
+                                   iqtree_dir=iqtree_dir,
+                                   iqtree_exec_param=iqtree_exec_param,
+                                   iqtree_threads=iqtree_threads,
+                                   iqtree_output=iqtree_output,
+                                   astral_exec_dir=astral_exec_dir,
+                                   astral_jar=astral_jar,
+                                   astral=astral,
+                                   astral_dir=astral_dir,
+                                   astral_output=astral_output,
+                                   snaq=snaq,
+                                   snaq_threads=snaq_threads,
+                                   snaq_hmax=snaq_hmax,
+                                   mrbayes=mrbayes,
+                                   mrbayes_parameters=mrbayes_parameters,
+                                   bucky=bucky,
+                                   mbsum=mbsum,
+                                   quartet_maxcut=quartet_maxcut,
+                                   quartet_maxcut_exec_dir=quartet_maxcut_exec_dir,
+                                   phylonet=phylonet,
+                                   phylonet_exec_dir=phylonet_exec_dir,
+                                   phylonet_jar=phylonet_jar,
+                                   phylonet_threads=phylonet_threads,
+                                   phylonet_hmax=phylonet_hmax,
+                                   phylonet_input=phylonet_input)
+        return self.bioconfig

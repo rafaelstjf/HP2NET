@@ -132,3 +132,5 @@ dmypy.json
 data_results
 workdir
 Astral/*
+runinfo/*
+.vscode/*
