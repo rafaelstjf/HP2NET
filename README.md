@@ -1,4 +1,4 @@
-# Workflow for construction of phylogenetic networks on High Processing Computing environment
+# Workflow for construction of phylogenetic networks on High Performance Computing environment
 
 ## Introduction
 
