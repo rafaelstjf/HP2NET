@@ -594,16 +594,18 @@ def setup_qmc_data(basedir: str,
     # change taxon names to ids
     taxa_id = 1
     taxon_to_id = {}
+    id_to_taxon = {}
     dir_name = os.path.basename(basedir)
     for k in sorted(taxa):
-        taxon_to_id[k] = taxa_id
+        taxon_to_id[str(taxa_id)] = k
+        id_to_taxon[k] = taxa_id
         taxa_id += 1
     for i in range(0, len(quartets)):
         tmp1 = quartets[i].split('|')
         old_quartets = []
         old_quartets.extend(tmp1[0].split(','))
         old_quartets.extend(tmp1[1].split(','))
-        quartets[i] = f"{taxon_to_id[old_quartets[0]]},{taxon_to_id[old_quartets[1]]}|{taxon_to_id[old_quartets[2]]},{taxon_to_id[old_quartets[3]]}"
+        quartets[i] = f"{id_to_taxon[old_quartets[0]]},{id_to_taxon[old_quartets[1]]}|{id_to_taxon[old_quartets[2]]},{id_to_taxon[old_quartets[3]]}"
     qmc_folder = os.path.join(basedir, "qmc")
     qmc_input = os.path.join(qmc_folder, f'{dir_name}.txt')
     qmc_input_file = open(qmc_input, 'w+')
