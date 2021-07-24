@@ -663,11 +663,13 @@ def setup_qmc_output(basedir: str,
     import os
     import pandas as pd
     import re
+    import json
     dir_name = os.path.basename(basedir)
     qmc_folder = os.path.join(basedir, "qmc")
     qmc_output = os.path.join(qmc_folder, f'{dir_name}.tre')
     taxon_json = os.path.join(qmc_folder, f'{dir_name}.json')
-    taxon_to_id = pd.read_json(taxon_json)
+    with open(taxon_json, 'r') as f:
+        taxon_to_id = json.load(f)
     tree_file = open(qmc_output, 'r+')
     lines = tree_file.read()
     tree_file.close()
