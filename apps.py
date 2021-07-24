@@ -687,6 +687,7 @@ def setup_qmc_output(basedir: str,
             else:
                 parsed += str(taxon_to_id[id_search])
                 id_search = ""
+                parsed+= character
         else:
             id_search+= character
     tree_file.write(parsed)
