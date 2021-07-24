@@ -231,8 +231,8 @@ def snaq(basedir: str,
     import os
     from pathlib import Path
     os.environ["JULIA_SETUP"] = config.julia_setup
-    os.environ["JULIA_PKGDIR"] = config.julia_pkgdir
-    os.environ["JULIA_SYSIMAGE"] = config.julia_sysimage
+    #os.environ["JULIA_PKGDIR"] = config.julia_pkgdir
+    #os.environ["JULIA_SYSIMAGE"] = config.julia_sysimage
     # run the julia script with PhyloNetworks
     snaq_exec = config.snaq
     num_threads = config.snaq_threads
@@ -679,7 +679,8 @@ def setup_qmc_output(basedir: str,
     tree_file.close()
     tree_file = open(qmc_output, 'w')
     for k in sorted(taxon_to_id, key=taxon_to_id.get, reverse=True):
-        lines = re.sub(str(taxon_to_id[k]), k, lines)
+        pattern = f'(\(|,){str(taxon_to_id[k])}'
+        lines = re.sub(pattern, k, lines)
     tree_file.write(lines)
     tree_file.close()
     return
