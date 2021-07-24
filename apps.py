@@ -678,10 +678,18 @@ def setup_qmc_output(basedir: str,
     lines = tree_file.read()
     tree_file.close()
     tree_file = open(qmc_output, 'w')
-    for k in sorted(taxon_to_id, key=taxon_to_id.get, reverse=True):
-        pattern = f'(\(|,){str(taxon_to_id[k])}'
-        lines = re.sub(pattern, k, lines)
-    tree_file.write(lines)
+    parsed = ""
+    id_search = ""
+    for character in lines:
+        if(not character.isnumeric()):
+            if(id_search == ""):
+                parsed += character
+            else:
+                parsed += str(taxon_to_id[id_search])
+                id_search = ""
+        else:
+            id_search+= character
+    tree_file.write(parsed)
     tree_file.close()
     return
 
