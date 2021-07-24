@@ -43,10 +43,21 @@ class PhylipMissingData(Exception):
         message -- explanation of the error
     """
 
-    def __init__(self, input_dir, message="Unable to find a tar file with the nexus data."):
-        self.input_dir = input_dir
+    def __init__(self, basedir, message="Unable to find a tar file with the nexus data."):
+        self.basedir = basedir
         self.message = message
         super().__init__(self.message)
 
     def __str__(self):
-        return f'{self.input_dir} -> {self.message}'
+        return f'{self.basedir} -> {self.message}'
+
+class MrBayesMissingData(Exception):
+
+    def __init__(self, basedir, message="Unable to find the nexus data"):
+        self.message = message
+        self.basedir = basedir
+        super().__init__(self.message)
+
+    def __str__(self):
+        return f'{self.basedir} -> {self.message}'
+    

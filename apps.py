@@ -236,18 +236,22 @@ def snaq(basedir: str,
     # run the julia script with PhyloNetworks
     snaq_exec = config.snaq
     num_threads = config.snaq_threads
+    output_folder = os.path.join(basedir, 'snaq')
     hmax = config.snaq_hmax
+    sysimage = ""
+    if(config.julia_sysimage != ""):
+        sysimage = f'{config.julia_sysimage} '
     if config.tree_method == "ML_RAXML":
-        return f'julia {config.julia_sysimage} --threads {num_threads} {snaq_exec} 0 {basedir}/{config.raxml_output} {basedir}/{config.astral_output} {basedir} {num_threads} {hmax}'
+        return f'julia {sysimage}--threads {num_threads} {snaq_exec} 0 {basedir}/{config.raxml_output} {basedir}/{config.astral_output} {output_folder} {num_threads} {hmax}'
     elif config.tree_method == "ML_IQTREE":
-        return f'julia {config.julia_sysimage} --threads {num_threads} {snaq_exec} 0 {basedir}/{config.iqtree_output} {basedir}/{config.astral_output} {basedir} {num_threads} {hmax}'
+        return f'julia {sysimage}--threads {num_threads} {snaq_exec} 0 {basedir}/{config.iqtree_output} {basedir}/{config.astral_output} {output_folder} {num_threads} {hmax}'
     elif config.tree_method == "BI_MRBAYES":
         dir_name = os.path.basename(basedir)
         qmc_folder = os.path.join(basedir, "qmc")
         qmc_output = os.path.join(qmc_folder, f'{dir_name}.tre')
         bucky_folder = os.path.join(basedir, "bucky")
         bucky_table = os.path.join(bucky_folder, f"{dir_name}.csv")
-        return f'julia {config.julia_sysimage} --threads {num_threads} {snaq_exec} 1 {bucky_table} {qmc_output} {basedir} {num_threads} {hmax}'
+        return f'julia {sysimage}--threads {num_threads} {snaq_exec} 1 {bucky_table} {qmc_output} {basedir} {num_threads} {hmax}'
     else:
         return
 
