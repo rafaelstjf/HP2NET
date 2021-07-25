@@ -251,7 +251,7 @@ def snaq(basedir: str,
         qmc_output = os.path.join(qmc_folder, f'{dir_name}.tre')
         bucky_folder = os.path.join(basedir, "bucky")
         bucky_table = os.path.join(bucky_folder, f"{dir_name}.csv")
-        return f'julia {sysimage}--threads {num_threads} {snaq_exec} 1 {bucky_table} {qmc_output} {basedir} {num_threads} {hmax}'
+        return f'julia {sysimage}--threads {num_threads} {snaq_exec} 1 {bucky_table} {qmc_output} {output_folder} {num_threads} {hmax}'
     else:
         return
 
