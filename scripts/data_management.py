@@ -33,7 +33,7 @@ def nexus_to_phylip(folder):
             print("Impossible to convert nexus files to phylip!")
     
 def setup_raxml_output(basedir, RaxmlDir, RaxmlOutput):
-    raxml_dir = os.path.join(base_dir, RaxmlDir)
+    raxml_dir = os.path.join(basedir, RaxmlDir)
     bootstrap_dir = os.path.join(raxml_dir, "bootstrap")
     besttree_file = os.path.join(raxml_dir, RaxmlOutput)
     Path(bootstrap_dir).mkdir(exist_ok=True)
@@ -55,7 +55,7 @@ def setup_raxml_output(basedir, RaxmlDir, RaxmlOutput):
         print("Error! Directory does not exist or not enough privileges")
     #append all the besttrees into a single file(in the working dir), compress the files and remove them
     try:
-        raxml_input = open(besttree_file, 'w+')
+        raxml_input = open(besttree_file, 'w')
         files = glob.glob(os.path.join(raxml_dir, 'RAxML_bestTree.*'))
         trees = ""
         for f in files:

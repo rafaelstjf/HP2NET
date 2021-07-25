@@ -93,7 +93,7 @@ def main():
                 ret_snq = apps.snaq(basedir, bio_config, inputs=[ret_ast])
                 #ret_clear = apps.clear_temporary_files(basedir, bio_config, inputs=ret_snq)
             result.append(ret_snq)
-        elif(bio_config.network_method == "MP" and bio_config.tree_method == "BI_MRBAYES"):
+        elif(bio_config.network_method == "MP" and bio_config.tree_method != "BI_MRBAYES"):
             logging.info("Using the Maximum Parsimony Method")
             ret_spd = apps.setup_phylonet_data(basedir, bio_config, inputs=ret_tree)
             ret_phylonet = apps.phylonet(basedir, bio_config, inputs=[ret_spd])

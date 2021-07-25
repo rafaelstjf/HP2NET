@@ -167,7 +167,7 @@ class ConfigFactory:
         raxml = cf['RAXML']['RaxmlExecutable']
         raxml_param = cf['RAXML']['RaxmlParameters']
         raxml_dir = cf['RAXML']['RaxmlDir']
-        raxml_output = f"{raxml_dir}/{cf['RAXML']['RaxmlOutput']}"
+        raxml_output = cf['RAXML']['RaxmlOutput']
         raxml_threads = cf['RAXML']['RaxmlThreads']
         raxml_exec_param = cf['RAXML']['RaxmlExecParam']
         #IQTREE

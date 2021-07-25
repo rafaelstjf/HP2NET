@@ -154,8 +154,7 @@ def setup_tree_output(basedir: str,
     if(config.tree_method == "ML_RAXML"):
         dm.setup_raxml_output(basedir, config.raxml_dir, config.raxml_output)
     elif(config.tree_method == "ML_IQTREE"):
-        dm.setup_iqtree_output(
-            basedir, config.iqtree_dir, config.iqtree_output)
+        dm.setup_iqtree_output(basedir, config.iqtree_dir, config.iqtree_output)
     return
 
 
