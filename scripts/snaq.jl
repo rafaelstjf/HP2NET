@@ -28,7 +28,8 @@ addprocs(parse(Int64,ARGS[5]) - 1)
 
 #numproc = Threads.nthreads()
 #println("Number of Threads: ", numproc)
-output = joinpath(ARGS[4], replace(basename(ARGS[4]),"/" => "" ))
+basedir = dirname(ARGS[4])
+output = joinpath(ARGS[4], replace(basename(basedir),"/" => "" ))
 println("Using PhyloNetworks on every processor")
 @everywhere using PhyloNetworks
 @everywhere using PhyloPlots

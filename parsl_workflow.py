@@ -36,6 +36,8 @@ def main():
             if(bio_config.tree_method != "BI_MRBAYES"):
                 folder_list.append('astral')
             folder_list.append('snaq')
+        else:
+            folder_list.append('phylonet')
         result.append(apps.setup_phylip_data(basedir, bio_config))
         result.append(apps.create_folders(basedir, bio_config,folders=folder_list))
     wait_for_all(result)

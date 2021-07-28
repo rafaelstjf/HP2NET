@@ -78,7 +78,6 @@ class BioConfig:
     workflow_node_t:    int
     workflow_node_l:    int
     raxml:              str
-    raxml_param:        str
     raxml_dir:          str
     raxml_output:       str
     raxml_threads:      int
@@ -165,23 +164,22 @@ class ConfigFactory:
         workflow_node_l = int(cf["WORKFLOW"]["PartNodeLong"])
         #RAXML
         raxml = cf['RAXML']['RaxmlExecutable']
-        raxml_param = cf['RAXML']['RaxmlParameters']
-        raxml_dir = cf['RAXML']['RaxmlDir']
-        raxml_output = cf['RAXML']['RaxmlOutput']
+        raxml_dir = 'raxml'
+        raxml_output = 'besttrees.tre'
         raxml_threads = cf['RAXML']['RaxmlThreads']
         raxml_exec_param = cf['RAXML']['RaxmlExecParam']
         #IQTREE
         iqtree = cf['IQTREE']['IqTreeExecutable']
-        iqtree_dir = cf['IQTREE']['IqTreeDir']
+        iqtree_dir = 'iqtree'
         iqtree_exec_param = cf['IQTREE']['IqTreeParameters']
         iqtree_threads = cf['IQTREE']['IqTreeThreads']
-        iqtree_output = cf['IQTREE']['iqTreeOutput']
+        iqtree_output = 'besttrees.tre'
         #ASTRAL
         astral_exec_dir = cf['ASTRAL']['AstralExecDir']
         astral_jar = cf['ASTRAL']['AstralJar']
         astral = f"cd {astral_exec_dir}; java -jar {astral_jar}"
-        astral_dir = cf['ASTRAL']['AstralDir']
-        astral_output = f"{astral_dir}/{cf['ASTRAL']['AstralOutput']}"
+        astral_dir = 'astral'
+        astral_output = 'astral.tre'
         #SNAQ
         snaq = f"{cf['SNAQ']['SnaqScript']}"
         snaq_threads = int(cf['SNAQ']['SnaqThreads'])
@@ -192,7 +190,7 @@ class ConfigFactory:
         phylonet = f"cd {phylonet_exec_dir}; java -jar {phylonet_jar}"
         phylonet_threads = cf['PHYLONET']['PhyloNetThreads']
         phylonet_hmax = cf['PHYLONET']['PhyloNetHMax']
-        phylonet_input = cf['PHYLONET']['PhyloNetInput']
+        phylonet_input = 'phylonet_phase_1.nex'
         #MRBAYES
         mrbayes = cf['MRBAYES']['MBExecutable']
         mrbayes_parameters = cf['MRBAYES']['MBParameters']
@@ -228,7 +226,6 @@ class ConfigFactory:
                                    workflow_node_t=workflow_node_t,
                                    workflow_node_l=workflow_node_l,
                                    raxml=raxml,
-                                   raxml_param=raxml_param,
                                    raxml_dir=raxml_dir,
                                    raxml_output=raxml_output,
                                    raxml_threads=raxml_threads,

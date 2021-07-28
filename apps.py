@@ -59,8 +59,9 @@ def setup_phylip_data(basedir: str, config: BioConfig,
         Stdout and Stderr are defaulted to parsl.AUTO_LOGNAME, so the log will be automatically 
         named according to task id and saved under task_logs in the run directory.
     """
-    import os
-    import glob
+    import os, glob, tarfile
+    from Bio import AlignIO
+    from pathlib import Path
     from appsexception import PhylipMissingData
 
     input_dir = os.path.join(basedir, 'input')
@@ -76,10 +77,16 @@ def setup_phylip_data(basedir: str, config: BioConfig,
         for tar_file in tar_file_list:
             os.system(f'cd {input_nexus_dir}; tar zxvf {tar_file}')
     # Now, use the function to convert nexus to phylip.
-    import sys
-    sys.path.append(config.script_dir)
-    import data_management as dm
-    dm.nexus_to_phylip(input_nexus_dir)
+    input_phylip_dir = os.path.join(input_dir, "phylip")
+    if not os.path.isdir(input_phylip_dir):
+        Path(input_phylip_dir).mkdir(exist_ok=True)
+        files = glob.glob(f'{input_nexus_dir}/*.nex')
+        try:
+            for f in files:
+                out_name = os.path.basename(f).split('.')[0]
+                AlignIO.convert(f, "nexus", os.path.join(input_phylip_dir, f'{out_name}.phy'), "phylip-sequential")
+        except Exception:
+            print("Impossible to convert nexus files to phylip!")
     return
 
 
@@ -147,16 +154,83 @@ def setup_tree_output(basedir: str,
         Stdout and Stderr are defaulted to parsl.AUTO_LOGNAME, so the log will be automatically 
         named according to task id and saved under task_logs in the run directory.
     """
-    import os
-    import sys
-    sys.path.append(config.script_dir)
-    import data_management as dm
+    import os, glob, tarfile
+    from pathlib import Path
     if(config.tree_method == "ML_RAXML"):
-        dm.setup_raxml_output(basedir, config.raxml_dir, config.raxml_output)
+        raxml_dir = os.path.join(basedir, config.raxml_dir)
+        bootstrap_dir = os.path.join(raxml_dir, "bootstrap")
+        besttree_file = os.path.join(raxml_dir, config.raxml_output)
+        try:
+            Path(bootstrap_dir).mkdir(exist_ok=True)
+        except Exception:
+            print("Failed to create the raxml bootstrap folder!")
+        old_files = glob.glob(f'{bootstrap_dir}/*')
+        try:
+            for f in old_files:
+                os.remove(f)
+        except Exception:
+            print(f"Error! Impossible to remove files from {folder}")
+        try:
+            files = glob.glob(f'{raxml_dir}/RAxML_bootstrap.*')
+            for f in files:
+                os.rename(f, os.path.join(bootstrap_dir, os.path.basename(f)))
+            # compress and remove the bootstrap files
+            with tarfile.open(os.path.join(raxml_dir, "contrees.tgz"), "w:gz") as tar:
+                files = glob.glob(f'{raxml_dir}/RAxML_bipartitions.*')
+                for f in files:
+                    tar.add(f, arcname=os.path.basename(f))
+                for f in files:
+                    os.remove(f)
+        except Exception:
+            print("Error! Directory does not exist or not enough privileges")
+        #append all the besttrees into a single file(in the working dir), compress the files and remove them
+        try:
+            raxml_input = open(besttree_file, 'w')
+            files = glob.glob(os.path.join(raxml_dir, 'RAxML_bestTree.*'))
+            trees = ""
+            for f in files:
+                gen_tree = open(f, 'r')
+                trees += gen_tree.readline()
+                gen_tree.close()
+            raxml_input.write(trees)
+            raxml_input.close()
+            with tarfile.open(os.path.join(raxml_dir, "besttrees.tgz"), "w:gz") as tar:
+                files = glob.glob(os.path.join(raxml_dir, 'RAxML_bestTree.*'))
+                for f in files:
+                    tar.add(f, arcname=os.path.basename(f))
+                for f in files:
+                    os.remove(f)
+        except IOError:
+            print("Error! Failed to create the input file")
     elif(config.tree_method == "ML_IQTREE"):
-        dm.setup_iqtree_output(basedir, config.iqtree_dir, config.iqtree_output)
+        phylip_dir = os.path.join(basedir, os.path.join("input", "phylip"))
+        iqtree_dir = os.path.join(basedir, config.iqtree_dir)
+        besttree_file = os.path.join(iqtree_dir, config.iqtree_output)
+        try:
+            files = glob.glob(os.path.join(phylip_dir, '*.iqtree'))
+            files += glob.glob(os.path.join(phylip_dir, '*.treefile'))
+            files += glob.glob(os.path.join(phylip_dir, '*.mldist'))
+            files += glob.glob(os.path.join(phylip_dir, '*.nex'))
+            files += glob.glob(os.path.join(phylip_dir, '*.contree'))
+            files += glob.glob(os.path.join(phylip_dir, '*.log'))
+            files += glob.glob(os.path.join(phylip_dir, '*.ckp.gz'))
+            files += glob.glob(os.path.join(phylip_dir, '*.bionj'))
+            files += glob.glob(os.path.join(phylip_dir, '*.reduced'))
+            for f in files:
+                new_f = os.path.join(iqtree_dir, os.path.basename(f))
+                os.replace(f, new_f)
+            iq_input = open(besttree_file, 'w+')
+            files = glob.glob(os.path.join(iqtree_dir, '*.treefile'))
+            trees = ""
+            for f in files:
+                gen_tree = open(f, 'r')
+                trees += gen_tree.readline()
+                gen_tree.close()
+            iq_input.write(trees)
+            iq_input.close()
+        except IOError:
+            print("Error! Failed to create the input file")
     return
-
 
 @parsl.bash_app(executors=['single_thread'])
 def astral(basedir: str,
@@ -179,7 +253,7 @@ def astral(basedir: str,
         named according to task id and saved under task_logs in the run directory.
     """
     import glob
-
+    import os
     astral_dir = f"{basedir}/{config.astral_dir}"
     bs_file = f'{astral_dir}/BSlistfiles'
     boot_strap = f"{basedir}/{config.raxml_dir}/bootstrap/*"
@@ -197,14 +271,14 @@ def astral(basedir: str,
     exec_astral = config.astral
     tree_output = ""
     if(config.tree_method == "ML_RAXML"):
-        tree_output = f"{basedir}/{config.raxml_output}"
+        raxm_dir = os.path.join(basedir, config.raxml_dir)
+        tree_output = os.path.join(raxm_dir,config.raxml_output)
     elif(config.tree_method == "ML_IQTREE"):
-        tree_output = f"{basedir}/{config.iqtree_output}"
-    astral_output = f"{basedir}/{config.astral_output}"
-
+        iqtree_dir = os.path.join(basedir, config.iqtree_dir)
+        tree_output = os.path.join(iqtree_dir,config.iqtree_output)
+    astral_output = os.path.join(astral_dir, config.astral_output)
     # Return to Parsl to be executed on the workflow
     return f'{exec_astral} -i {tree_output} -b {bs_file} -r {num_boot} -o {astral_output}'
-
 
 @parsl.bash_app(executors=['snaq'])
 def snaq(basedir: str,
@@ -241,9 +315,17 @@ def snaq(basedir: str,
     if(config.julia_sysimage != ""):
         sysimage = f'{config.julia_sysimage} '
     if config.tree_method == "ML_RAXML":
-        return f'julia {sysimage}--threads {num_threads} {snaq_exec} 0 {basedir}/{config.raxml_output} {basedir}/{config.astral_output} {output_folder} {num_threads} {hmax}'
+        raxml_tree = os.path.join(basedir, config.raxml_dir)
+        raxml_tree = os.path.join(raxml_tree, config.raxml_output)
+        astral_tree = os.path.join(basedir, config.astral_dir)
+        astral_tree = os.path.join(astral_tree, config.astral_output)
+        return f'julia {sysimage}--threads {num_threads} {snaq_exec} 0 {raxml_tree} {astral_tree} {output_folder} {num_threads} {hmax}'
     elif config.tree_method == "ML_IQTREE":
-        return f'julia {sysimage}--threads {num_threads} {snaq_exec} 0 {basedir}/{config.iqtree_output} {basedir}/{config.astral_output} {output_folder} {num_threads} {hmax}'
+        iqtree_tree = os.path.join(basedir, config.iqtree_dir)
+        iqtree_tree = os.path.join(iqtree_tree, config.iqtree_output)
+        astral_tree = os.path.join(basedir, config.astral_dir)
+        astral_tree = os.path.join(astral_tree, config.astral_output)
+        return f'julia {sysimage}--threads {num_threads} {snaq_exec} 0 {iqtree_tree} {astral_tree} {output_folder} {num_threads} {hmax}'
     elif config.tree_method == "BI_MRBAYES":
         dir_name = os.path.basename(basedir)
         qmc_folder = os.path.join(basedir, "qmc")
@@ -723,12 +805,32 @@ def setup_phylonet_data(basedir: str,
     elif(config.tree_method == "ML_IQTREE"):
         gene_trees = os.path.join(basedir, config.iqtree_dir)
         gene_trees = os.path.join(gene_trees, config.iqtree_output)
-    out_dir = os.path.join(basedir, config.phylonet_input)
-    import sys
-    sys.path.append(config.script_dir)
-    import data_management as dm
-    dm.create_phylonet_input(gene_trees, out_dir, config.phylonet_hmax,
-                             config.phylonet_threads, config.phylonet_threads)
+    out_dir = os.path.join(basedir, "phylonet")
+    out_filepath = os.path.join(out_dir, config.phylonet_input)
+    try:
+        in_file = open(gene_trees)
+    except IOError:
+        print("Error! Could not open Gene tree file.")
+        return 
+    try:
+        out_file = open(out_filepath)
+    except IOError:
+        print("Error! Could not open output file.")
+        return
+    tree_index = 0
+    buffer = "#NEXUS\nBEGIN TREES;\n"
+    for tree in in_file.readlines():
+        tree_index+=1
+        buffer+="Tree geneTree" + str(tree_index) + " = " + tree
+    in_file.close()
+    buffer+='END;\nBEGIN PHYLONET;\nInferNetwork_MP ('
+    for i in range(0, tree_index-1):
+        buffer+="geneTree" + str(i+1) +','
+    output_network = os.path.join(out_dir, 'PhyloNet' + hmax + ".nex")
+    buffer+="geneTree" + str(tree_index) +') ' + config.phylonet_hmax + " -pl " + config.phylonet_threads + " -x " + config.phylonet_threads + " " + output_network + ';\nEND;'
+    #---
+    out_file.write(buffer)
+    out_file.close()
     return
 
 
@@ -754,10 +856,10 @@ def phylonet(basedir: str,
     """
     exec_phylonet = config.phylonet
     import os
-    input_file = os.path.join(basedir, config.phylonet_input)
-
+    output_dir = os.path.join(basedir, "phylonet")
+    input_file = os.path.join(output_dir, config.phylonet_input)
     # Return to Parsl to be executed on the workflow
-    return f'{exec_phylonet} {input_file}'
+    return f'cd {output_dir};{exec_phylonet} {input_file}'
 
 
 @parsl.bash_app(executors=['raxml'])
@@ -792,12 +894,8 @@ def clear_temporary_files(basedir: str,
                           inputs=[],
                           outputs=[],
                           stderr=parsl.AUTO_LOGNAME,
-                          stdout=parsl.AUTO_LOGNAME):
-    import sys
-    import os
-    sys.path.append(config.script_dir)
-    import data_management as dm
-    dm.clear_execution(config.network_method, config.tree_method, basedir)
+                          stdout=parsl.AUTO_LOGNAME):    
+    #TODO
     return
 
 
@@ -810,8 +908,11 @@ def create_folders(basedir: str,
                    stderr=parsl.AUTO_LOGNAME,
                    stdout=parsl.AUTO_LOGNAME):
     import os
-    import sys
-    sys.path.append(config.script_dir)
-    import data_management as dm
-    dm.create_folders(basedir, folders)
+    from pathlib import Path 
+    for folder in folders:
+        full_path = os.path.join(basedir, folder)
+        try:
+            Path(full_path).mkdir(exist_ok=True)
+        except Exception:
+            print(f'Impossible to create {full_path} folder')
     return
