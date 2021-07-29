@@ -92,15 +92,20 @@ class BioConfig:
     astral:             str
     astral_dir:         str
     astral_output:      str
+    astral_exec_param:  str
     snaq:               str
     snaq_threads:       int
     snaq_hmax:          int
     mrbayes:            str
     mrbayes_parameters: str
+    mrbayes_dir:        str
     bucky:              str
+    bucky_dir:          str
     mbsum:              str
+    mbsum_dir:          str
     quartet_maxcut:     str
     quartet_maxcut_exec_dir: str
+    quartet_maxcut_dir: str
     phylonet:           str
     phylonet_exec_dir:  str
     phylonet_jar:       str
@@ -167,7 +172,7 @@ class ConfigFactory:
         raxml_dir = 'raxml'
         raxml_output = 'besttrees.tre'
         raxml_threads = cf['RAXML']['RaxmlThreads']
-        raxml_exec_param = cf['RAXML']['RaxmlExecParam']
+        raxml_exec_param = cf['RAXML']['RaxmlExecParameters']
         #IQTREE
         iqtree = cf['IQTREE']['IqTreeExecutable']
         iqtree_dir = 'iqtree'
@@ -180,6 +185,7 @@ class ConfigFactory:
         astral = f"cd {astral_exec_dir}; java -jar {astral_jar}"
         astral_dir = 'astral'
         astral_output = 'astral.tre'
+        astral_exec_param = cf['ASTRAL']['AstralExecParameters']
         #SNAQ
         snaq = f"{cf['SNAQ']['SnaqScript']}"
         snaq_threads = int(cf['SNAQ']['SnaqThreads'])
@@ -194,13 +200,17 @@ class ConfigFactory:
         #MRBAYES
         mrbayes = cf['MRBAYES']['MBExecutable']
         mrbayes_parameters = cf['MRBAYES']['MBParameters']
+        mrbayes_dir = 'mrbayes'
         #BUCKY
         bucky = cf['BUCKY']['BuckyExecutable']
+        bucky_dir= 'bucky'
         #MBSUM
         mbsum = cf['BUCKY']['MbSumExecutable']
+        mbsum_dir = 'mbsum'
         #QUARTET MAXCUT
         quartet_maxcut = cf['QUARTETMAXCUT']['QmcExecutable']
         quartet_maxcut_exec_dir = cf['QUARTETMAXCUT']['QmcExecDir']
+        quartet_maxcut_dir = 'qmc'
         self.bioconfig = BioConfig(script_dir=script_dir,
                                    workload_path=workload_path,
                                    network_method=network_method,
@@ -240,15 +250,20 @@ class ConfigFactory:
                                    astral=astral,
                                    astral_dir=astral_dir,
                                    astral_output=astral_output,
+                                   astral_exec_param=astral_exec_param,
                                    snaq=snaq,
                                    snaq_threads=snaq_threads,
                                    snaq_hmax=snaq_hmax,
                                    mrbayes=mrbayes,
                                    mrbayes_parameters=mrbayes_parameters,
+                                   mrbayes_dir=mrbayes_dir,
                                    bucky=bucky,
+                                   bucky_dir=bucky_dir,
                                    mbsum=mbsum,
+                                   mbsum_dir=mbsum_dir,
                                    quartet_maxcut=quartet_maxcut,
                                    quartet_maxcut_exec_dir=quartet_maxcut_exec_dir,
+                                   quartet_maxcut_dir=quartet_maxcut_dir,
                                    phylonet=phylonet,
                                    phylonet_exec_dir=phylonet_exec_dir,
                                    phylonet_jar=phylonet_jar,

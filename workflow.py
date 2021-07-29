@@ -99,7 +99,7 @@ def workflow_config(config: BioConfig) -> parsl.config.Config:
                 ),
             ),
             HighThroughputExecutor(
-                label=f'raxml',
+                label=f'tree_and_statistics',
                 # Optional: The network interface on node 0 which compute nodes can communicate with.
                 # address=address_by_interface('enp4s0f0' or 'ib0')
                 address=address_by_interface('ib0'),
@@ -123,7 +123,7 @@ def workflow_config(config: BioConfig) -> parsl.config.Config:
                 ),
             ),
             HighThroughputExecutor(
-                label=f'snaq',
+                label=f'phylogenetic_network',
                 # Optional: The network interface on node 0 which compute nodes can communicate with.
                 # address=address_by_interface('enp4s0f0' or 'ib0')
                 address=address_by_interface('ib0'),

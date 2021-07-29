@@ -91,7 +91,7 @@ def setup_phylip_data(basedir: str, config: BioConfig,
 
 
 # raxml bash app
-@parsl.bash_app(executors=['raxml'])
+@parsl.bash_app(executors=['tree_and_statistics'])
 def raxml(basedir: str, config: BioConfig,
           input_file: str,
           inputs=[],
@@ -169,7 +169,7 @@ def setup_tree_output(basedir: str,
             for f in old_files:
                 os.remove(f)
         except Exception:
-            print(f"Error! Impossible to remove files from {folder}")
+            print(f"Error! Impossible to remove files from {old_files}")
         try:
             files = glob.glob(f'{raxml_dir}/RAxML_bootstrap.*')
             for f in files:
@@ -216,6 +216,7 @@ def setup_tree_output(basedir: str,
             files += glob.glob(os.path.join(phylip_dir, '*.ckp.gz'))
             files += glob.glob(os.path.join(phylip_dir, '*.bionj'))
             files += glob.glob(os.path.join(phylip_dir, '*.reduced'))
+            files += glob.glob(os.path.join(phylip_dir, '*.boottrees'))
             for f in files:
                 new_f = os.path.join(iqtree_dir, os.path.basename(f))
                 os.replace(f, new_f)
@@ -256,31 +257,27 @@ def astral(basedir: str,
     import os
     astral_dir = f"{basedir}/{config.astral_dir}"
     bs_file = f'{astral_dir}/BSlistfiles'
-    boot_strap = f"{basedir}/{config.raxml_dir}/bootstrap/*"
-
-    # Build the invocation command.
-
-    # TODO: manage the fixed bootstrap number...
-    num_boot = 100
-
-    # Create bs_file
-    with open(bs_file, 'w') as f:
-        for i in glob.glob(boot_strap):
-            f.write(f'{i}\n')
-
     exec_astral = config.astral
     tree_output = ""
     if(config.tree_method == "ML_RAXML"):
         raxm_dir = os.path.join(basedir, config.raxml_dir)
         tree_output = os.path.join(raxm_dir,config.raxml_output)
+        boot_strap = f"{basedir}/{config.raxml_dir}/bootstrap/*"
+        with open(bs_file, 'w') as f:
+            for i in glob.glob(boot_strap):
+                f.write(f'{i}\n')
     elif(config.tree_method == "ML_IQTREE"):
         iqtree_dir = os.path.join(basedir, config.iqtree_dir)
         tree_output = os.path.join(iqtree_dir,config.iqtree_output)
+        boot_strap = f"{basedir}/{config.iqtree_dir}/*.boottrees"
+        with open(bs_file, 'w') as f:
+            for i in glob.glob(boot_strap):
+                f.write(f'{i}\n')
     astral_output = os.path.join(astral_dir, config.astral_output)
     # Return to Parsl to be executed on the workflow
-    return f'{exec_astral} -i {tree_output} -b {bs_file} -r {num_boot} -o {astral_output}'
+    return f'{exec_astral} -i {tree_output} -b {bs_file} {config.astral_exec_param} -o {astral_output}'
 
-@parsl.bash_app(executors=['snaq'])
+@parsl.bash_app(executors=['phylogenetic_network'])
 def snaq(basedir: str,
          config: BioConfig,
          inputs=[],
@@ -315,22 +312,19 @@ def snaq(basedir: str,
     if(config.julia_sysimage != ""):
         sysimage = f'{config.julia_sysimage} '
     if config.tree_method == "ML_RAXML":
-        raxml_tree = os.path.join(basedir, config.raxml_dir)
-        raxml_tree = os.path.join(raxml_tree, config.raxml_output)
+        raxml_tree = os.path.join(os.path.join(basedir, config.raxml_dir), config.raxml_output)
         astral_tree = os.path.join(basedir, config.astral_dir)
         astral_tree = os.path.join(astral_tree, config.astral_output)
         return f'julia {sysimage}--threads {num_threads} {snaq_exec} 0 {raxml_tree} {astral_tree} {output_folder} {num_threads} {hmax}'
     elif config.tree_method == "ML_IQTREE":
-        iqtree_tree = os.path.join(basedir, config.iqtree_dir)
-        iqtree_tree = os.path.join(iqtree_tree, config.iqtree_output)
+        iqtree_tree = os.path.join(os.path.join(basedir, config.iqtree_dir), config.iqtree_output)
         astral_tree = os.path.join(basedir, config.astral_dir)
         astral_tree = os.path.join(astral_tree, config.astral_output)
         return f'julia {sysimage}--threads {num_threads} {snaq_exec} 0 {iqtree_tree} {astral_tree} {output_folder} {num_threads} {hmax}'
     elif config.tree_method == "BI_MRBAYES":
         dir_name = os.path.basename(basedir)
-        qmc_folder = os.path.join(basedir, "qmc")
-        qmc_output = os.path.join(qmc_folder, f'{dir_name}.tre')
-        bucky_folder = os.path.join(basedir, "bucky")
+        qmc_output = os.path.join(os.path.join(basedir, config.quartet_maxcut_dir), f'{dir_name}.tre')
+        bucky_folder = os.path.join(basedir, config.bucky_dir)
         bucky_table = os.path.join(bucky_folder, f"{dir_name}.csv")
         return f'julia {sysimage}--threads {num_threads} {snaq_exec} 1 {bucky_table} {qmc_output} {output_folder} {num_threads} {hmax}'
     else:
@@ -362,7 +356,7 @@ def mrbayes(basedir: str,
     import os
     from pathlib import Path
     gene_name = os.path.basename(input_file)
-    mb_folder = os.path.join(basedir, "mrbayes")
+    mb_folder = os.path.join(basedir, config.mrbayes_dir)
     gene_file = open(input_file, 'r')
     gene_string = gene_file.read()
     gene_file.close()
@@ -402,8 +396,8 @@ def mbsum(basedir: str,
     import re
     import glob
     gene_name = os.path.basename(input_file)
-    mbsum_folder = os.path.join(basedir, "mbsum")
-    mrbayes_folder = os.path.join(basedir, "mrbayes")
+    mbsum_folder = os.path.join(basedir, config.mbsum_dir)
+    mrbayes_folder = os.path.join(basedir, config.mrbayes_dir)
     # get the mrbayes parameters
     par_0 = re.sub("mcmcp ", "", config.mrbayes_parameters)
     par = par_0.split(' ')
@@ -415,7 +409,7 @@ def mbsum(basedir: str,
             par_dir['nruns']*par_dir['burninfrac'])/par_dir['nruns']) + 1
     # select all the mrbayes .t files of the gene alignment file
     trees = glob.glob(os.path.join(mrbayes_folder, gene_name + '*.t'))
-    return f"mbsum {(' ').join(trees)} -n {trim} -o {os.path.join(mbsum_folder, gene_name + '.sum')}"
+    return f"{config.mbsum} {(' ').join(trees)} -n {trim} -o {os.path.join(mbsum_folder, gene_name + '.sum')}"
 
 
 @parsl.python_app(executors=['single_thread'])
@@ -442,8 +436,8 @@ def setup_bucky_data(basedir: str,
     from pathlib import Path
     import glob
     from itertools import combinations
-    mbsum_folder = os.path.join(basedir, "mbsum")
-    bucky_folder = os.path.join(basedir, "bucky")
+    mbsum_folder = os.path.join(basedir, config.mbsum_dir)
+    bucky_folder = os.path.join(basedir, config.bucky_dir)
     # parse the sumarized taxa by mbsum
     files = glob.glob(os.path.join(mbsum_folder, '*.sum'))
     taxa = {}
@@ -514,8 +508,8 @@ def bucky(basedir: str,
     import os
     import glob
     import re
-    mbsum_folder = os.path.join(basedir, "mbsum")
-    bucky_folder = os.path.join(basedir, "bucky")
+    mbsum_folder = os.path.join(basedir, config.mbsum_dir)
+    bucky_folder = os.path.join(basedir, config.bucky_dir)
     files = glob.glob(os.path.join(mbsum_folder, '*.sum'))
     output_file = os.path.basename(prune_file)
     output_file = re.sub("-prune.txt", "", output_file)
@@ -546,7 +540,7 @@ def setup_bucky_output(basedir: str,
     import re
     import os
     import glob
-    bucky_folder = os.path.join(basedir, "bucky")
+    bucky_folder = os.path.join(basedir, config.bucky_dir)
     pattern = re.compile("Read \d+ genes with a ")
     out_files = glob.glob(os.path.join(bucky_folder, "*.out"))
     table_string = "taxon1,taxon2,taxon3,taxon4,CF12.34,CF12.34_lo,CF12.34_hi,CF13.24,CF13.24_lo,CF13.24_hi,CF14.23,CF14.23_lo,CF14.23_hi,ngenes\n"
@@ -641,7 +635,7 @@ def setup_qmc_data(basedir: str,
     import os
     from pathlib import Path
     dir_name = os.path.basename(basedir)
-    bucky_folder = os.path.join(basedir, "bucky")
+    bucky_folder = os.path.join(basedir, config.bucky_dir)
     table_filename = os.path.join(bucky_folder, f'{dir_name}.csv')
     try:
         table = pd.read_csv(table_filename, delimiter=',', dtype='string')
@@ -834,7 +828,7 @@ def setup_phylonet_data(basedir: str,
     return
 
 
-@parsl.bash_app(executors=['snaq'])
+@parsl.bash_app(executors=['phylogenetic_network'])
 def phylonet(basedir: str,
              config: BioConfig,
              inputs=[],
@@ -862,7 +856,7 @@ def phylonet(basedir: str,
     return f'cd {output_dir};{exec_phylonet} {input_file}'
 
 
-@parsl.bash_app(executors=['raxml'])
+@parsl.bash_app(executors=['tree_and_statistics'])
 def iqtree(basedir: str, config: BioConfig,
            input_file: str,
            inputs=[],
