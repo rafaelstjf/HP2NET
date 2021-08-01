@@ -225,7 +225,7 @@ def setup_tree_output(basedir: str,
             trees = ""
             for f in files:
                 gen_tree = open(f, 'r')
-                trees += gen_tree.readline()
+                trees += gen_tree.readline() + '\n'
                 gen_tree.close()
             iq_input.write(trees)
             iq_input.close()
@@ -301,6 +301,7 @@ def snaq(basedir: str,
     import os
     from pathlib import Path
     os.environ["JULIA_SETUP"] = config.julia_setup
+    os.environ["JULIA_NUM_THREADS"] = str(config.snaq_threads)
     #os.environ["JULIA_PKGDIR"] = config.julia_pkgdir
     #os.environ["JULIA_SYSIMAGE"] = config.julia_sysimage
     # run the julia script with PhyloNetworks
@@ -793,21 +794,20 @@ def setup_phylonet_data(basedir: str,
         named according to task id and saved under task_logs in the run directory.
     """
     import os
+    gene_trees = ""
     if(config.tree_method == "ML_RAXML"):
-        gene_trees = os.path.join(basedir, config.raxml_dir)
-        gene_trees = os.path.join(gene_trees, config.raxml_output)
+        gene_trees = os.path.join(os.path.join(basedir, config.raxml_dir), config.raxml_output)
     elif(config.tree_method == "ML_IQTREE"):
-        gene_trees = os.path.join(basedir, config.iqtree_dir)
-        gene_trees = os.path.join(gene_trees, config.iqtree_output)
-    out_dir = os.path.join(basedir, "phylonet")
+        gene_trees = os.path.join(os.path.join(basedir, config.iqtree_dir), config.iqtree_output)
+    out_dir = os.path.join(basedir, 'phylonet')
     out_filepath = os.path.join(out_dir, config.phylonet_input)
     try:
-        in_file = open(gene_trees)
+        in_file = open(gene_trees, 'r')
     except IOError:
         print("Error! Could not open Gene tree file.")
         return 
     try:
-        out_file = open(out_filepath)
+        out_file = open(out_filepath, 'w+')
     except IOError:
         print("Error! Could not open output file.")
         return
@@ -820,7 +820,7 @@ def setup_phylonet_data(basedir: str,
     buffer+='END;\nBEGIN PHYLONET;\nInferNetwork_MP ('
     for i in range(0, tree_index-1):
         buffer+="geneTree" + str(i+1) +','
-    output_network = os.path.join(out_dir, 'PhyloNet' + hmax + ".nex")
+    output_network = os.path.join(out_dir, 'PhyloNet' + config.phylonet_hmax + ".nex")
     buffer+="geneTree" + str(tree_index) +') ' + config.phylonet_hmax + " -pl " + config.phylonet_threads + " -x " + config.phylonet_threads + " " + output_network + ';\nEND;'
     #---
     out_file.write(buffer)

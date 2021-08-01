@@ -60,6 +60,7 @@ class BioConfig:
     julia_pkgdir:       str
     julia_sysimage:     str
     workload_path:      str
+    execution_provider: str
     network_method:     str
     tree_method:        str
     workload:           field(default_factory=list)
@@ -146,7 +147,7 @@ class ConfigFactory:
                 if line[0] == '#':
                     continue
                 workload.append(line.strip())
-        
+        execution_provider = cf['GENERAL']['ExecutionProvider']
         #SYSTEM
         julia_setup = cf['SYSTEM']['JuliaSetup']
         julia_pkgdir = cf['SYSTEM']['JuliaPkgDir']
@@ -213,6 +214,7 @@ class ConfigFactory:
         quartet_maxcut_dir = 'qmc'
         self.bioconfig = BioConfig(script_dir=script_dir,
                                    workload_path=workload_path,
+                                   execution_provider=execution_provider,
                                    network_method=network_method,
                                    tree_method=tree_method,
                                    workload=workload,

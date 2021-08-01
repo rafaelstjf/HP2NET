@@ -33,7 +33,7 @@ import logging
 from parsl.channels import LocalChannel
 from parsl.launchers import SrunLauncher
 from parsl.addresses import address_by_interface
-from parsl.executors import HighThroughputExecutor
+from parsl.executors import HighThroughputExecutor, ThreadPoolExecutor
 from parsl.providers import LocalProvider, SlurmProvider
 
 from bioconfig import BioConfig
@@ -41,14 +41,13 @@ from bioconfig import BioConfig
 # PARSL CONFIGURATION
 
 
-def workflow_config(config: BioConfig) -> parsl.config.Config:
+def workflow_config(config: BioConfig, ) -> parsl.config.Config:
     """ Configures and loads Parsl's Workflow configuration
 
     Parameters:
 
     config: BioConfig    - Workflow configuration
     """
-
     name = config.workflow_name
     interval = 30
     monitor = config.workflow_monitor
@@ -62,96 +61,123 @@ def workflow_config(config: BioConfig) -> parsl.config.Config:
     env_str = config.environ
 
     logging.info(f'Task Environment {env_str}')
-
     mon_hub = parsl.monitoring.monitoring.MonitoringHub(
-        workflow_name=name,
-        hub_address=address_by_interface('ib0'),
-        hub_port=60001,
-        resource_monitoring_enabled=True,
-        monitoring_debug=False,
-        resource_monitoring_interval=interval,
-    ) if monitor else None
-
-    return parsl.config.Config(
-        executors=[
-            HighThroughputExecutor(
-                label='single_thread',
-                # Optional: The network interface on node 0 which compute nodes can communicate with.
-                # address=address_by_interface('enp4s0f0' or 'ib0')
-                address=address_by_interface('ib0'),
-                max_workers=int(config.workflow_core_f),
-                cores_per_worker=1,
-                worker_debug=False,
-                interchange_port_range=(50000, 55000),
-                provider=SlurmProvider(
-                    partition=config.workflow_part_f,
-                    # scheduler_options='',
-                    parallelism=1,
-                    init_blocks=1,
-                    max_blocks=1,
-                    nodes_per_block=config.workflow_node_f,
-                    cmd_timeout=120,
-                    worker_init=env_str,
-                    move_files=False,
-                    walltime=config.workflow_wall_t_f,
-                    launcher=SrunLauncher(
-                        overrides=f'-c {config.workflow_core_f}'),
+            workflow_name=name,
+            hub_address=address_by_interface('ib0'),
+            hub_port=60001,
+            resource_monitoring_enabled=True,
+            monitoring_debug=False,
+            resource_monitoring_interval=interval,
+        ) if monitor else None
+    if config.execution_provider == 'SlurmProvider':
+        return parsl.config.Config(
+            executors=[
+                HighThroughputExecutor(
+                    label='single_thread',
+                    # Optional: The network interface on node 0 which compute nodes can communicate with.
+                    # address=address_by_interface('enp4s0f0' or 'ib0')
+                    address=address_by_interface('ib0'),
+                    max_workers=int(config.workflow_core_f),
+                    cores_per_worker=1,
+                    worker_debug=False,
+                    interchange_port_range=(50000, 55000),
+                    provider=SlurmProvider(
+                        partition=config.workflow_part_f,
+                        # scheduler_options='',
+                        parallelism=1,
+                        init_blocks=1,
+                        max_blocks=1,
+                        nodes_per_block=config.workflow_node_f,
+                        cmd_timeout=120,
+                        worker_init=env_str,
+                        move_files=False,
+                        walltime=config.workflow_wall_t_f,
+                        launcher=SrunLauncher(
+                            overrides=f'-c {config.workflow_core_f}'),
+                    ),
                 ),
-            ),
-            HighThroughputExecutor(
-                label=f'tree_and_statistics',
-                # Optional: The network interface on node 0 which compute nodes can communicate with.
-                # address=address_by_interface('enp4s0f0' or 'ib0')
-                address=address_by_interface('ib0'),
-                max_workers=int(config.workflow_core_t),
-                cores_per_worker=6,
-                worker_debug=False,
-                interchange_port_range=(55000, 60000),
-                provider=SlurmProvider(
-                    partition=config.workflow_part_t,
-                    # scheduler_options='',
-                    parallelism=1,
-                    init_blocks=1,
-                    max_blocks=1,
-                    nodes_per_block=config.workflow_node_t,
-                    cmd_timeout=120,
-                    worker_init=env_str,
-                    move_files=False,
-                    walltime=config.workflow_wall_t_t,
-                    launcher=SrunLauncher(
-                        overrides=f'-c {config.workflow_core_t}'),
+                HighThroughputExecutor(
+                    label=f'tree_and_statistics',
+                    # Optional: The network interface on node 0 which compute nodes can communicate with.
+                    # address=address_by_interface('enp4s0f0' or 'ib0')
+                    address=address_by_interface('ib0'),
+                    max_workers=int(config.workflow_core_t),
+                    cores_per_worker=6,
+                    worker_debug=False,
+                    interchange_port_range=(55000, 60000),
+                    provider=SlurmProvider(
+                        partition=config.workflow_part_t,
+                        # scheduler_options='',
+                        parallelism=1,
+                        init_blocks=1,
+                        max_blocks=1,
+                        nodes_per_block=config.workflow_node_t,
+                        cmd_timeout=120,
+                        worker_init=env_str,
+                        move_files=False,
+                        walltime=config.workflow_wall_t_t,
+                        launcher=SrunLauncher(
+                            overrides=f'-c {config.workflow_core_t}'),
+                    ),
                 ),
-            ),
-            HighThroughputExecutor(
-                label=f'phylogenetic_network',
-                # Optional: The network interface on node 0 which compute nodes can communicate with.
-                # address=address_by_interface('enp4s0f0' or 'ib0')
-                address=address_by_interface('ib0'),
-                max_workers=int(config.workflow_core_l),
-                cores_per_worker=6,
-                worker_debug=False,
-                interchange_port_range=(40000, 45000),
-                provider=SlurmProvider(
-                    partition=config.workflow_part_l,
-                    # scheduler_options='',
-                    parallelism=1,
-                    init_blocks=1,
-                    max_blocks=1,
-                    nodes_per_block=config.workflow_node_l,
-                    cmd_timeout=120,
-                    worker_init=env_str,
-                    move_files=False,
-                    walltime=config.workflow_wall_t_l,
-                    launcher=SrunLauncher(
-                        overrides=f'-c {config.workflow_core_l}'),
+                HighThroughputExecutor(
+                    label=f'phylogenetic_network',
+                    # Optional: The network interface on node 0 which compute nodes can communicate with.
+                    # address=address_by_interface('enp4s0f0' or 'ib0')
+                    address=address_by_interface('ib0'),
+                    max_workers=int(config.workflow_core_l),
+                    cores_per_worker=6,
+                    worker_debug=False,
+                    interchange_port_range=(40000, 45000),
+                    provider=SlurmProvider(
+                        partition=config.workflow_part_l,
+                        # scheduler_options='',
+                        parallelism=1,
+                        init_blocks=1,
+                        max_blocks=1,
+                        nodes_per_block=config.workflow_node_l,
+                        cmd_timeout=120,
+                        worker_init=env_str,
+                        move_files=False,
+                        walltime=config.workflow_wall_t_l,
+                        launcher=SrunLauncher(
+                            overrides=f'-c {config.workflow_core_l}'),
+                    ),
                 ),
-            ),
 
-        ],
-        monitoring=mon_hub,
-        strategy=None,
-    )
+            ],
+            monitoring=mon_hub,
+            strategy=None,
+        )
+    else: #localprovider
+        return parsl.config.Config(
+            executors=[
+                ThreadPoolExecutor(
+                    label='single_thread',
+                    # Optional: The network interface on node 0 which compute nodes can communicate with.
+                    # address=address_by_interface('enp4s0f0' or 'ib0')
+                    max_threads = 1,
+                    managed = True
+                ),
+                ThreadPoolExecutor(
+                    label=f'tree_and_statistics',
+                    # Optional: The network interface on node 0 which compute nodes can communicate with.
+                    # address=address_by_interface('enp4s0f0' or 'ib0')
+                    max_threads = 4,
+                    managed = True
+                ),
+                ThreadPoolExecutor(
+                    label=f'phylogenetic_network',
+                    # Optional: The network interface on node 0 which compute nodes can communicate with.
+                    # address=address_by_interface('enp4s0f0' or 'ib0')
+                    max_threads = 4,
+                    managed = True
+                ),
 
+            ],
+            monitoring=mon_hub,
+            strategy=None,
+        )
 
 # SYNCHRONIZATION ROUTINES
 
