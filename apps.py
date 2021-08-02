@@ -305,7 +305,7 @@ def snaq(basedir: str,
     #os.environ["JULIA_PKGDIR"] = config.julia_pkgdir
     #os.environ["JULIA_SYSIMAGE"] = config.julia_sysimage
     # run the julia script with PhyloNetworks
-    snaq_exec = config.snaq
+    snaq_exec = os.path.join(config.script_dir, config.snaq)
     num_threads = config.snaq_threads
     output_folder = os.path.join(basedir, 'snaq')
     hmax = config.snaq_hmax

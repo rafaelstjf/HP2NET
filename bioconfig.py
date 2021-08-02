@@ -19,7 +19,7 @@ this program. If not, see <http://www.gnu.org/licenses/>.
 
 #from apps import quartet_maxcut
 from parsl import bash_app, python_app
-import parsl
+import parsl, os
 
 # COPYRIGHT SECTION
 __author__ = "Diego Carvalho"
@@ -152,7 +152,6 @@ class ConfigFactory:
         julia_setup = cf['SYSTEM']['JuliaSetup']
         julia_pkgdir = cf['SYSTEM']['JuliaPkgDir']
         julia_sysimage = cf['SYSTEM']['JuliaSysImage']
-        perl_int = cf['SYSTEM']['PerlInter']
         #WORKFLOW
         workflow_name = cf["WORKFLOW"]["Name"]
         workflow_monitor = cf["WORKFLOW"].getboolean("Monitor")
@@ -161,7 +160,7 @@ class ConfigFactory:
         workflow_part_l = cf["WORKFLOW"]["PartitionLong"]
         workflow_wall_t_f = cf["WORKFLOW"]["WalltimeFast"]
         workflow_wall_t_t = cf["WORKFLOW"]["WalltimeThread"]
-        workflow_wall_t_l = cf["WORKFLOW"]["WalltineLong"]
+        workflow_wall_t_l = cf["WORKFLOW"]["WalltimeLong"]
         workflow_core_f = int(cf["WORKFLOW"]["PartCoreFast"])
         workflow_core_t = int(cf["WORKFLOW"]["PartCoreThread"])
         workflow_core_l = int(cf["WORKFLOW"]["PartCoreLong"])
@@ -188,7 +187,7 @@ class ConfigFactory:
         astral_output = 'astral.tre'
         astral_exec_param = cf['ASTRAL']['AstralExecParameters']
         #SNAQ
-        snaq = f"{cf['SNAQ']['SnaqScript']}"
+        snaq = cf['SNAQ']['SnaqScript']
         snaq_threads = int(cf['SNAQ']['SnaqThreads'])
         snaq_hmax = int(cf['SNAQ']['SnaqHMax'])
         #PHYLONET
