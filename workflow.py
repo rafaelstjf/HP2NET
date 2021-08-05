@@ -156,7 +156,7 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
                     label='single_thread',
                     # Optional: The network interface on node 0 which compute nodes can communicate with.
                     # address=address_by_interface('enp4s0f0' or 'ib0')
-                    max_threads = 1,
+                    max_threads = 4,
                     managed = True
                 ),
                 ThreadPoolExecutor(

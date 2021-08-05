@@ -1,10 +1,5 @@
-import logging
+import parsl, apps, glob, bioconfig, os, logging, argparse
 from pandas.core import base
-import parsl
-import apps
-import glob
-import bioconfig
-import os
 from workflow import workflow_config, wait_for_all
 
 def raxml_snaq(bio_config):
@@ -167,11 +162,11 @@ def mrbayes_snaq(bio_config):
     wait_for_all(result)
     return
 
-def main():
+def main(config_file='config/default.ini'):
     
     logging.info('Starting the Workflow Orchestration')
 
-    cf = bioconfig.ConfigFactory()
+    cf = bioconfig.ConfigFactory(config_file)
 
     bio_config = cf.build_config()
 
@@ -203,4 +198,10 @@ def main():
 logging.basicConfig(level=logging.INFO)
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description='Process the configuration file.')
+    parser.add_argument('--config', help='Settings file', required=False, type=str)
+    args = parser.parse_args()
+    if args.config is not None:
+        main(args.config)
+    else:
+        main()
