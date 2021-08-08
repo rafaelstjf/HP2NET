@@ -306,25 +306,22 @@ def snaq(basedir: str,
     output_folder = os.path.join(basedir, 'snaq')
     hmax = config.snaq_hmax
     runs = config.snaq_runs
-    sysimage = ""
-    if(config.julia_sysimage != ""):
-        sysimage = f'{config.julia_sysimage} '
     if config.tree_method == "ML_RAXML":
         raxml_tree = os.path.join(os.path.join(basedir, config.raxml_dir), config.raxml_output)
         astral_tree = os.path.join(basedir, config.astral_dir)
         astral_tree = os.path.join(astral_tree, config.astral_output)
-        return f'julia {sysimage}--threads {num_threads} {snaq_exec} 0 {raxml_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs}'
+        return f'julia --threads {num_threads} {snaq_exec} 0 {raxml_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs}'
     elif config.tree_method == "ML_IQTREE":
         iqtree_tree = os.path.join(os.path.join(basedir, config.iqtree_dir), config.iqtree_output)
         astral_tree = os.path.join(basedir, config.astral_dir)
         astral_tree = os.path.join(astral_tree, config.astral_output)
-        return f'julia {sysimage}--threads {num_threads} {snaq_exec} 0 {iqtree_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs}'
+        return f'julia --threads {num_threads} {snaq_exec} 0 {iqtree_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs}'
     elif config.tree_method == "BI_MRBAYES":
         dir_name = os.path.basename(basedir)
         qmc_output = os.path.join(os.path.join(basedir, config.quartet_maxcut_dir), f'{dir_name}.tre')
         bucky_folder = os.path.join(basedir, config.bucky_dir)
         bucky_table = os.path.join(bucky_folder, f"{dir_name}.csv")
-        return f'julia {sysimage}--threads {num_threads} {snaq_exec} 1 {bucky_table} {qmc_output} {output_folder} {num_threads} {hmax}'
+        return f'julia --threads {num_threads} {snaq_exec} 1 {bucky_table} {qmc_output} {output_folder} {num_threads} {hmax}'
     else:
         return
 
