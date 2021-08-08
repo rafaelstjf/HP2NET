@@ -300,15 +300,12 @@ def snaq(basedir: str,
     # set environment variables
     import os
     from pathlib import Path
-    os.environ["JULIA_SETUP"] = config.julia_setup
-    os.environ["JULIA_NUM_THREADS"] = str(config.snaq_threads)
-    #os.environ["JULIA_PKGDIR"] = config.julia_pkgdir
-    #os.environ["JULIA_SYSIMAGE"] = config.julia_sysimage
     # run the julia script with PhyloNetworks
     snaq_exec = os.path.join(config.script_dir, config.snaq)
     num_threads = config.snaq_threads
     output_folder = os.path.join(basedir, 'snaq')
     hmax = config.snaq_hmax
+    runs = config.snaq_runs
     sysimage = ""
     if(config.julia_sysimage != ""):
         sysimage = f'{config.julia_sysimage} '
@@ -316,12 +313,12 @@ def snaq(basedir: str,
         raxml_tree = os.path.join(os.path.join(basedir, config.raxml_dir), config.raxml_output)
         astral_tree = os.path.join(basedir, config.astral_dir)
         astral_tree = os.path.join(astral_tree, config.astral_output)
-        return f'julia {sysimage}--threads {num_threads} {snaq_exec} 0 {raxml_tree} {astral_tree} {output_folder} {num_threads} {hmax}'
+        return f'julia {sysimage}--threads {num_threads} {snaq_exec} 0 {raxml_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs}'
     elif config.tree_method == "ML_IQTREE":
         iqtree_tree = os.path.join(os.path.join(basedir, config.iqtree_dir), config.iqtree_output)
         astral_tree = os.path.join(basedir, config.astral_dir)
         astral_tree = os.path.join(astral_tree, config.astral_output)
-        return f'julia {sysimage}--threads {num_threads} {snaq_exec} 0 {iqtree_tree} {astral_tree} {output_folder} {num_threads} {hmax}'
+        return f'julia {sysimage}--threads {num_threads} {snaq_exec} 0 {iqtree_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs}'
     elif config.tree_method == "BI_MRBAYES":
         dir_name = os.path.basename(basedir)
         qmc_output = os.path.join(os.path.join(basedir, config.quartet_maxcut_dir), f'{dir_name}.tre')

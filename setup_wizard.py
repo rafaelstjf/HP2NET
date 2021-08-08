@@ -99,23 +99,6 @@ def main():
         cf['WORKFLOW']['partnodelong'] = show_and_add_options([cf['WORKFLOW']['partnodelong']])
         print("Walltime this partition: ")
         cf['WORKFLOW']['walltimelong'] = show_and_add_options([cf['WORKFLOW']['walltimelong']])
-    if(full_configuration == 'No'):
-        print('Use a Julia Sysimage?')
-        if(show_options(['Yes','No']) == 'Yes'):
-            print("Julia setup:")
-            cf['SYSTEM']['juliasetup'] = show_and_add_options([cf['SYSTEM']['juliasetup']])
-            print("Julia Package dir:")
-            cf['SYSTEM']['juliapkgdir'] = show_and_add_options([cf['SYSTEM']['juliapkgdir']])
-            print("Julia sysimage file:")
-            cf['SYSTEM']['juliasysimage'] = show_and_add_options([cf['SYSTEM']['juliasysimage']])
-    else:
-        print("Julia setup:")
-        cf['SYSTEM']['juliasetup'] = show_and_add_options([cf['SYSTEM']['juliasetup']])
-        print("Julia Package dir:")
-        cf['SYSTEM']['juliapkgdir'] = show_and_add_options([cf['SYSTEM']['juliapkgdir']])
-        print("Julia sysimage file:")
-        cf['SYSTEM']['juliasysimage'] = show_and_add_options([cf['SYSTEM']['juliasysimage']])
-
     if(full_configuration == 'Yes' or cf['GENERAL']['treemethod'] == 'ML_RAXML'):
         print("----------------------RAxML settings----------------------")
         print("RAxML executable name")
@@ -148,6 +131,8 @@ def main():
         cf['SNAQ']['snaqthreads'] = show_and_add_options([cf['SNAQ']['snaqthreads']])
         print("Maximum number of hybridizations:")
         cf['SNAQ']['snaqhmax'] = show_and_add_options([cf['SNAQ']['snaqhmax']])
+        print("Number of runs:")
+        cf['SNAQ']['snaqruns'] = show_and_add_options([cf['SNAQ']['snaqruns']])
     if(full_configuration == 'Yes' or cf['GENERAL']['networkmethod'] == 'MP' ):
         print("----------------------PhyloNet settings----------------------")
         print("Folder of the jar file:")

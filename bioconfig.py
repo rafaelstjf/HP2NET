@@ -56,9 +56,6 @@ class BioConfig:
     env_path:           str
     environ:            str
     script_dir:         str
-    julia_setup:        str
-    julia_pkgdir:       str
-    julia_sysimage:     str
     workload_path:      str
     execution_provider: str
     network_method:     str
@@ -97,6 +94,7 @@ class BioConfig:
     snaq:               str
     snaq_threads:       int
     snaq_hmax:          int
+    snaq_runs:          int
     mrbayes:            str
     mrbayes_parameters: str
     mrbayes_dir:        str
@@ -149,9 +147,6 @@ class ConfigFactory:
                 workload.append(line.strip())
         execution_provider = cf['GENERAL']['ExecutionProvider']
         #SYSTEM
-        julia_setup = cf['SYSTEM']['JuliaSetup']
-        julia_pkgdir = cf['SYSTEM']['JuliaPkgDir']
-        julia_sysimage = cf['SYSTEM']['JuliaSysImage']
         #WORKFLOW
         workflow_name = cf["WORKFLOW"]["Name"]
         workflow_monitor = cf["WORKFLOW"].getboolean("Monitor")
@@ -190,6 +185,8 @@ class ConfigFactory:
         snaq = cf['SNAQ']['SnaqScript']
         snaq_threads = int(cf['SNAQ']['SnaqThreads'])
         snaq_hmax = int(cf['SNAQ']['SnaqHMax'])
+        snaq_runs = int(cf['SNAQ']['SnaqRuns'])
+        
         #PHYLONET
         phylonet_exec_dir = cf['PHYLONET']['PhyloNetExecDir']
         phylonet_jar = cf['PHYLONET']['PhyloNetJar']
@@ -219,9 +216,6 @@ class ConfigFactory:
                                    workload=workload,
                                    env_path=env_path,
                                    environ=environ,
-                                   julia_setup=julia_setup,
-                                   julia_pkgdir=julia_pkgdir,
-                                   julia_sysimage=julia_sysimage,
                                    workflow_monitor=workflow_monitor,
                                    workflow_name=workflow_name,
                                    workflow_part_f=workflow_part_f,
@@ -255,6 +249,7 @@ class ConfigFactory:
                                    snaq=snaq,
                                    snaq_threads=snaq_threads,
                                    snaq_hmax=snaq_hmax,
+                                   snaq_runs=snaq_runs,
                                    mrbayes=mrbayes,
                                    mrbayes_parameters=mrbayes_parameters,
                                    mrbayes_dir=mrbayes_dir,
