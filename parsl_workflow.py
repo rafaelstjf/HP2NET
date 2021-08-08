@@ -162,14 +162,22 @@ def mrbayes_snaq(bio_config):
     wait_for_all(result)
     return
 
-def main(config_file='config/default.ini'):
+def main(config_file='config/default.ini', tree_method = "", network_method = ""):
     
     logging.info('Starting the Workflow Orchestration')
 
     cf = bioconfig.ConfigFactory(config_file)
 
     bio_config = cf.build_config()
-
+    #configure parameters
+    if tree_method == 'ML_RAXML' or tree_method == 'ML_IQTREE':
+        bio_config.tree_method = tree_method
+    if tree_method == 'BI_MRBAYES' and (bio_config.network_method == 'MPL' or network_method == 'MPL'):
+        bio_config.tree_method = tree_method
+    if network_method == 'MPL':
+        bio_config.network_method = network_method
+    elif network_method == 'MP' and bio_config.tree_method != 'BI_MRBAYES':
+        bio_config.network_method = network_method
     # Configure the infrastructure
     # TODO: Fetch the configuration from a file...
     dkf_config = workflow_config(bio_config)
@@ -200,8 +208,22 @@ logging.basicConfig(level=logging.INFO)
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Process the configuration file.')
     parser.add_argument('--config', help='Settings file', required=False, type=str)
+    parser.add_argument('--net', help='Network method (MP for maximum parsimony or MPL for maximum pseudo likelihood)', required=False, type=str)
+    parser.add_argument('--tree', help='Tree method (ML_RAXML, ML_IQTREE or BI_MRBAYES (works only with MPL))', required=False, type=str)
     args = parser.parse_args()
-    if args.config is not None:
-        main(args.config)
+    if args.config is not None and args.tree is not None and args.net is not None:
+        main(config_file=args.config, tree_method = args.tree, network_method = args.net)
+    elif args.config is not None and args.tree is not None:
+        main(config_file=args.config, tree_method=args.tree)
+    elif args.config is not None and args.net is not None:
+        main(config_file=args.config, network_method=args.net)
+    elif args.tree is not None and args.net is not None:
+        main(tree_method = args.tree, network_method=args.net)
+    elif args.config is not None:
+        main(config_file=args.config)
+    elif args.tree is not None:
+        main(tree_method=args.tree)
+    elif args.net is not None:
+        main(network_method = args.net)
     else:
         main()

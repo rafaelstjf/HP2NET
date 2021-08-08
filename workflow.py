@@ -31,7 +31,7 @@ __status__ = "Research"
 import parsl
 import logging
 from parsl.channels import LocalChannel
-from parsl.launchers import SrunLauncher
+from parsl.launchers import SrunLauncher, SingleNodeLauncher
 from parsl.addresses import address_by_interface
 from parsl.executors import HighThroughputExecutor, ThreadPoolExecutor
 from parsl.providers import LocalProvider, SlurmProvider
@@ -152,28 +152,51 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
     else: #localprovider
         return parsl.config.Config(
             executors=[
-                ThreadPoolExecutor(
+                HighThroughputExecutor(
                     label='single_thread',
                     # Optional: The network interface on node 0 which compute nodes can communicate with.
                     # address=address_by_interface('enp4s0f0' or 'ib0')
-                    max_threads = 4,
-                    managed = True
+                    max_workers=3,
+                    cores_per_worker=1,
+                    worker_debug=False,
+                    provider=LocalProvider(
+                        channel=LocalChannel(script_dir="/mnt/c/Users/rafae/Documents/GitHub/biocomp"),
+                        parallelism=1,
+                        init_blocks=1,
+                        worker_init=env_str,
+                        max_blocks=1
+                    ),
                 ),
-                ThreadPoolExecutor(
+                HighThroughputExecutor(
                     label=f'tree_and_statistics',
                     # Optional: The network interface on node 0 which compute nodes can communicate with.
                     # address=address_by_interface('enp4s0f0' or 'ib0')
-                    max_threads = 4,
-                    managed = True
+                    max_workers=1,
+                    cores_per_worker=4,
+                    worker_debug=False,
+                    provider=LocalProvider(
+                        channel=LocalChannel(script_dir="/mnt/c/Users/rafae/Documents/GitHub/biocomp"),
+                        parallelism=1,
+                        init_blocks=1,
+                        worker_init=env_str,
+                        max_blocks=1
+                    ),
                 ),
-                ThreadPoolExecutor(
+                HighThroughputExecutor(
                     label=f'phylogenetic_network',
                     # Optional: The network interface on node 0 which compute nodes can communicate with.
                     # address=address_by_interface('enp4s0f0' or 'ib0')
-                    max_threads = 4,
-                    managed = True
+                    max_workers=1,
+                    cores_per_worker=4,
+                    worker_debug=False,
+                    provider=LocalProvider(
+                        channel=LocalChannel(script_dir="/mnt/c/Users/rafae/Documents/GitHub/biocomp"),
+                        parallelism=1,
+                        init_blocks=1,
+                        worker_init=env_str,
+                        max_blocks=1
+                    ),
                 ),
-
             ],
             monitoring=mon_hub,
             strategy=None,

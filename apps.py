@@ -575,7 +575,6 @@ def setup_bucky_output(basedir: str,
             cf[i] = re.sub("(=|\(number of loci\)|\s+)", "", cf[i])
             cf_95[i] = re.sub("(95% CI for CF = \(|\))", "", cf_95[i])
             cf_95_list = cf_95[i].split(',')
-            print(cf_95_list)
             split_dict['CF'] = float(cf[i])/float(num_genes)
             split_dict['95_CI_LO'] = float(cf_95_list[0])/float(num_genes)
             split_dict['95_CI_HI'] = float(cf_95_list[1])/float(num_genes)
