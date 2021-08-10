@@ -33,7 +33,7 @@ import logging
 from parsl.channels import LocalChannel
 from parsl.launchers import SrunLauncher, SingleNodeLauncher
 from parsl.addresses import address_by_interface
-from parsl.executors import HighThroughputExecutor, ThreadPoolExecutor
+from parsl.executors import HighThroughputExecutor, WorkQueueExecutor
 from parsl.providers import LocalProvider, SlurmProvider
 
 from bioconfig import BioConfig
@@ -72,15 +72,14 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
     if config.execution_provider == 'SlurmProvider':
         return parsl.config.Config(
             executors=[
-                HighThroughputExecutor(
+                WorkQueueExecutor(
                     label='single_thread',
                     # Optional: The network interface on node 0 which compute nodes can communicate with.
                     # address=address_by_interface('enp4s0f0' or 'ib0')
                     address=address_by_interface('ib0'),
                     max_workers=int(config.workflow_core_f),
-                    cores_per_worker=1,
-                    worker_debug=False,
-                    interchange_port_range=(50000, 55000),
+                    shared_fs = False,
+                    use_cache = True,
                     provider=SlurmProvider(
                         partition=config.workflow_part_f,
                         # scheduler_options='',
@@ -96,15 +95,13 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
                             overrides=f'-c {config.workflow_core_f}'),
                     ),
                 ),
-                HighThroughputExecutor(
+                WorkQueueExecutor(
                     label=f'tree_and_statistics',
                     # Optional: The network interface on node 0 which compute nodes can communicate with.
                     # address=address_by_interface('enp4s0f0' or 'ib0')
                     address=address_by_interface('ib0'),
-                    max_workers=int(config.workflow_core_t),
-                    cores_per_worker=6,
-                    worker_debug=False,
-                    interchange_port_range=(55000, 60000),
+                    shared_fs = False,
+                    use_cache = True,
                     provider=SlurmProvider(
                         partition=config.workflow_part_t,
                         # scheduler_options='',
@@ -120,15 +117,13 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
                             overrides=f'-c {config.workflow_core_t}'),
                     ),
                 ),
-                HighThroughputExecutor(
+                WorkQueueExecutor(
                     label=f'phylogenetic_network',
                     # Optional: The network interface on node 0 which compute nodes can communicate with.
                     # address=address_by_interface('enp4s0f0' or 'ib0')
                     address=address_by_interface('ib0'),
-                    max_workers=int(config.workflow_core_l),
-                    cores_per_worker=6,
-                    worker_debug=False,
-                    interchange_port_range=(40000, 45000),
+                    shared_fs = False,
+                    use_cache = True,
                     provider=SlurmProvider(
                         partition=config.workflow_part_l,
                         # scheduler_options='',
@@ -160,7 +155,7 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
                     cores_per_worker=1,
                     worker_debug=False,
                     provider=LocalProvider(
-                        channel=LocalChannel(script_dir="/mnt/c/Users/rafae/Documents/GitHub/biocomp"),
+                        channel=LocalChannel(config.script_dir),
                         parallelism=1,
                         init_blocks=1,
                         worker_init=env_str,
@@ -175,7 +170,7 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
                     cores_per_worker=4,
                     worker_debug=False,
                     provider=LocalProvider(
-                        channel=LocalChannel(script_dir="/mnt/c/Users/rafae/Documents/GitHub/biocomp"),
+                        channel=LocalChannel(config.script_dir),
                         parallelism=1,
                         init_blocks=1,
                         worker_init=env_str,
@@ -190,7 +185,7 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
                     cores_per_worker=4,
                     worker_debug=False,
                     provider=LocalProvider(
-                        channel=LocalChannel(script_dir="/mnt/c/Users/rafae/Documents/GitHub/biocomp"),
+                        channel=LocalChannel(config.script_dir),
                         parallelism=1,
                         init_blocks=1,
                         worker_init=env_str,
