@@ -313,7 +313,7 @@ def snaq(basedir: str,
     # run the julia script with PhyloNetworks
     snaq_exec = os.path.join(config.script_dir, config.snaq)
     num_threads = config.snaq_threads
-    output_folder = os.path.join(basedir, 'snaq')
+    output_folder = os.path.join(basedir, config.snaq_dir)
     hmax = config.snaq_hmax
     runs = config.snaq_runs
     if config.tree_method == "ML_RAXML":
@@ -820,7 +820,7 @@ def setup_phylonet_data(basedir: str,
         gene_trees = os.path.join(os.path.join(basedir, config.raxml_dir), config.raxml_output)
     elif(config.tree_method == "ML_IQTREE"):
         gene_trees = os.path.join(os.path.join(basedir, config.iqtree_dir), config.iqtree_output)
-    out_dir = os.path.join(basedir, 'phylonet')
+    out_dir = os.path.join(basedir, config.phylonet_dir)
     out_filepath = os.path.join(out_dir, config.phylonet_input)
     try:
         in_file = open(gene_trees, 'r')
@@ -873,7 +873,7 @@ def phylonet(basedir: str,
     import os
     import logging
     logging.info(f'PhyloNet with {basedir}')
-    output_dir = os.path.join(basedir, "phylonet")
+    output_dir = os.path.join(basedir, config.phylonet_dir)
     input_file = os.path.join(output_dir, config.phylonet_input)
     # Return to Parsl to be executed on the workflow
     return f'cd {output_dir};{exec_phylonet} {input_file}'
@@ -908,17 +908,6 @@ def iqtree(basedir: str, config: BioConfig,
 
 
 @parsl.python_app(executors=['single_thread'])
-def clear_temporary_files(basedir: str,
-                          config: BioConfig,
-                          inputs=[],
-                          outputs=[],
-                          stderr=parsl.AUTO_LOGNAME,
-                          stdout=parsl.AUTO_LOGNAME):    
-    #TODO
-    return
-
-
-@parsl.python_app(executors=['single_thread'])
 def create_folders(basedir: str,
                    config: BioConfig,
                    folders=[],
@@ -928,12 +917,21 @@ def create_folders(basedir: str,
                    stdout=parsl.AUTO_LOGNAME):
     import os
     from pathlib import Path 
+    import shutil
     import logging
+    logging.info(f'Removing folders from old executions')
+    for folder in folders:
+        full_path = os.path.join(basedir, folder)
+        try:
+            shutil.rmtree(full_path)
+        except Exception:
+            print(f"Impossible to remove {full_path} folder")
     logging.info(f'Creating folders in {basedir}')
     for folder in folders:
         full_path = os.path.join(basedir, folder)
         try:
             Path(full_path).mkdir(exist_ok=True)
+            print('a')
         except Exception:
             print(f'Impossible to create {full_path} folder')
     return

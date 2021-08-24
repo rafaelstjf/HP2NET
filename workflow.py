@@ -61,7 +61,8 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
     env_str = config.environ
 
     logging.info(f'Task Environment {env_str}')
-    mon_hub = parsl.monitoring.monitoring.MonitoringHub(
+    if config.execution_provider == 'SlurmProvider':
+        mon_hub = parsl.monitoring.monitoring.MonitoringHub(
             workflow_name=name,
             hub_address=address_by_interface('ib0'),
             hub_port=60001,
@@ -69,7 +70,6 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
             monitoring_debug=False,
             resource_monitoring_interval=interval,
         ) if monitor else None
-    if config.execution_provider == 'SlurmProvider':
         return parsl.config.Config(
             executors=[
                 WorkQueueExecutor(
@@ -145,6 +145,12 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
             strategy=None,
         )
     else: #localprovider
+        mon_hub = parsl.monitoring.monitoring.MonitoringHub(
+            workflow_name=name,
+            resource_monitoring_enabled=True,
+            monitoring_debug=False,
+            resource_monitoring_interval=interval,
+        ) if monitor else None
         return parsl.config.Config(
             executors=[
                 HighThroughputExecutor(

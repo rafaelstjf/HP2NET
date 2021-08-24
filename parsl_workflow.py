@@ -27,7 +27,6 @@ def raxml_snaq(bio_config):
         logging.info("Using the Maximum Pseudo Likelihood Method")
         ret_ast = apps.astral(basedir, bio_config, inputs=[ret_sad])
         ret_snq = apps.snaq(basedir, bio_config, inputs=[ret_ast])
-        #ret_clear = apps.clear_temporary_files(basedir, bio_config, inputs=ret_snq)
         result.append(ret_snq)
     wait_for_all(result)
     return
@@ -57,7 +56,6 @@ def raxml_phylonet(bio_config):
         logging.info("Using the Maximum Parsimony Method")
         ret_spd = apps.setup_phylonet_data(basedir, bio_config, inputs=[ret_sad])
         ret_phylonet = apps.phylonet(basedir, bio_config, inputs=[ret_spd])
-        #ret_clear = apps.clear_temporary_files(basedir, bio_config, inputs=ret_phylonet)
         result.append(ret_phylonet)
     wait_for_all(result)
     return
@@ -87,7 +85,6 @@ def iqtree_snaq(bio_config):
         logging.info("Using the Maximum Pseudo Likelihood Method")
         ret_ast = apps.astral(basedir, bio_config, inputs=[ret_sad])
         ret_snq = apps.snaq(basedir, bio_config, inputs=[ret_ast])
-        #ret_clear = apps.clear_temporary_files(basedir, bio_config, inputs=ret_snq)
         result.append(ret_snq)
     wait_for_all(result)
     return
@@ -117,7 +114,6 @@ def iqtree_phylonet(bio_config):
         logging.info("Using the Maximum Parsimony Method")
         ret_spd = apps.setup_phylonet_data(basedir, bio_config, inputs=[ret_sad])
         ret_phylonet = apps.phylonet(basedir, bio_config, inputs=[ret_spd])
-        #ret_clear = apps.clear_temporary_files(basedir, bio_config, inputs=ret_phylonet)
         result.append(ret_phylonet)
     wait_for_all(result)
     return

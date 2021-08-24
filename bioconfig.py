@@ -95,6 +95,7 @@ class BioConfig:
     snaq_threads:       int
     snaq_hmax:          int
     snaq_runs:          int
+    snaq_dir:           str
     mrbayes:            str
     mrbayes_parameters: str
     mrbayes_dir:        str
@@ -111,6 +112,7 @@ class BioConfig:
     phylonet_threads:   str
     phylonet_hmax:      str
     phylonet_input:     str
+    phylonet_dir:       str
 
 
 @borg
@@ -186,6 +188,7 @@ class ConfigFactory:
         snaq_threads = int(cf['SNAQ']['SnaqThreads'])
         snaq_hmax = int(cf['SNAQ']['SnaqHMax'])
         snaq_runs = int(cf['SNAQ']['SnaqRuns'])
+        snaq_dir = 'snaq'
         
         #PHYLONET
         phylonet_exec_dir = cf['PHYLONET']['PhyloNetExecDir']
@@ -194,6 +197,7 @@ class ConfigFactory:
         phylonet_threads = cf['PHYLONET']['PhyloNetThreads']
         phylonet_hmax = cf['PHYLONET']['PhyloNetHMax']
         phylonet_input = 'phylonet_phase_1.nex'
+        phylonet_dir = 'phylonet'
         #MRBAYES
         mrbayes = cf['MRBAYES']['MBExecutable']
         mrbayes_parameters = cf['MRBAYES']['MBParameters']
@@ -250,6 +254,7 @@ class ConfigFactory:
                                    snaq_threads=snaq_threads,
                                    snaq_hmax=snaq_hmax,
                                    snaq_runs=snaq_runs,
+                                   snaq_dir=snaq_dir,
                                    mrbayes=mrbayes,
                                    mrbayes_parameters=mrbayes_parameters,
                                    mrbayes_dir=mrbayes_dir,
@@ -265,5 +270,7 @@ class ConfigFactory:
                                    phylonet_jar=phylonet_jar,
                                    phylonet_threads=phylonet_threads,
                                    phylonet_hmax=phylonet_hmax,
-                                   phylonet_input=phylonet_input)
+                                   phylonet_input=phylonet_input,
+                                   phylonet_dir=phylonet_dir
+                                   )
         return self.bioconfig

@@ -14,7 +14,8 @@ In view of the complexity in modeling network experiments, the present work intr
 
 1. Python >= 3.8
    1. Biopython >= 1.75
-2. Parsl >= 1.0
+   2. Pandas
+   3. Parsl >= 1.0
 3. Raxml >= 8.2.12
 4. Astral  >= 5.7.1
 5. SnaQ (PhyloNetworks) >= 0.13.0
@@ -22,16 +23,21 @@ In view of the complexity in modeling network experiments, the present work intr
 7. BUCKy >=  1.4.4
 8. Quartet MaxCut >= 2.10
 9. PhyloNet >= 3.8.2
+10. Julia >= 1.5
 
 ## How to use
 
 #### Setting up the workflow
 
-* Edit *parl.env* with the environment variables of the needed softwares
-* Edit *work.config* with the directories of your phylogeny studies (the workflow receives as input a set of gene alignments of homologous species in the nexus format)
-* Edit *default.ini* with the path for each of the needed softwares and the parameters of the execution provider
+* Edit *parl.env* with the environment.
+* Edit *work.config* with the directories of your phylogeny studies (the workflow receives as input a set of homologous gene alignments of species in the nexus format).
+* Edit *default.ini* with the path for each of the needed softwares and the parameters of the execution provider.
 
 #### Running the workflow
 
 After setting up the workflow, just run ``python parsl_workflow.py`` in a login machine. Parsl will be responsible to submit the job of the tasks
 
+---
+## If you use it, please cite
+
+Terra, R., Coelho, M., Cruz, L., Garcia-Zapata, M., Gadelha, L., Osthoff, C., ... & Ocana, K. (2021, July). Gerência e Análises de Workflows aplicados a Redes Filogenéticas de Genomas de Dengue no Brasil. In *Anais do XV Brazilian e-Science Workshop* (pp. 49-56). SBC.
