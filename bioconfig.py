@@ -144,9 +144,26 @@ class ConfigFactory:
         workload = list()
         with open(f"{workload_path}", "r") as f:
             for line in f:
+                dir_ = {}
                 if line[0] == '#':
                     continue
-                workload.append(line.strip())
+                line_with_method = line.split('@')
+                dir_['dir'] = line_with_method[0].strip()
+                if(len(line_with_method) > 1):
+                    methods = line_with_method[1].strip().split('|')
+                    if(len(methods) > 0):
+                        dir_['tree_method']=methods[0]
+                        if(len(methods) > 1):
+                            dir_['network_method'] = methods[1]
+                        else:
+                            dir_['network_method'] = network_method
+                    else:
+                        dir_['tree_method'] = tree_method
+                        dir_['network_method'] = network_method
+                else:
+                    dir_['tree_method'] = tree_method
+                    dir_['network_method'] = network_method
+                workload.append(dir_)
         execution_provider = cf['GENERAL']['ExecutionProvider']
         #SYSTEM
         #WORKFLOW
