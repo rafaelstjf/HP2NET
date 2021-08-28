@@ -60,6 +60,7 @@ class BioConfig:
     execution_provider: str
     network_method:     str
     tree_method:        str
+    bootstrap:          str
     workload:           field(default_factory=list)
     workflow_name:      str
     workflow_monitor:   bool
@@ -79,10 +80,10 @@ class BioConfig:
     raxml_dir:          str
     raxml_output:       str
     raxml_threads:      int
-    raxml_exec_param:   str
+    raxml_model:        str
     iqtree:             str
     iqtree_dir:         str
-    iqtree_exec_param:  str
+    iqtree_model:       str
     iqtree_threads:     int
     iqtree_output:      str
     astral_exec_dir:    str
@@ -90,7 +91,7 @@ class BioConfig:
     astral:             str
     astral_dir:         str
     astral_output:      str
-    astral_exec_param:  str
+    astral_mapping:  str
     snaq:               str
     snaq_threads:       int
     snaq_hmax:          int
@@ -164,6 +165,7 @@ class ConfigFactory:
                     dir_['tree_method'] = tree_method
                     dir_['network_method'] = network_method
                 workload.append(dir_)
+        bootstrap = cf['GENERAL']['BootStrap']
         execution_provider = cf['GENERAL']['ExecutionProvider']
         #SYSTEM
         #WORKFLOW
@@ -186,11 +188,11 @@ class ConfigFactory:
         raxml_dir = 'raxml'
         raxml_output = 'besttrees.tre'
         raxml_threads = cf['RAXML']['RaxmlThreads']
-        raxml_exec_param = cf['RAXML']['RaxmlExecParameters']
+        raxml_model = cf['RAXML']['RaxmlEvolutionaryModel']
         #IQTREE
         iqtree = cf['IQTREE']['IqTreeExecutable']
         iqtree_dir = 'iqtree'
-        iqtree_exec_param = cf['IQTREE']['IqTreeParameters']
+        iqtree_model = cf['IQTREE']['IqTreeEvolutionaryModel']
         iqtree_threads = cf['IQTREE']['IqTreeThreads']
         iqtree_output = 'besttrees.tre'
         #ASTRAL
@@ -199,7 +201,7 @@ class ConfigFactory:
         astral = f"cd {astral_exec_dir}; java -jar {astral_jar}"
         astral_dir = 'astral'
         astral_output = 'astral.tre'
-        astral_exec_param = cf['ASTRAL']['AstralExecParameters']
+        astral_mapping = cf['ASTRAL']['AstralMapping']
         #SNAQ
         snaq = cf['SNAQ']['SnaqScript']
         snaq_threads = int(cf['SNAQ']['SnaqThreads'])
@@ -234,6 +236,7 @@ class ConfigFactory:
                                    execution_provider=execution_provider,
                                    network_method=network_method,
                                    tree_method=tree_method,
+                                   bootstrap=bootstrap,
                                    workload=workload,
                                    env_path=env_path,
                                    environ=environ,
@@ -255,10 +258,10 @@ class ConfigFactory:
                                    raxml_dir=raxml_dir,
                                    raxml_output=raxml_output,
                                    raxml_threads=raxml_threads,
-                                   raxml_exec_param=raxml_exec_param,
+                                   raxml_model=raxml_model,
                                    iqtree=iqtree,
                                    iqtree_dir=iqtree_dir,
-                                   iqtree_exec_param=iqtree_exec_param,
+                                   iqtree_model=iqtree_model,
                                    iqtree_threads=iqtree_threads,
                                    iqtree_output=iqtree_output,
                                    astral_exec_dir=astral_exec_dir,
@@ -266,7 +269,7 @@ class ConfigFactory:
                                    astral=astral,
                                    astral_dir=astral_dir,
                                    astral_output=astral_output,
-                                   astral_exec_param=astral_exec_param,
+                                   astral_mapping=astral_mapping,
                                    snaq=snaq,
                                    snaq_threads=snaq_threads,
                                    snaq_hmax=snaq_hmax,

@@ -126,15 +126,15 @@ def raxml(basedir: dict, config: BioConfig,
     raxml_dir = os.path.join(basedir['dir'], config.raxml_dir)
 
     # TODO: Create the following parameters(external configuration): -m, -N,
-    flags = f"-T {num_threads} {exec_param}"
 
     p = random.randint(1, 10000)
     x = random.randint(1, 10000)
+    params = f"-T {num_threads} -p {p} -x {x} -f a -m {config.raxml_model} -N {config.bootstrap}"
 
     output_file = os.path.splitext(os.path.basename(input_file))[0]
 
     # Return to Parsl to be executed on the workflow
-    return f"cd {raxml_dir}; {raxml_exec} {flags} -p {p} -x {x} -s {input_file} -n {output_file}"
+    return f"cd {raxml_dir}; {raxml_exec} {params} -s {input_file} -n {output_file}"
 
 
 @parsl.python_app(executors=['single_thread'])
@@ -283,7 +283,10 @@ def astral(basedir: dict,
                 f.write(f'{i}\n')
     astral_output = os.path.join(astral_dir, config.astral_output)
     # Return to Parsl to be executed on the workflow
-    return f'{exec_astral} -i {tree_output} -b {bs_file} {config.astral_exec_param} -o {astral_output}'
+    if len(config.astral_mapping) > 0:
+        return f'{exec_astral} -i {tree_output} -b {bs_file} -r {config.bootstrap} -a {os.path.join(os.path.join(basedir, "input"),config.astral_mapping)} -o {astral_output}'
+    else:
+        return f'{exec_astral} -i {tree_output} -b {bs_file} -r {config.bootstrap} -o {astral_output}'
 
 @parsl.bash_app(executors=['phylogenetic_network'])
 def snaq(basedir: dict,
@@ -902,7 +905,7 @@ def iqtree(basedir: dict, config: BioConfig,
     import logging
     logging.info(f'IQ-TREE with {basedir["dir"]}')
     iqtree_dir = os.path.join(basedir['dir'], config.iqtree_dir)
-    flags = f"-T {config.iqtree_threads} {config.iqtree_exec_param} -s {input_file}"
+    flags = f"-T {config.iqtree_threads} -b {config.bootstrap} -m {config.iqtree_model}  -s {input_file}"
     # Return to Parsl to be executed on the workflow
     return f"cd {iqtree_dir}; {config.iqtree} {flags}"
 
