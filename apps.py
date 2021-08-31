@@ -120,8 +120,6 @@ def raxml(basedir: dict, config: BioConfig,
 
     num_threads = config.raxml_threads
     raxml_exec = config.raxml
-    exec_param = config.raxml_exec_param
-
     logging.info(f'Raxml called with {basedir["dir"]}')
     raxml_dir = os.path.join(basedir['dir'], config.raxml_dir)
 
@@ -262,26 +260,40 @@ def astral(basedir: dict,
     import glob
     import os
     import logging
+    from pathlib import Path
     logging.info(f'ASTRAL called with {basedir["dir"]}')
     astral_dir = os.path.join(basedir['dir'],config.astral_dir)
-    bs_file = os.path.join(astral_dir,'BSlistfiles')
     exec_astral = config.astral
     tree_output = ""
+    astral_output = ""
     if(basedir['tree_method'] == "ML_RAXML"):
+        try:
+            astral_raxml = os.path.join(astral_dir, config.raxml_dir)
+            Path(astral_raxml).mkdir(exist_ok=True)
+        except Exception:
+            print("Failed to create the raxml bootstrap folder!")
+        bs_file = os.path.join(astral_raxml,'BSlistfiles')
         raxm_dir = os.path.join(basedir['dir'], config.raxml_dir)
         tree_output = os.path.join(raxm_dir,config.raxml_output)
         boot_strap = os.path.join(os.path.join(basedir['dir'],config.raxml_dir),"bootstrap/*")
         with open(bs_file, 'w') as f:
             for i in glob.glob(boot_strap):
                 f.write(f'{i}\n')
+        astral_output = os.path.join(astral_raxml, config.astral_output)
     elif(basedir['tree_method'] == "ML_IQTREE"):
+        try:
+            astral_iqtree = os.path.join(astral_dir, config.iqtree_dir)
+            Path(astral_iqtree).mkdir(exist_ok=True)
+        except Exception:
+            print("Failed to create the raxml bootstrap folder!")
+        bs_file = os.path.join(astral_iqtree,'BSlistfiles')
         iqtree_dir = os.path.join(basedir['dir'], config.iqtree_dir)
         tree_output = os.path.join(iqtree_dir,config.iqtree_output)
         boot_strap = os.path.join(os.path.join(basedir['dir'],config.iqtree_dir),'*.boottrees')
         with open(bs_file, 'w') as f:
             for i in glob.glob(boot_strap):
                 f.write(f'{i}\n')
-    astral_output = os.path.join(astral_dir, config.astral_output)
+        astral_output = os.path.join(astral_iqtree, config.astral_output)
     # Return to Parsl to be executed on the workflow
     if len(config.astral_mapping) > 0:
         return f'{exec_astral} -i {tree_output} -b {bs_file} -r {config.bootstrap} -a {os.path.join(os.path.join(basedir, "input"),config.astral_mapping)} -o {astral_output}'
@@ -321,20 +333,20 @@ def snaq(basedir: dict,
     runs = config.snaq_runs
     if basedir['tree_method'] == "ML_RAXML":
         raxml_tree = os.path.join(os.path.join(basedir['dir'], config.raxml_dir), config.raxml_output)
-        astral_tree = os.path.join(basedir['dir'], config.astral_dir)
+        astral_tree = os.path.join(basedir['dir'], os.path.join(config.astral_dir, config.raxml_dir))
         astral_tree = os.path.join(astral_tree, config.astral_output)
-        return f'julia {snaq_exec} 0 {raxml_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs}'
+        return f'julia {snaq_exec} {basedir["tree_method"]} {raxml_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs}'
     elif basedir['tree_method'] == "ML_IQTREE":
         iqtree_tree = os.path.join(os.path.join(basedir['dir'], config.iqtree_dir), config.iqtree_output)
-        astral_tree = os.path.join(basedir['dir'], config.astral_dir)
+        astral_tree = os.path.join(basedir['dir'], os.path.join(config.astral_dir,config.iqtree_dir))
         astral_tree = os.path.join(astral_tree, config.astral_output)
-        return f'julia {snaq_exec} 0 {iqtree_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs}'
+        return f'julia {snaq_exec} {basedir["tree_method"]} {iqtree_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs}'
     elif basedir['tree_method'] == "BI_MRBAYES":
         dir_name = os.path.basename(basedir['dir'])
         qmc_output = os.path.join(os.path.join(basedir['dir'], config.quartet_maxcut_dir), f'{dir_name}.tre')
         bucky_folder = os.path.join(basedir['dir'], config.bucky_dir)
         bucky_table = os.path.join(bucky_folder, f"{dir_name}.csv")
-        return f'julia {snaq_exec} 1 {bucky_table} {qmc_output} {output_folder} {num_threads} {hmax}'
+        return f'julia {snaq_exec} {basedir["tree_method"]} {bucky_table} {qmc_output} {output_folder} {num_threads} {hmax}'
     else:
         return
 
@@ -824,7 +836,7 @@ def setup_phylonet_data(basedir: dict,
     elif(basedir['tree_method'] == "ML_IQTREE"):
         gene_trees = os.path.join(os.path.join(basedir['dir'], config.iqtree_dir), config.iqtree_output)
     out_dir = os.path.join(basedir['dir'], config.phylonet_dir)
-    out_filepath = os.path.join(out_dir, config.phylonet_input)
+    out_filepath = os.path.join(out_dir, (basedir['tree_method'] + '_' + config.phylonet_input))
     try:
         in_file = open(gene_trees, 'r')
     except IOError:
@@ -844,7 +856,8 @@ def setup_phylonet_data(basedir: dict,
     buffer+='END;\nBEGIN PHYLONET;\nInferNetwork_MP ('
     for i in range(0, tree_index-1):
         buffer+="geneTree" + str(i+1) +','
-    output_network = os.path.join(out_dir, 'PhyloNet' + config.phylonet_hmax + ".nex")
+    filename = f"{os.path.basename(basedir['dir'])}_{basedir['tree_method']}_{basedir['network_method']}_{config.phylonet_hmax}.nex"
+    output_network = os.path.join(out_dir,filename)
     buffer+="geneTree" + str(tree_index) +') ' + config.phylonet_hmax + " -pl " + config.phylonet_threads + " -x " + config.phylonet_threads + " " + output_network + ';\nEND;'
     #---
     out_file.write(buffer)
@@ -877,7 +890,7 @@ def phylonet(basedir: dict,
     import logging
     logging.info(f'PhyloNet with {basedir["dir"]}')
     output_dir = os.path.join(basedir['dir'], config.phylonet_dir)
-    input_file = os.path.join(output_dir, config.phylonet_input)
+    input_file = os.path.join(output_dir, (basedir['tree_method'] + '_' + config.phylonet_input))
     # Return to Parsl to be executed on the workflow
     return f'cd {output_dir};{exec_phylonet} {input_file}'
 

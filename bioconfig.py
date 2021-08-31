@@ -203,7 +203,7 @@ class ConfigFactory:
         astral_output = 'astral.tre'
         astral_mapping = cf['ASTRAL']['AstralMapping']
         #SNAQ
-        snaq = cf['SNAQ']['SnaqScript']
+        snaq = 'snaq.jl'
         snaq_threads = int(cf['SNAQ']['SnaqThreads'])
         snaq_hmax = int(cf['SNAQ']['SnaqHMax'])
         snaq_runs = int(cf['SNAQ']['SnaqRuns'])
