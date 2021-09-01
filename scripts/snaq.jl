@@ -11,7 +11,7 @@ using Distributed: length
 #arg[7] = runs
 
 println("Starting PhyloNetworks...")
-if length(ARGS) < 6
+if length(ARGS) < 7
     println("Missing arguments!")
 else
     println("Tree method: ", ARGS[1])

@@ -346,7 +346,7 @@ def snaq(basedir: dict,
         qmc_output = os.path.join(os.path.join(basedir['dir'], config.quartet_maxcut_dir), f'{dir_name}.tre')
         bucky_folder = os.path.join(basedir['dir'], config.bucky_dir)
         bucky_table = os.path.join(bucky_folder, f"{dir_name}.csv")
-        return f'julia {snaq_exec} {basedir["tree_method"]} {bucky_table} {qmc_output} {output_folder} {num_threads} {hmax}'
+        return f'julia {snaq_exec} {basedir["tree_method"]} {bucky_table} {qmc_output} {output_folder} {num_threads} {hmax} {runs}'
     else:
         return
 
