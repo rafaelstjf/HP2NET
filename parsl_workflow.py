@@ -4,10 +4,6 @@ from workflow import workflow_config, wait_for_all
 
 def raxml_snaq(bio_config, basedir):
     result = list()
-    #Create folders
-    result.append(apps.setup_phylip_data(basedir, bio_config))
-    wait_for_all(result)
-    result = list()
     ret_tree = list()
     datalist = list()
     #append the input files
@@ -26,9 +22,6 @@ def raxml_snaq(bio_config, basedir):
     return result
 
 def raxml_phylonet(bio_config, basedir):
-    result = list()
-    result.append(apps.setup_phylip_data(basedir, bio_config))
-    wait_for_all(result)
     result = list()
     ret_tree = list()
     datalist = list()
@@ -49,10 +42,6 @@ def raxml_phylonet(bio_config, basedir):
 
 def iqtree_snaq(bio_config, basedir):
     result = list()
-    #Create folders
-    result.append(apps.setup_phylip_data(basedir, bio_config))
-    wait_for_all(result)
-    result = list()
     ret_tree = list()
     datalist = list()
     #append the input files
@@ -72,10 +61,6 @@ def iqtree_snaq(bio_config, basedir):
 
 def iqtree_phylonet(bio_config, basedir):
     result = list()
-    #Create folders
-    result.append(apps.setup_phylip_data(basedir, bio_config))
-    wait_for_all(result)
-    result = list()
     ret_tree = list()
     datalist = list()
     #append the input files
@@ -94,10 +79,6 @@ def iqtree_phylonet(bio_config, basedir):
     return result
 
 def mrbayes_snaq(bio_config, basedir):
-    result = list()
-    #Create folders
-    result.append(apps.setup_phylip_data(basedir, bio_config))
-    wait_for_all(result)
     result = list()
     ret_tree = list()
     datalist = list()
@@ -127,10 +108,11 @@ def mrbayes_snaq(bio_config, basedir):
     result.append(ret_snq)
     return result
 
-def create_folders(config):
+def prepare_to_run(config):
     folder_list = list()
     r = list()
     for basedir in config.workload:
+        r.append(apps.setup_phylip_data(basedir, config))
         network_method = basedir['network_method']
         tree_method = basedir['tree_method']
         if(network_method == 'MPL'):
@@ -157,7 +139,7 @@ def main(config_file='config/default.ini', tree_method = "", network_method = ""
     dkf_config = workflow_config(bio_config)
     dkf = parsl.load(dkf_config)
     results = list()
-    create_folders(bio_config)
+    prepare_to_run(bio_config)
     for basedir in bio_config.workload:
         network_method = basedir['network_method']
         tree_method = basedir['tree_method']
@@ -169,14 +151,14 @@ def main(config_file='config/default.ini', tree_method = "", network_method = ""
             elif(tree_method == 'BI_MRBAYES'):
                 r = mrbayes_snaq(bio_config, basedir)
             else:
-                logging.error(f'Invalid parameter combinatiion: {bio_config.network_method} and {bio_config.tree_method}')
+                logging.error(f'Invalid parameter combination: {bio_config.network_method} and {bio_config.tree_method}')
         elif(network_method == 'MP'):
             if(tree_method == 'ML_RAXML'):
                 r = raxml_phylonet(bio_config, basedir)
             elif(tree_method == 'ML_IQTREE'):
                 r = iqtree_phylonet(bio_config, basedir)
             else:
-                logging.error(f'Invalid parameter combinatiion: {bio_config.network_method} and {bio_config.tree_method}')
+                logging.error(f'Invalid parameter combination: {bio_config.network_method} and {bio_config.tree_method}')
         else:
             logging.error(f'Invalid network method: {bio_config.network_method}')
         results.extend(r)

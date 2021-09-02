@@ -156,11 +156,16 @@ class ConfigFactory:
                         dir_['tree_method']=methods[0]
                         if(len(methods) > 1):
                             dir_['network_method'] = methods[1]
+                            if(len(methods) > 2):
+                                dir_['mapping'] = methods[2]
+                            else:
+                                dir_['mapping'] = cf['ASTRAL']['AstralMapping']
                         else:
                             dir_['network_method'] = network_method
                     else:
                         dir_['tree_method'] = tree_method
                         dir_['network_method'] = network_method
+                        dir_['mapping'] = cf['ASTRAL']['AstralMapping']
                 else:
                     dir_['tree_method'] = tree_method
                     dir_['network_method'] = network_method
