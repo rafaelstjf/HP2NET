@@ -81,7 +81,10 @@ def setup_phylip_data(basedir: dict, config: BioConfig,
     # Now, use the function to convert nexus to phylip.
     input_phylip_dir = os.path.join(input_dir, "phylip")
     if os.path.isdir(input_phylip_dir):
-        shutil.rmtree(input_phylip_dir)
+        try:
+            shutil.rmtree(input_phylip_dir)
+        except Exception:
+            print("Error when trying to delete folder")
     Path(input_phylip_dir).mkdir(exist_ok=True)
     files = glob.glob(os.path.join(input_nexus_dir,'*.nex'))
     try:
@@ -290,8 +293,8 @@ def astral(basedir: dict,
                 f.write(f'{i}\n')
         astral_output = os.path.join(astral_iqtree, config.astral_output)
     # Return to Parsl to be executed on the workflow
-    if len(config.astral_mapping) > 0:
-        return f'{exec_astral} -i {tree_output} -b {bs_file} -r {config.bootstrap} -a {os.path.join(os.path.join(basedir, "input"),config.astral_mapping)} -o {astral_output}'
+    if len(config.species_mapping) > 0:
+        return f'{exec_astral} -i {tree_output} -b {bs_file} -r {config.bootstrap} -a {os.path.join(os.path.join(basedir, "input"),config.species_mapping)} -o {astral_output}'
     else:
         return f'{exec_astral} -i {tree_output} -b {bs_file} -r {config.bootstrap} -o {astral_output}'
 
@@ -340,7 +343,7 @@ def snaq(basedir: dict,
         qmc_output = os.path.join(os.path.join(basedir['dir'], config.quartet_maxcut_dir), f'{dir_name}.tre')
         bucky_folder = os.path.join(basedir['dir'], config.bucky_dir)
         bucky_table = os.path.join(bucky_folder, f"{dir_name}.csv")
-        return f'julia {snaq_exec} {basedir["tree_method"]} {bucky_table} {qmc_output} {output_folder} {num_threads} {hmax}'
+        return f'julia {snaq_exec} {basedir["tree_method"]} {bucky_table} {qmc_output} {output_folder} {num_threads} {hmax} {runs}'
     else:
         return
 
@@ -832,7 +835,22 @@ def setup_phylonet_data(basedir: dict,
         buffer+="geneTree" + str(i+1) +','
     filename = f"{os.path.basename(basedir['dir'])}_{basedir['tree_method']}_{basedir['network_method']}_{config.phylonet_hmax}.nex"
     output_network = os.path.join(out_dir,filename)
-    buffer+="geneTree" + str(tree_index) +') ' + config.phylonet_hmax + " -pl " + config.phylonet_threads + " -x " + config.phylonet_threads + " " + output_network + ';\nEND;'
+    if(len(config.species_mapping) == 0):
+        buffer+="geneTree" + str(tree_index) +') ' + config.phylonet_hmax + " -pl " + config.phylonet_threads + " -x " + config.phylonet_runs + " " + output_network + ';\nEND;'
+    else:
+        mapping_file = os.path.join(os.path.join(basedir, "input"),config.species_mapping)
+        mapping_string = ""
+        with  open(mapping_file, 'r') as f:
+            mapping_string+='<'
+            comma = False
+            for line in f.readlines:
+                if comma == True:
+                    mapping_string+='; '
+                mapping_string+=line.replace("\n", " ")
+                comma = True
+            mapping_string+='>'
+        buffer+="geneTree" + str(tree_index) +') ' + config.phylonet_hmax + " -pl " + config.phylonet_threads + " -a " + mapping_string +" -x " + config.phylonet_runs + " " + output_network + ';\nEND;'
+
     #---
     out_file.write(buffer)
     out_file.close()
