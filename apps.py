@@ -293,8 +293,8 @@ def astral(basedir: dict,
                 f.write(f'{i}\n')
         astral_output = os.path.join(astral_iqtree, config.astral_output)
     # Return to Parsl to be executed on the workflow
-    if len(config.species_mapping) > 0:
-        return f'{exec_astral} -i {tree_output} -b {bs_file} -r {config.bootstrap} -a {os.path.join(os.path.join(basedir, "input"),config.species_mapping)} -o {astral_output}'
+    if len(basedir['mapping']) > 0:
+        return f'{exec_astral} -i {tree_output} -b {bs_file} -r {config.bootstrap} -a {os.path.join(os.path.join(basedir["dir"], "input"),basedir["mapping"])} -o {astral_output}'
     else:
         return f'{exec_astral} -i {tree_output} -b {bs_file} -r {config.bootstrap} -o {astral_output}'
 
@@ -835,10 +835,10 @@ def setup_phylonet_data(basedir: dict,
         buffer+="geneTree" + str(i+1) +','
     filename = f"{os.path.basename(basedir['dir'])}_{basedir['tree_method']}_{basedir['network_method']}_{config.phylonet_hmax}.nex"
     output_network = os.path.join(out_dir,filename)
-    if(len(config.species_mapping) == 0):
+    if(len(basedir['mapping']) == 0):
         buffer+="geneTree" + str(tree_index) +') ' + config.phylonet_hmax + " -pl " + config.phylonet_threads + " -x " + config.phylonet_runs + " " + output_network + ';\nEND;'
     else:
-        mapping_file = os.path.join(os.path.join(basedir, "input"),config.species_mapping)
+        mapping_file = os.path.join(os.path.join(basedir["mapping"], "input"),basedir["mapping"])
         mapping_string = ""
         with  open(mapping_file, 'r') as f:
             mapping_string+='<'
