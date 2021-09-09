@@ -61,6 +61,7 @@ class BioConfig:
     network_method:     str
     tree_method:        str
     bootstrap:          str
+    species_mapping:    str
     workload:           field(default_factory=list)
     workflow_name:      str
     workflow_monitor:   bool
@@ -91,7 +92,6 @@ class BioConfig:
     astral:             str
     astral_dir:         str
     astral_output:      str
-    astral_mapping:  str
     snaq:               str
     snaq_threads:       int
     snaq_hmax:          int
@@ -114,7 +114,7 @@ class BioConfig:
     phylonet_hmax:      str
     phylonet_input:     str
     phylonet_dir:       str
-
+    phylonet_runs:      str
 
 @borg
 class ConfigFactory:
@@ -156,16 +156,23 @@ class ConfigFactory:
                         dir_['tree_method']=methods[0]
                         if(len(methods) > 1):
                             dir_['network_method'] = methods[1]
+                            if(len(methods) > 2):
+                                dir_['mapping'] = methods[2]
+                            else:
+                                dir_['mapping'] = cf['GENERAL']['SpeciesMapping']
                         else:
                             dir_['network_method'] = network_method
                     else:
                         dir_['tree_method'] = tree_method
                         dir_['network_method'] = network_method
+                        dir_['mapping'] = cf['GENERAL']['SpeciesMapping']
                 else:
                     dir_['tree_method'] = tree_method
                     dir_['network_method'] = network_method
+                    dir_['mapping'] = cf['GENERAL']['SpeciesMapping']
                 workload.append(dir_)
         bootstrap = cf['GENERAL']['BootStrap']
+        species_mapping = cf['GENERAL']['SpeciesMapping']
         execution_provider = cf['GENERAL']['ExecutionProvider']
         #SYSTEM
         #WORKFLOW
@@ -201,7 +208,6 @@ class ConfigFactory:
         astral = f"cd {astral_exec_dir}; java -jar {astral_jar}"
         astral_dir = 'astral'
         astral_output = 'astral.tre'
-        astral_mapping = cf['ASTRAL']['AstralMapping']
         #SNAQ
         snaq = 'snaq.jl'
         snaq_threads = int(cf['SNAQ']['SnaqThreads'])
@@ -214,6 +220,7 @@ class ConfigFactory:
         phylonet_jar = cf['PHYLONET']['PhyloNetJar']
         phylonet = f"cd {phylonet_exec_dir}; java -jar {phylonet_jar}"
         phylonet_threads = cf['PHYLONET']['PhyloNetThreads']
+        phylonet_runs = cf['PHYLONET']['PhyloNetRuns']
         phylonet_hmax = cf['PHYLONET']['PhyloNetHMax']
         phylonet_input = 'phylonet_phase_1.nex'
         phylonet_dir = 'phylonet'
@@ -237,6 +244,7 @@ class ConfigFactory:
                                    network_method=network_method,
                                    tree_method=tree_method,
                                    bootstrap=bootstrap,
+                                   species_mapping=species_mapping,
                                    workload=workload,
                                    env_path=env_path,
                                    environ=environ,
@@ -269,7 +277,6 @@ class ConfigFactory:
                                    astral=astral,
                                    astral_dir=astral_dir,
                                    astral_output=astral_output,
-                                   astral_mapping=astral_mapping,
                                    snaq=snaq,
                                    snaq_threads=snaq_threads,
                                    snaq_hmax=snaq_hmax,
@@ -291,6 +298,7 @@ class ConfigFactory:
                                    phylonet_threads=phylonet_threads,
                                    phylonet_hmax=phylonet_hmax,
                                    phylonet_input=phylonet_input,
-                                   phylonet_dir=phylonet_dir
+                                   phylonet_dir=phylonet_dir,
+                                   phylonet_runs=phylonet_runs
                                    )
         return self.bioconfig

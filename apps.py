@@ -59,11 +59,9 @@ def setup_phylip_data(basedir: dict, config: BioConfig,
         Stdout and Stderr are defaulted to parsl.AUTO_LOGNAME, so the log will be automatically 
         named according to task id and saved under task_logs in the run directory.
     """
-    import os, glob, tarfile
+    import os, glob, tarfile, logging, tarfile, shutil
     from Bio import AlignIO
     from pathlib import Path
-    import logging
-    import tarfile
     from appsexception import PhylipMissingData
 
     logging.info(f'Converting Nexus files to Phylip on {basedir["dir"]}')
@@ -82,15 +80,20 @@ def setup_phylip_data(basedir: dict, config: BioConfig,
             tar.extractall(path=input_nexus_dir)
     # Now, use the function to convert nexus to phylip.
     input_phylip_dir = os.path.join(input_dir, "phylip")
-    if not os.path.isdir(input_phylip_dir):
-        Path(input_phylip_dir).mkdir(exist_ok=True)
-        files = glob.glob(os.path.join(input_nexus_dir,'*.nex'))
+    if os.path.isdir(input_phylip_dir):
         try:
-            for f in files:
-                out_name = os.path.basename(f).split('.')[0]
-                AlignIO.convert(f, "nexus", os.path.join(input_phylip_dir, f'{out_name}.phy'), "phylip-sequential")
+            shutil.rmtree(input_phylip_dir)
         except Exception:
-            print("Impossible to convert nexus files to phylip!")
+            print("Error when trying to delete folder")
+    Path(input_phylip_dir).mkdir(exist_ok=True)
+    files = glob.glob(os.path.join(input_nexus_dir,'*.nex'))
+    try:
+        for f in files:
+            out_name = os.path.basename(f).split('.')[0]
+            AlignIO.convert(f, "nexus", os.path.join(input_phylip_dir, f'{out_name}.phy'), "phylip-sequential")
+    except Exception:
+        print("Impossible to convert nexus files to phylip!")
+    
     return
 
 
@@ -114,9 +117,7 @@ def raxml(basedir: dict, config: BioConfig,
         Stdout and Stderr are defaulted to parsl.AUTO_LOGNAME, so the log will be automatically 
         named according to task id and saved under task_logs in the run directory.
     """
-    import os
-    import random
-    import logging
+    import os, random, logging
 
     num_threads = config.raxml_threads
     raxml_exec = config.raxml
@@ -156,9 +157,8 @@ def setup_tree_output(basedir: dict,
         Stdout and Stderr are defaulted to parsl.AUTO_LOGNAME, so the log will be automatically 
         named according to task id and saved under task_logs in the run directory.
     """
-    import os, glob, tarfile
+    import os, glob, tarfile, logging
     from pathlib import Path
-    import logging
     logging.info(f'Setting up the tree output on {basedir["dir"]}')
     if(basedir['tree_method'] == "ML_RAXML"):
         raxml_dir = os.path.join(basedir['dir'], config.raxml_dir)
@@ -257,9 +257,7 @@ def astral(basedir: dict,
         Stdout and Stderr are defaulted to parsl.AUTO_LOGNAME, so the log will be automatically 
         named according to task id and saved under task_logs in the run directory.
     """
-    import glob
-    import os
-    import logging
+    import glob, os, logging
     from pathlib import Path
     logging.info(f'ASTRAL called with {basedir["dir"]}')
     astral_dir = os.path.join(basedir['dir'],config.astral_dir)
@@ -295,8 +293,8 @@ def astral(basedir: dict,
                 f.write(f'{i}\n')
         astral_output = os.path.join(astral_iqtree, config.astral_output)
     # Return to Parsl to be executed on the workflow
-    if len(config.astral_mapping) > 0:
-        return f'{exec_astral} -i {tree_output} -b {bs_file} -r {config.bootstrap} -a {os.path.join(os.path.join(basedir, "input"),config.astral_mapping)} -o {astral_output}'
+    if len(basedir['mapping']) > 0:
+        return f'{exec_astral} -i {tree_output} -b {bs_file} -r {config.bootstrap} -a {os.path.join(os.path.join(basedir["dir"], "input"),basedir["mapping"])} -o {astral_output}'
     else:
         return f'{exec_astral} -i {tree_output} -b {bs_file} -r {config.bootstrap} -o {astral_output}'
 
@@ -321,9 +319,8 @@ def snaq(basedir: dict,
         named according to task id and saved under task_logs in the run directory.
     """
     # set environment variables
-    import os
+    import os, logging
     from pathlib import Path
-    import logging
     logging.info(f'SNAQ called with {basedir["dir"]}')
     # run the julia script with PhyloNetworks
     snaq_exec = os.path.join(config.script_dir, config.snaq)
@@ -373,9 +370,8 @@ def mrbayes(basedir: dict,
         Stdout and Stderr are defaulted to parsl.AUTO_LOGNAME, so the log will be automatically 
         named according to task id and saved under task_logs in the run directory.
     """
-    import os
+    import os, logging
     from pathlib import Path
-    import logging
     logging.info(f'MrBayes called with {basedir["dir"]}')
     gene_name = os.path.basename(input_file)
     mb_folder = os.path.join(basedir['dir'], config.mrbayes_dir)
@@ -413,11 +409,8 @@ def mbsum(basedir: dict,
         Stdout and Stderr are defaulted to parsl.AUTO_LOGNAME, so the log will be automatically 
         named according to task id and saved under task_logs in the run directory.
     """
-    import os
+    import os, re, glob, logging
     from pathlib import Path
-    import re
-    import glob
-    import logging
     logging.info(f'MBSUM called with {basedir["dir"]}')
     gene_name = os.path.basename(input_file)
     mbsum_folder = os.path.join(basedir['dir'], config.mbsum_dir)
@@ -455,12 +448,9 @@ def setup_bucky_data(basedir: dict,
         Stdout and Stderr are defaulted to parsl.AUTO_LOGNAME, so the log will be automatically 
         named according to task id and saved under task_logs in the run directory.
     """
-    import re
-    import os
+    import re, os, glob, logging
     from pathlib import Path
-    import glob
     from itertools import combinations
-    import logging
     logging.info(f'Setting up bucky data in {basedir["dir"]}')
     mbsum_folder = os.path.join(basedir['dir'], config.mbsum_dir)
     bucky_folder = os.path.join(basedir['dir'], config.bucky_dir)
@@ -531,10 +521,7 @@ def bucky(basedir: dict,
         Stdout and Stderr are defaulted to parsl.AUTO_LOGNAME, so the log will be automatically 
         named according to task id and saved under task_logs in the run directory.
     """
-    import os
-    import glob
-    import re
-    import logging
+    import os, glob, re, logging
     logging.info(f'BUCKy called with {basedir["dir"]}')
     mbsum_folder = os.path.join(basedir['dir'], config.mbsum_dir)
     bucky_folder = os.path.join(basedir['dir'], config.bucky_dir)
@@ -565,10 +552,7 @@ def setup_bucky_output(basedir: dict,
         Stdout and Stderr are defaulted to parsl.AUTO_LOGNAME, so the log will be automatically 
         named according to task id and saved under task_logs in the run directory.
     """
-    import re
-    import os
-    import glob
-    import logging
+    import re, os, glob, logging
     logging.info(f'Setting up BUCky output in {basedir["dir"]}')
     bucky_folder = os.path.join(basedir['dir'], config.bucky_dir)
     pattern = re.compile("Read \d+ genes with a ")
@@ -660,10 +644,8 @@ def setup_qmc_data(basedir: dict,
         named according to task id and saved under task_logs in the run directory.
     """
     import pandas as pd
-    import json
-    import os
+    import json, os, logging
     from pathlib import Path
-    import logging
     logging.info(f'Setting up Quartet MaxCut data in {basedir["dir"]}')
     dir_name = os.path.basename(basedir['dir'])
     bucky_folder = os.path.join(basedir['dir'], config.bucky_dir)
@@ -742,8 +724,7 @@ def quartet_maxcut(basedir: dict,
         Stdout and Stderr are defaulted to parsl.AUTO_LOGNAME, so the log will be automatically 
         named according to task id and saved under task_logs in the run directory.
     """
-    import os
-    import logging
+    import os, logging
     logging.info(f'Quartet MaxCut called with {basedir["dir"]}')
     dir_name = os.path.basename(basedir['dir'])
     qmc_folder = os.path.join(basedir['dir'], "qmc")
@@ -774,11 +755,8 @@ def setup_qmc_output(basedir: dict,
         Stdout and Stderr are defaulted to parsl.AUTO_LOGNAME, so the log will be automatically 
         named according to task id and saved under task_logs in the run directory.
     """
-    import os
+    import os, json, logging
     import pandas as pd
-    import re
-    import json
-    import logging
     logging.info(f'Setting up Quartet MaxCut in {basedir["dir"]}')
     dir_name = os.path.basename(basedir['dir'])
     qmc_folder = os.path.join(basedir['dir'], config.quartet_maxcut_dir)
@@ -827,8 +805,7 @@ def setup_phylonet_data(basedir: dict,
         Stdout and Stderr are defaulted to parsl.AUTO_LOGNAME, so the log will be automatically 
         named according to task id and saved under task_logs in the run directory.
     """
-    import os
-    import logging
+    import os, logging
     logging.info(f'Setting up Phylonet data in {basedir["dir"]}')
     gene_trees = ""
     if(basedir['tree_method'] == "ML_RAXML"):
@@ -858,7 +835,22 @@ def setup_phylonet_data(basedir: dict,
         buffer+="geneTree" + str(i+1) +','
     filename = f"{os.path.basename(basedir['dir'])}_{basedir['tree_method']}_{basedir['network_method']}_{config.phylonet_hmax}.nex"
     output_network = os.path.join(out_dir,filename)
-    buffer+="geneTree" + str(tree_index) +') ' + config.phylonet_hmax + " -pl " + config.phylonet_threads + " -x " + config.phylonet_threads + " " + output_network + ';\nEND;'
+    if(len(basedir['mapping']) == 0):
+        buffer+="geneTree" + str(tree_index) +') ' + config.phylonet_hmax + " -pl " + config.phylonet_threads + " -x " + config.phylonet_runs + " " + output_network + ';\nEND;'
+    else:
+        mapping_file = os.path.join(os.path.join(basedir["mapping"], "input"),basedir["mapping"])
+        mapping_string = ""
+        with  open(mapping_file, 'r') as f:
+            mapping_string+='<'
+            comma = False
+            for line in f.readlines:
+                if comma == True:
+                    mapping_string+='; '
+                mapping_string+=line.replace("\n", " ")
+                comma = True
+            mapping_string+='>'
+        buffer+="geneTree" + str(tree_index) +') ' + config.phylonet_hmax + " -pl " + config.phylonet_threads + " -a " + mapping_string +" -x " + config.phylonet_runs + " " + output_network + ';\nEND;'
+
     #---
     out_file.write(buffer)
     out_file.close()
@@ -886,8 +878,7 @@ def phylonet(basedir: dict,
         named according to task id and saved under task_logs in the run directory.
     """
     exec_phylonet = config.phylonet
-    import os
-    import logging
+    import os, logging
     logging.info(f'PhyloNet with {basedir["dir"]}')
     output_dir = os.path.join(basedir['dir'], config.phylonet_dir)
     input_file = os.path.join(output_dir, (basedir['tree_method'] + '_' + config.phylonet_input))
@@ -914,8 +905,7 @@ def iqtree(basedir: dict, config: BioConfig,
         Stdout and Stderr are defaulted to parsl.AUTO_LOGNAME, so the log will be automatically 
         named according to task id and saved under task_logs in the run directory.
     """
-    import os
-    import logging
+    import os, logging
     logging.info(f'IQ-TREE with {basedir["dir"]}')
     iqtree_dir = os.path.join(basedir['dir'], config.iqtree_dir)
     flags = f"-T {config.iqtree_threads} -b {config.bootstrap} -m {config.iqtree_model}  -s {input_file}"
@@ -931,10 +921,8 @@ def create_folders(basedir: dict,
                    outputs=[],
                    stderr=parsl.AUTO_LOGNAME,
                    stdout=parsl.AUTO_LOGNAME):
-    import os
-    from pathlib import Path 
-    import shutil
-    import logging
+    import os, shutil, logging
+    from pathlib import Path
     logging.info(f'Removing folders from old executions')
     for folder in folders:
         full_path = os.path.join(basedir['dir'], folder)
