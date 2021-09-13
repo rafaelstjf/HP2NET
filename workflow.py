@@ -157,7 +157,7 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
                     label='single_thread',
                     # Optional: The network interface on node 0 which compute nodes can communicate with.
                     # address=address_by_interface('enp4s0f0' or 'ib0')
-                    max_workers=3,
+                    max_workers=config.workflow_core_f,
                     cores_per_worker=1,
                     worker_debug=False,
                     provider=LocalProvider(
@@ -173,7 +173,7 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
                     # Optional: The network interface on node 0 which compute nodes can communicate with.
                     # address=address_by_interface('enp4s0f0' or 'ib0')
                     max_workers=1,
-                    cores_per_worker=4,
+                    cores_per_worker=config.workflow_core_t,
                     worker_debug=False,
                     provider=LocalProvider(
                         channel=LocalChannel(config.script_dir),
@@ -188,7 +188,7 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
                     # Optional: The network interface on node 0 which compute nodes can communicate with.
                     # address=address_by_interface('enp4s0f0' or 'ib0')
                     max_workers=1,
-                    cores_per_worker=4,
+                    cores_per_worker=config.workflow_core_l,
                     worker_debug=False,
                     provider=LocalProvider(
                         channel=LocalChannel(config.script_dir),
