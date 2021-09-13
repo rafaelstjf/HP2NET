@@ -11,13 +11,13 @@ def raxml_snaq(bio_config, basedir):
     datalist = glob.glob(os.path.join(dir_, '*.phy'))
     #create trees       
     for input_file in datalist:
-        ret = apps.raxml(basedir, bio_config, input_file)
+        ret = apps.raxml(basedir['dir'], bio_config, input_file)
         ret_tree.append(ret)
     #wait_for_all(ret_tree)
-    ret_sad = apps.setup_tree_output(basedir, bio_config, inputs=ret_tree)
+    ret_sad = apps.setup_tree_output(basedir['dir'], basedir['tree_method'], bio_config, inputs=ret_tree)
     logging.info("Using the Maximum Pseudo Likelihood Method")
-    ret_ast = apps.astral(basedir, bio_config, inputs=[ret_sad])
-    ret_snq = apps.snaq(basedir, bio_config, inputs=[ret_ast])
+    ret_ast = apps.astral(basedir['dir'], basedir['tree_method'], basedir['mapping'], bio_config, inputs=[ret_sad])
+    ret_snq = apps.snaq(basedir['dir'], basedir['tree_method'], bio_config, inputs=[ret_ast])
     result.append(ret_snq)
     return result
 
@@ -30,13 +30,13 @@ def raxml_phylonet(bio_config, basedir):
     datalist = glob.glob(os.path.join(dir_, '*.phy'))
     #create trees
     for input_file in datalist:
-        ret = apps.raxml(basedir, bio_config, input_file)
+        ret = apps.raxml(basedir['dir'], bio_config, input_file)
         ret_tree.append(ret)
     #wait_for_all(ret_tree)
-    ret_sad = apps.setup_tree_output(basedir, bio_config, inputs=ret_tree)
+    ret_sad = apps.setup_tree_output(basedir['dir'], basedir['tree_method'], bio_config, inputs=ret_tree)
     logging.info("Using the Maximum Parsimony Method")
-    ret_spd = apps.setup_phylonet_data(basedir, bio_config, inputs=[ret_sad])
-    ret_phylonet = apps.phylonet(basedir, bio_config, inputs=[ret_spd])
+    ret_spd = apps.setup_phylonet_data(basedir['dir'], basedir['tree_method'], basedir['network_method'], basedir['mapping'], bio_config, inputs=[ret_sad])
+    ret_phylonet = apps.phylonet(basedir['dir'], basedir['tree_method'], bio_config, inputs=[ret_spd])
     result.append(ret_phylonet)
     return result
 
@@ -49,13 +49,13 @@ def iqtree_snaq(bio_config, basedir):
     datalist = glob.glob(os.path.join(dir_, '*.phy'))
     #create trees
     for input_file in datalist:
-        ret  = apps.iqtree(basedir, bio_config, input_file)
+        ret  = apps.iqtree(basedir['dir'], bio_config, input_file)
         ret_tree.append(ret)
     #wait_for_all(ret_tree)
-    ret_sad = apps.setup_tree_output(basedir, bio_config, inputs=ret_tree)
+    ret_sad = apps.setup_tree_output(basedir['dir'], basedir['tree_method'], bio_config, inputs=ret_tree)
     logging.info("Using the Maximum Pseudo Likelihood Method")
-    ret_ast = apps.astral(basedir, bio_config, inputs=[ret_sad])
-    ret_snq = apps.snaq(basedir, bio_config, inputs=[ret_ast])
+    ret_ast = apps.astral(basedir['dir'], basedir['tree_method'], basedir['mapping'], bio_config, inputs=[ret_sad])
+    ret_snq = apps.snaq(basedir['dir'], basedir['tree_method'], bio_config, inputs=[ret_ast])
     result.append(ret_snq)
     return result
 
@@ -68,13 +68,13 @@ def iqtree_phylonet(bio_config, basedir):
     datalist = glob.glob(os.path.join(dir_, '*.phy'))
     #create trees
     for input_file in datalist:
-        ret  = apps.iqtree(basedir, bio_config, input_file)
+        ret  = apps.iqtree(basedir['dir'], bio_config, input_file)
         ret_tree.append(ret)
     #wait_for_all(ret_tree)
-    ret_sad = apps.setup_tree_output(basedir, bio_config, inputs=ret_tree)
+    ret_sad = apps.setup_tree_output(basedir['dir'], basedir['tree_method'], bio_config, inputs=ret_tree)
     logging.info("Using the Maximum Parsimony Method")
-    ret_spd = apps.setup_phylonet_data(basedir, bio_config, inputs=[ret_sad])
-    ret_phylonet = apps.phylonet(basedir, bio_config, inputs=[ret_spd])
+    ret_spd = apps.setup_phylonet_data(basedir['dir'], basedir['tree_method'], basedir['network_method'], basedir['mapping'], bio_config, inputs=[ret_sad])
+    ret_phylonet = apps.phylonet(basedir['dir'], basedir['tree_method'], bio_config, inputs=[ret_spd])
     result.append(ret_phylonet)
     return result
 
@@ -87,24 +87,24 @@ def mrbayes_snaq(bio_config, basedir):
     datalist = glob.glob(os.path.join(dir_, '*.nex'))
     ret_mbsum = list()
     for input_file in datalist:
-        ret_mb = apps.mrbayes(basedir, bio_config, input_file = input_file, inputs = [])
-        ret_mbsum.append(apps.mbsum(basedir, bio_config, input_file = input_file, inputs = [ret_mb]))
+        ret_mb = apps.mrbayes(basedir['dir'], bio_config, input_file = input_file, inputs = [])
+        ret_mbsum.append(apps.mbsum(basedir['dir'], bio_config, input_file = input_file, inputs = [ret_mb]))
     #wait_for_all(ret_mbsum)
-    ret_pre_bucky = apps.setup_bucky_data(basedir, bio_config, inputs = ret_mbsum)
+    ret_pre_bucky = apps.setup_bucky_data(basedir['dir'], bio_config, inputs = ret_mbsum)
     wait_for_all([ret_pre_bucky])
     bucky_folder = os.path.join(basedir['dir'], "bucky")	
     prune_trees = glob.glob(os.path.join(bucky_folder, "*.txt"))
     ret_bucky = list()
     for prune_tree in prune_trees:
-        ret_bucky.append(apps.bucky(basedir, bio_config, prune_file = prune_tree, inputs = [ret_pre_bucky]))
+        ret_bucky.append(apps.bucky(basedir['dir'], bio_config, prune_file = prune_tree, inputs = [ret_pre_bucky]))
     #wait_for_all(ret_bucky)
-    ret_post_bucky = apps.setup_bucky_output(basedir, bio_config, inputs = ret_bucky)
-    ret_pre_qmc = apps.setup_qmc_data(basedir, bio_config, inputs = [ret_post_bucky])
-    ret_qmc = apps.quartet_maxcut(basedir, bio_config, inputs = [ret_pre_qmc])
-    ret_tree.append(apps.setup_qmc_output(basedir, bio_config, inputs = [ret_qmc]))
+    ret_post_bucky = apps.setup_bucky_output(basedir['dir'], bio_config, inputs = ret_bucky)
+    ret_pre_qmc = apps.setup_qmc_data(basedir['dir'], bio_config, inputs = [ret_post_bucky])
+    ret_qmc = apps.quartet_maxcut(basedir['dir'], bio_config, inputs = [ret_pre_qmc])
+    ret_tree.append(apps.setup_qmc_output(basedir['dir'], bio_config, inputs = [ret_qmc]))
     #wait_for_all(ret_tree)
     logging.info("Using the Maximum Pseudo Likelihood Method")
-    ret_snq = apps.snaq(basedir, bio_config, inputs=ret_tree)
+    ret_snq = apps.snaq(basedir['dir'], basedir['tree_method'], bio_config, inputs=ret_tree)
     result.append(ret_snq)
     return result
 
@@ -127,10 +127,10 @@ def prepare_to_run(config):
                folder_list.extend([config.raxml_dir, config.phylonet_dir])
             elif(tree_method == 'ML_IQTREE'):
                 folder_list.extend([config.iqtree_dir, config.phylonet_dir])
-        r.append(apps.create_folders(basedir, config,folders=folder_list))
+        r.append(apps.create_folders(basedir['dir'], config,folders=folder_list))
     wait_for_all(r)
         
-def main(config_file='config/default.ini', tree_method = "", network_method = ""):
+def main(config_file='config/default.ini'):
     logging.info('Starting the Workflow Orchestration')
     cf = bioconfig.ConfigFactory(config_file)
     bio_config = cf.build_config()
@@ -170,23 +170,9 @@ def main(config_file='config/default.ini', tree_method = "", network_method = ""
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Process the configuration file.')
-    parser.add_argument('--config', help='Settings file', required=False, type=str)
-    parser.add_argument('--net', help='Network method (MP for maximum parsimony or MPL for maximum pseudo likelihood)', required=False, type=str)
-    parser.add_argument('--tree', help='Tree method (ML_RAXML, ML_IQTREE or BI_MRBAYES (works only with MPL))', required=False, type=str)
+    parser.add_argument('--cf', help='Settings file', required=False, type=str)
     args = parser.parse_args()
-    if args.config is not None and args.tree is not None and args.net is not None:
-        main(config_file=args.config, tree_method = args.tree, network_method = args.net)
-    elif args.config is not None and args.tree is not None:
-        main(config_file=args.config, tree_method=args.tree)
-    elif args.config is not None and args.net is not None:
-        main(config_file=args.config, network_method=args.net)
-    elif args.tree is not None and args.net is not None:
-        main(tree_method = args.tree, network_method=args.net)
-    elif args.config is not None:
-        main(config_file=args.config)
-    elif args.tree is not None:
-        main(tree_method=args.tree)
-    elif args.net is not None:
-        main(network_method = args.net)
+    if args.cf is not None:
+        main(config_file=args.cf)
     else:
         main()
