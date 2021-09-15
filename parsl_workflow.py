@@ -112,7 +112,7 @@ def prepare_to_run(config):
     folder_list = list()
     r = list()
     for basedir in config.workload:
-        r.append(apps.setup_phylip_data(basedir, config))
+        r.append(apps.setup_phylip_data(basedir['dir'], config))
         network_method = basedir['network_method']
         tree_method = basedir['tree_method']
         if(network_method == 'MPL'):
