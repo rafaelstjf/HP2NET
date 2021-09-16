@@ -23,7 +23,7 @@ In view of the complexity in modeling network experiments, the present work intr
 7. BUCKy >=  1.4.4
 8. Quartet MaxCut >= 2.10
 9. PhyloNet >= 3.8.2
-10. Julia >= 1.5
+10. Julia >= 1.4.1
 
 ## How to use
 

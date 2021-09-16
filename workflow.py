@@ -39,7 +39,7 @@ from parsl.providers import LocalProvider, SlurmProvider
 from bioconfig import BioConfig
 
 # PARSL CONFIGURATION
-
+CORES_PER_WORKER = 6
 
 def workflow_config(config: BioConfig, ) -> parsl.config.Config:
     """ Configures and loads Parsl's Workflow configuration
@@ -75,8 +75,8 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
                 label=f'Single_partition',
                 # Optional: The network interface on node 0 which compute nodes can communicate with.
                 # address=address_by_interface('enp4s0f0' or 'ib0')
-                max_workers=1,
-                cores_per_worker=6,
+                max_workers=(config.workflow_node_l*config.workflow_core_l) / CORES_PER_WORKER,
+                cores_per_worker=CORES_PER_WORKER,
                 worker_debug=False,
                 provider=LocalProvider(
                     nodes_per_block=config.workflow_node_l,

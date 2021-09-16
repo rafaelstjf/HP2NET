@@ -1,7 +1,6 @@
 #!/bin/bash
 #SBATCH --nodes=4           #Numero de Nós
 #SBATCH --ntasks-per-node=48 #Numero de tarefas por Nó
-#SBATCH --ntasks=192         #Numero de tarefas
 #SBATCH -p sequana_cpu_long         #Fila (partition) a ser utilizada
 #SBATCH -J Biocomp             #Nome job
 #SBATCH --exclusive          #Utilização exclusiva dos nós durante a execução do job

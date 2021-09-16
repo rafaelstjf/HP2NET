@@ -388,7 +388,7 @@ def mrbayes(work_dir: str,
     gene_par.write(gene_string)
     par = f"begin mrbayes;\nset nowarnings=yes;\nset autoclose=yes;\nlset nst=2;\n{config.mrbayes_parameters};\nmcmc;\nsumt;\nend;"
     gene_par.write(par)
-    return f"{config.mrbayes} {os.path.join(mb_folder, gene_name)} 2>&1 | tee {os.path.join(mb_folder, gene_name + '.log')}"
+    return f"{config.mrbayes} {os.path.join(mb_folder, gene_name)}"
 
 # mbsum bash app
 

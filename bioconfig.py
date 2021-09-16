@@ -51,7 +51,7 @@ class borg(object):
         return self.my_instance
 
 
-@dataclass
+@dataclass(eq=True, frozen=True)
 class BioConfig:
     env_path:           str
     environ:            str
