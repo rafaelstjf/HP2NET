@@ -2,6 +2,9 @@ import parsl, apps, glob, bioconfig, os, logging, argparse
 from pandas.core import base
 from workflow import workflow_config, wait_for_all
 
+cache = dict()
+logging.basicConfig(level=logging.INFO)
+
 def raxml_snaq(bio_config, basedir):
     result = list()
     ret_tree = list()
@@ -9,12 +12,17 @@ def raxml_snaq(bio_config, basedir):
     #append the input files
     dir_ = os.path.join(os.path.join(basedir['dir'], "input"), "phylip")
     datalist = glob.glob(os.path.join(dir_, '*.phy'))
-    #create trees       
-    for input_file in datalist:
-        ret = apps.raxml(basedir['dir'], bio_config, input_file)
-        ret_tree.append(ret)
-    #wait_for_all(ret_tree)
-    ret_sad = apps.setup_tree_output(basedir['dir'], basedir['tree_method'], bio_config, inputs=ret_tree)
+    if (basedir['dir'], 'raxml') not in cache:
+        #create trees
+        for input_file in datalist:
+            ret = apps.raxml(basedir['dir'], bio_config, input_file)
+            ret_tree.append(ret)
+        ret_sad = apps.setup_tree_output(basedir['dir'], basedir['tree_method'], bio_config, inputs=ret_tree)
+        cache[(basedir['dir'], 'raxml')] = ret_sad
+        logging.info('Creating cache on raxml')
+    else:
+        logging.info('Using cached raxml')
+        ret_sad = cache[(basedir['dir'], 'raxml')]
     logging.info("Using the Maximum Pseudo Likelihood Method")
     ret_ast = apps.astral(basedir['dir'], basedir['tree_method'], basedir['mapping'], bio_config, inputs=[ret_sad])
     ret_snq = apps.snaq(basedir['dir'], basedir['tree_method'], bio_config, inputs=[ret_ast])
@@ -28,12 +36,17 @@ def raxml_phylonet(bio_config, basedir):
     #append the input files
     dir_ = os.path.join(os.path.join(basedir['dir'], "input"), "phylip")
     datalist = glob.glob(os.path.join(dir_, '*.phy'))
-    #create trees
-    for input_file in datalist:
-        ret = apps.raxml(basedir['dir'], bio_config, input_file)
-        ret_tree.append(ret)
-    #wait_for_all(ret_tree)
-    ret_sad = apps.setup_tree_output(basedir['dir'], basedir['tree_method'], bio_config, inputs=ret_tree)
+    if (basedir['dir'], 'raxml') not in cache:
+        #create trees
+        for input_file in datalist:
+            ret = apps.raxml(basedir['dir'], bio_config, input_file)
+            ret_tree.append(ret)
+        ret_sad = apps.setup_tree_output(basedir['dir'], basedir['tree_method'], bio_config, inputs=ret_tree)
+        cache[(basedir['dir'], 'raxml')] = ret_sad
+        logging.info('Creating cache on raxml')
+    else:
+        logging.info('Using cached raxml')
+        ret_sad = cache[(basedir['dir'], 'raxml')]
     logging.info("Using the Maximum Parsimony Method")
     ret_spd = apps.setup_phylonet_data(basedir['dir'], basedir['tree_method'], basedir['network_method'], basedir['mapping'], bio_config, inputs=[ret_sad])
     ret_phylonet = apps.phylonet(basedir['dir'], basedir['tree_method'], bio_config, inputs=[ret_spd])
@@ -47,12 +60,17 @@ def iqtree_snaq(bio_config, basedir):
     #append the input files
     dir_ = os.path.join(os.path.join(basedir['dir'], "input"), "phylip")
     datalist = glob.glob(os.path.join(dir_, '*.phy'))
-    #create trees
-    for input_file in datalist:
-        ret  = apps.iqtree(basedir['dir'], bio_config, input_file)
-        ret_tree.append(ret)
-    #wait_for_all(ret_tree)
-    ret_sad = apps.setup_tree_output(basedir['dir'], basedir['tree_method'], bio_config, inputs=ret_tree)
+    if (basedir['dir'], 'iqtree') not in cache:
+        #create trees
+        for input_file in datalist:
+            ret  = apps.iqtree(basedir['dir'], bio_config, input_file)
+            ret_tree.append(ret)
+        logging.info('Creating cache on iqtree')
+        ret_sad = apps.setup_tree_output(basedir['dir'], basedir['tree_method'], bio_config, inputs=ret_tree)
+        cache[(basedir['dir'], 'iqtree')] = ret_sad
+    else:
+        logging.info('Using cached iqtree')
+        ret_sad = cache[(basedir['dir'], 'iqtree')]
     logging.info("Using the Maximum Pseudo Likelihood Method")
     ret_ast = apps.astral(basedir['dir'], basedir['tree_method'], basedir['mapping'], bio_config, inputs=[ret_sad])
     ret_snq = apps.snaq(basedir['dir'], basedir['tree_method'], bio_config, inputs=[ret_ast])
@@ -66,12 +84,17 @@ def iqtree_phylonet(bio_config, basedir):
     #append the input files
     dir_ = os.path.join(os.path.join(basedir['dir'], "input"), "phylip")
     datalist = glob.glob(os.path.join(dir_, '*.phy'))
-    #create trees
-    for input_file in datalist:
-        ret  = apps.iqtree(basedir['dir'], bio_config, input_file)
-        ret_tree.append(ret)
-    #wait_for_all(ret_tree)
-    ret_sad = apps.setup_tree_output(basedir['dir'], basedir['tree_method'], bio_config, inputs=ret_tree)
+    if (basedir['dir'], 'iqtree') not in cache:
+        #create trees
+        for input_file in datalist:
+            ret  = apps.iqtree(basedir['dir'], bio_config, input_file)
+            ret_tree.append(ret)
+        logging.info('Creating cache on iqtree')
+        ret_sad = apps.setup_tree_output(basedir['dir'], basedir['tree_method'], bio_config, inputs=ret_tree)
+        cache[(basedir['dir'], 'iqtree')] = ret_sad
+    else:
+        logging.info('Using cached iqtree')
+        ret_sad = cache[(basedir['dir'], 'iqtree')]
     logging.info("Using the Maximum Parsimony Method")
     ret_spd = apps.setup_phylonet_data(basedir['dir'], basedir['tree_method'], basedir['network_method'], basedir['mapping'], bio_config, inputs=[ret_sad])
     ret_phylonet = apps.phylonet(basedir['dir'], basedir['tree_method'], bio_config, inputs=[ret_spd])
@@ -164,9 +187,6 @@ def main(config_file='config/default.ini'):
         results.extend(r)
     wait_for_all(results)
     return
-
-# LOGGING SECTION
-#logging.basicConfig(level=logging.INFO)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Process the configuration file.')

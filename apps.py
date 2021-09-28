@@ -945,7 +945,6 @@ def create_folders(work_dir: str,
         full_path = os.path.join(work_dir, folder)
         try:
             Path(full_path).mkdir(exist_ok=True)
-            print('a')
         except Exception:
             print(f'Impossible to create {full_path} folder')
     return
