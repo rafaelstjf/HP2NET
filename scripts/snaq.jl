@@ -41,14 +41,12 @@ println("Using PhyloNetworks on every processor")
 if ARGS[1] == "RAXML" || ARGS[1] == "IQTREE"
     raxmlCF = readTrees2CF(ARGS[2], writeTab=false, writeSummary=false)
     astraltree = last(readMultiTopology(ARGS[3])) # main tree with BS as node labels
-    rootatnode!(astraltree, ARGS[8])
-    net = snaq!(astraltree,  raxmlCF, hmax=parse(Int64,ARGS[6]), filename=string(output), runs=parse(Int64,ARGS[7]))
+    net = snaq!(astraltree,  raxmlCF, hmax=parse(Int64,ARGS[6]), filename=string(output), runs=parse(Int64,ARGS[7]), outgroup=ARGS[8])
 
 elseif ARGS[1] == "BI_MRBAYES"
     buckyCF = readTableCF(ARGS[2])
     qmc_tree = readTopology(ARGS[3])
-    rootatnode!(qmc_tree, ARGS[8])
-    net = snaq!(qmc_tree,  buckyCF, hmax=parse(Int64,ARGS[6]), filename=string(output), runs=parse(Int64,ARGS[7]))
+    net = snaq!(qmc_tree,  buckyCF, hmax=parse(Int64,ARGS[6]), filename=string(output), runs=parse(Int64,ARGS[7]), outgroup=ARGS[8])
 else
     println("Wrong argument!")
     exit(1)
