@@ -35,7 +35,7 @@ __status__ = "Research"
 # Parsl Bash and Python Applications Exceptions
 #
 
-class PhylipMissingData(Exception):
+class PhylipConversion(Exception):
     """Exception raised for errors in the setup_phylip_data Parsl's bash application.
 
     Attributes:
@@ -43,7 +43,7 @@ class PhylipMissingData(Exception):
         message -- explanation of the error
     """
 
-    def __init__(self, basedir, message="Unable to find a tar file with the nexus data."):
+    def __init__(self, basedir, message="Unable to convert the NEXUS files to PHYLIP."):
         self.basedir = basedir
         self.message = message
         super().__init__(self.message)
@@ -60,4 +60,57 @@ class MrBayesMissingData(Exception):
 
     def __str__(self):
         return f'{self.basedir} -> {self.message}'
-    
+
+class TarMissingData(Exception):
+    def __init__(self, basedir, message="Unable to find a tar file with the nexus data."):
+        self.basedir = basedir
+        self.message = message
+        super().__init__(self.message)
+
+    def __str__(self):
+        return f'{self.basedir} -> {self.message}'
+
+class JsonMissingData(Exception):
+    def __init__(self, basedir, message="Unable to find the JSON file with root and species mapping"):
+        self.basedir = basedir
+        self.message = message
+        super().__init__(self.message)
+
+    def __str__(self):
+        return f'{self.basedir} -> {self.message}'
+
+class FolderDeletionError(Exception):
+    def __init__(self, basedir, message="Unable to delete folder"):
+        self.basedir = basedir
+        self.message = message
+        super().__init__(self.message)
+
+    def __str__(self):
+        return f'{self.basedir} -> {self.message}'
+
+class FolderCreationError(Exception):
+    def __init__(self, basedir, message="Unable to create folder"):
+        self.basedir = basedir
+        self.message = message
+        super().__init__(self.message)
+
+    def __str__(self):
+        return f'{self.basedir} -> {self.message}'
+
+class FileCreationError(Exception):
+    def __init__(self, basedir, message="Unable to create file"):
+        self.basedir = basedir
+        self.message = message
+        super().__init__(self.message)
+
+    def __str__(self):
+        return f'{self.basedir} -> {self.message}'
+
+class RootMissing(Exception):
+    def __init__(self, basedir, message="Missing the taxon used as outgroup to root the trees"):
+        self.basedir = basedir
+        self.message = message
+        super().__init__(self.message)
+
+    def __str__(self):
+        return f'{self.basedir} -> {self.message}'

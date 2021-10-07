@@ -9,9 +9,10 @@ using Distributed: length
 #arg[5] = num_workers
 #arg[6] = hmax
 #arg[7] = runs
+#arg[8] = outgroup
 
 println("Starting PhyloNetworks...")
-if length(ARGS) < 7
+if length(ARGS) < 8
     println("Missing arguments!")
 else
     println("Tree method: ", ARGS[1])
@@ -21,6 +22,7 @@ else
     println("Number of processors: ", ARGS[5])
     println("Hybridization max: ", ARGS[6])
     println("Number of runs max: ", ARGS[7])
+    println("Outgroup taxon: ", ARGS[8])
 end
 using PhyloNetworks
 using PhyloPlots
@@ -36,15 +38,17 @@ output = joinpath(ARGS[4], name)
 println("Using PhyloNetworks on every processor")
 @everywhere using PhyloNetworks
 @everywhere using PhyloPlots
-if ARGS[1] == "ML_RAXML" || ARGS[1] == "ML_IQTREE"
+if ARGS[1] == "RAXML" || ARGS[1] == "IQTREE"
     raxmlCF = readTrees2CF(ARGS[2], writeTab=false, writeSummary=false)
     astraltree = last(readMultiTopology(ARGS[3])) # main tree with BS as node labels
+    rootatnode!(astraltree, ARGS[8])
     net = snaq!(astraltree,  raxmlCF, hmax=parse(Int64,ARGS[6]), filename=string(output), runs=parse(Int64,ARGS[7]))
 
 elseif ARGS[1] == "BI_MRBAYES"
     buckyCF = readTableCF(ARGS[2])
-    tre = readTopology(ARGS[3])
-    net = snaq!(tre,  buckyCF, hmax=parse(Int64,ARGS[6]), filename=string(output), runs=parse(Int64,ARGS[7]))
+    qmc_tree = readTopology(ARGS[3])
+    rootatnode!(qmc_tree, ARGS[8])
+    net = snaq!(qmc_tree,  buckyCF, hmax=parse(Int64,ARGS[6]), filename=string(output), runs=parse(Int64,ARGS[7]))
 else
     println("Wrong argument!")
     exit(1)

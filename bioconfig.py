@@ -18,8 +18,10 @@ this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
 #from apps import quartet_maxcut
+from genericpath import isfile
 from parsl import bash_app, python_app
-import parsl, os
+import parsl, os, json, glob
+from appsexception import JsonMissingData, RootMissing, TarMissingData
 
 # COPYRIGHT SECTION
 __author__ = "Diego Carvalho"
@@ -38,7 +40,6 @@ __status__ = "Research"
 from dataclasses import dataclass, field
 
 # TODO: self.mbblock = Prepare to read from a setup file.
-
 
 class borg(object):
     def __init__(self, my_class):
@@ -61,7 +62,6 @@ class BioConfig:
     network_method:     str
     tree_method:        str
     bootstrap:          str
-    species_mapping:    str
     workload:           field(default_factory=list)
     workflow_name:      str
     workflow_monitor:   bool
@@ -146,33 +146,44 @@ class ConfigFactory:
         with open(f"{workload_path}", "r") as f:
             for line in f:
                 dir_ = {}
-                if line[0] == '#':
-                    continue
-                line_with_method = line.split('@')
-                dir_['dir'] = line_with_method[0].strip()
-                if(len(line_with_method) > 1):
-                    methods = line_with_method[1].strip().split('|')
-                    if(len(methods) > 0):
-                        dir_['tree_method']=methods[0]
-                        if(len(methods) > 1):
-                            dir_['network_method'] = methods[1]
-                            if(len(methods) > 2):
-                                dir_['mapping'] = methods[2]
+                if line[0] != '#':
+                    line_with_method = line.split('@')
+                    dir_['dir'] = line_with_method[0].strip()
+                    #check if the line contains a specific method
+                    if(len(line_with_method) > 1):
+                        methods = line_with_method[1].strip().split('|')
+                        if(len(methods) > 0):
+                            dir_['tree_method']=methods[0]
+                            if(len(methods) > 1):
+                                dir_['network_method'] = methods[1]
                             else:
-                                dir_['mapping'] = cf['GENERAL']['SpeciesMapping']
+                                dir_['network_method'] = network_method
                         else:
+                            dir_['tree_method'] = tree_method
                             dir_['network_method'] = network_method
                     else:
                         dir_['tree_method'] = tree_method
                         dir_['network_method'] = network_method
-                        dir_['mapping'] = cf['GENERAL']['SpeciesMapping']
-                else:
-                    dir_['tree_method'] = tree_method
-                    dir_['network_method'] = network_method
-                    dir_['mapping'] = cf['GENERAL']['SpeciesMapping']
-                workload.append(dir_)
+                    #read the json
+                    input_dir = os.path.join(dir_['dir'], 'input')
+                    json_file = glob.glob(os.path.join(input_dir, '*.json'))
+                    if len(json_file) > 0:
+                        with open(json_file[0], 'r') as jf:
+                            json_data = json.load(jf)
+                            dir_['mapping'] = json_data['Mapping']
+                            dir_['outgroup'] = json_data['Outgroup']
+                            if dir_['outgroup'] == "":
+                                raise RootMissing(dir_['dir'])
+                    else:
+                        raise JsonMissingData(dir_['dir'])
+                    #check for the sequence alignments
+                    tar_file = glob.glob(os.path.join(input_dir, '*.tar.gz'))
+                    if len(tar_file) > 0:
+                        dir_['sequences'] = tar_file
+                    else:
+                        raise TarMissingData(dir_['dir'])
+                    workload.append(dir_)
         bootstrap = cf['GENERAL']['BootStrap']
-        species_mapping = cf['GENERAL']['SpeciesMapping']
         execution_provider = cf['GENERAL']['ExecutionProvider']
         #SYSTEM
         #WORKFLOW
@@ -218,7 +229,7 @@ class ConfigFactory:
         #PHYLONET
         phylonet_exec_dir = cf['PHYLONET']['PhyloNetExecDir']
         phylonet_jar = cf['PHYLONET']['PhyloNetJar']
-        phylonet = f"cd {phylonet_exec_dir}; java -jar {phylonet_jar}"
+        phylonet = f"java -jar {os.path.join(phylonet_exec_dir, phylonet_jar)}"
         phylonet_threads = cf['PHYLONET']['PhyloNetThreads']
         phylonet_runs = cf['PHYLONET']['PhyloNetRuns']
         phylonet_hmax = cf['PHYLONET']['PhyloNetHMax']
@@ -244,7 +255,6 @@ class ConfigFactory:
                                    network_method=network_method,
                                    tree_method=tree_method,
                                    bootstrap=bootstrap,
-                                   species_mapping=species_mapping,
                                    workload=workload,
                                    env_path=env_path,
                                    environ=environ,
