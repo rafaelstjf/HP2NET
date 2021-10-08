@@ -179,7 +179,7 @@ class ConfigFactory:
                     #check for the sequence alignments
                     tar_file = glob.glob(os.path.join(input_dir, '*.tar.gz'))
                     if len(tar_file) > 0:
-                        dir_['sequences'] = tar_file
+                        dir_['sequences'] = tar_file[0]
                     else:
                         raise TarMissingData(dir_['dir'])
                     workload.append(dir_)
