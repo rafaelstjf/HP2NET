@@ -30,8 +30,6 @@ using Distributed
 
 addprocs(parse(Int64,ARGS[5]) - 1)
 
-#numproc = Threads.nthreads()
-#println("Number of Threads: ", numproc)
 basedir = dirname(ARGS[4])
 name = string(replace(basename(basedir),"/" => "" ), "_", ARGS[1], "_", "MPL_", ARGS[6])
 output = joinpath(ARGS[4], name)

@@ -145,12 +145,6 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
             strategy=None,
         )
     else: #localprovider
-        mon_hub = parsl.monitoring.monitoring.MonitoringHub(
-            workflow_name=name,
-            resource_monitoring_enabled=True,
-            monitoring_debug=False,
-            resource_monitoring_interval=interval,
-        ) if monitor else None
         return parsl.config.Config(
             executors=[
                 HighThroughputExecutor(
@@ -199,7 +193,6 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
                     ),
                 ),
             ],
-            monitoring=mon_hub,
             strategy=None,
         )
 

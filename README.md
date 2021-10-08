@@ -23,13 +23,13 @@ In view of the complexity in modeling network experiments, the present work intr
 7. BUCKy >=  1.4.4
 8. Quartet MaxCut >= 2.10
 9. PhyloNet >= 3.8.2
-10. Julia >= 1.5
+10. Julia >= 1.4.1
 
 ## How to use
 
 #### Setting up the workflow
 
-* Edit *parl.env* with the environment.
+* Edit *parl.env* with the environment variables and add your folder to ``PYTHONPATH``.
 * Edit *work.config* with the directories of your phylogeny studies (the workflow receives as input a set of homologous gene alignments of species in the nexus format).
 * Edit *default.ini* with the path for each of the needed softwares and the parameters of the execution provider.
 

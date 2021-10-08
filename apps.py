@@ -939,21 +939,22 @@ def create_folders(basedir: dict,
                    stderr=parsl.AUTO_LOGNAME,
                    stdout=parsl.AUTO_LOGNAME):
     import os, shutil, logging
+    from appsexception import FolderCreationError ,FolderDeletionError
     from pathlib import Path
     work_dir = basedir['dir']
     logging.info(f'Removing folders from old executions')
     for folder in folders:
         full_path = os.path.join(work_dir, folder)
-        try:
-            shutil.rmtree(full_path)
-        except Exception:
-            print(f"Impossible to remove {full_path} folder")
+        if(os.path.isdir(full_path)):
+            try:
+                shutil.rmtree(full_path)
+            except Exception:
+                raise FolderDeletionError(full_path)
     logging.info(f'Creating folders in {work_dir}')
     for folder in folders:
         full_path = os.path.join(work_dir, folder)
         try:
             Path(full_path).mkdir(exist_ok=True)
-            print('a')
         except Exception:
-            print(f'Impossible to create {full_path} folder')
+            FolderCreationError(full_path)
     return
