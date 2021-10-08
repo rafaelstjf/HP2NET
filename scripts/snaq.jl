@@ -41,7 +41,7 @@ if ARGS[1] == "RAXML" || ARGS[1] == "IQTREE"
     astraltree = last(readMultiTopology(ARGS[3])) # main tree with BS as node labels
     net = snaq!(astraltree,  raxmlCF, hmax=parse(Int64,ARGS[6]), filename=string(output), runs=parse(Int64,ARGS[7]), outgroup=ARGS[8])
 
-elseif ARGS[1] == "BI_MRBAYES"
+elseif ARGS[1] == "MRBAYES"
     buckyCF = readTableCF(ARGS[2])
     qmc_tree = readTopology(ARGS[3])
     net = snaq!(qmc_tree,  buckyCF, hmax=parse(Int64,ARGS[6]), filename=string(output), runs=parse(Int64,ARGS[7]), outgroup=ARGS[8])

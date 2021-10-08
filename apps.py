@@ -72,7 +72,7 @@ def setup_phylip_data(basedir: dict, config: BioConfig,
     if not os.path.isdir(input_nexus_dir):
         os.mkdir(input_nexus_dir)
         tar_file = basedir['sequences']
-        tar = tarfile.open(tar_file)
+        tar = tarfile.open(tar_file, "r:gz")
         tar.extractall(path=input_nexus_dir)
     # Now, use the function to convert nexus to phylip.
     input_phylip_dir = os.path.join(input_dir, "phylip")
