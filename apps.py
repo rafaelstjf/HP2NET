@@ -69,14 +69,14 @@ def setup_phylip_data(basedir: dict, config: BioConfig,
     input_dir = os.path.join(basedir['dir'], 'input')
     input_nexus_dir = os.path.join(input_dir, 'nexus')
     # So, some work must be done. Build the Nexus directory
-    if not os.path.isdir(input_nexus_dir):
+    if not os.path.exists(input_nexus_dir):
         os.mkdir(input_nexus_dir)
         tar_file = basedir['sequences']
         tar = tarfile.open(tar_file, "r:gz")
         tar.extractall(path=input_nexus_dir)
     # Now, use the function to convert nexus to phylip.
     input_phylip_dir = os.path.join(input_dir, "phylip")
-    if os.path.isdir(input_phylip_dir):
+    if os.path.exists(input_phylip_dir):
         try:
             shutil.rmtree(input_phylip_dir)
         except Exception:
@@ -945,7 +945,7 @@ def create_folders(basedir: dict,
     logging.info(f'Removing folders from old executions')
     for folder in folders:
         full_path = os.path.join(work_dir, folder)
-        if(os.path.isdir(full_path)):
+        if(os.path.exists(full_path)):
             try:
                 shutil.rmtree(full_path)
             except Exception:
