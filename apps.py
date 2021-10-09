@@ -861,7 +861,7 @@ def setup_phylonet_data(basedir: dict,
     if(len(mapping) == 0):
         buffer+="geneTree" + str(tree_index) +') ' + config.phylonet_hmax + " -pl " + config.phylonet_threads + " -x " + config.phylonet_runs + " " + output_network + ';\nEND;'
     else:
-        buffer+="geneTree" + str(tree_index) +') ' + config.phylonet_hmax + " -pl " + config.phylonet_threads + " -a " + mapping +" -x " + config.phylonet_runs + " " + output_network + ';\nEND;'
+        buffer+="geneTree" + str(tree_index) +') ' + config.phylonet_hmax + " -pl " + config.phylonet_threads + " -a <" + mapping +"> -x " + config.phylonet_runs + " " + output_network + ';\nEND;'
 
     #---
     out_file.write(buffer)
