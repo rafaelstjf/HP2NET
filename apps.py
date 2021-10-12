@@ -76,7 +76,7 @@ def setup_phylip_data(basedir: dict, config: BioConfig,
         tar.extractall(path=input_nexus_dir)
     # Now, use the function to convert nexus to phylip.
     input_phylip_dir = os.path.join(input_dir, "phylip")
-    if os.path.isdir(input_phylip_dir):
+    if os.path.exists(input_phylip_dir):
         try:
             shutil.rmtree(input_phylip_dir)
         except Exception:
@@ -861,7 +861,7 @@ def setup_phylonet_data(basedir: dict,
     if(len(mapping) == 0):
         buffer+="geneTree" + str(tree_index) +') ' + config.phylonet_hmax + " -pl " + config.phylonet_threads + " -x " + config.phylonet_runs + " " + output_network + ';\nEND;'
     else:
-        buffer+="geneTree" + str(tree_index) +') ' + config.phylonet_hmax + " -pl " + config.phylonet_threads + " -a " + mapping +" -x " + config.phylonet_runs + " " + output_network + ';\nEND;'
+        buffer+="geneTree" + str(tree_index) +') ' + config.phylonet_hmax + " -pl " + config.phylonet_threads + " -a <" + mapping +"> -x " + config.phylonet_runs + " " + output_network + ';\nEND;'
 
     #---
     out_file.write(buffer)
@@ -925,7 +925,7 @@ def iqtree(basedir: dict,
     outgroup = basedir['outgroup']
     logging.info(f'IQ-TREE with {work_dir}')
     iqtree_dir = os.path.join(work_dir, config.iqtree_dir)
-    flags = f"-T {config.iqtree_threads} -b {config.bootstrap} -m {config.iqtree_model}  -s {input_file} -o {outgroup}"
+    flags = f"-T {config.iqtree_threads} -b {config.bootstrap} -m {config.iqtree_model}  -s {input_file} -o {outgroup} -keep-ident"
     # Return to Parsl to be executed on the workflow
     return f"cd {iqtree_dir}; {config.iqtree} {flags}"
 
@@ -945,7 +945,7 @@ def create_folders(basedir: dict,
     logging.info(f'Removing folders from old executions')
     for folder in folders:
         full_path = os.path.join(work_dir, folder)
-        if(os.path.isdir(full_path)):
+        if(os.path.exists(full_path)):
             try:
                 shutil.rmtree(full_path)
             except Exception:
