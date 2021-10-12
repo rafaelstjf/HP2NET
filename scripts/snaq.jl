@@ -38,7 +38,7 @@ println("Using PhyloNetworks on every processor")
 @everywhere using PhyloPlots
 if ARGS[1] == "RAXML" || ARGS[1] == "IQTREE"
     raxmlCF = readTrees2CF(ARGS[2], writeTab=false, writeSummary=false)
-    astraltree = last(readMultiTopology(ARGS[3])) # main tree with BS as node labels
+    astraltree = readTopology(last(readlines(ARGS[3]))) # main tree with BS as node labels
     net = snaq!(astraltree,  raxmlCF, hmax=parse(Int64,ARGS[6]), filename=string(output), runs=parse(Int64,ARGS[7]), outgroup=ARGS[8])
 
 elseif ARGS[1] == "MRBAYES"
