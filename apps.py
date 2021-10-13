@@ -925,7 +925,7 @@ def iqtree(basedir: dict,
     outgroup = basedir['outgroup']
     logging.info(f'IQ-TREE with {work_dir}')
     iqtree_dir = os.path.join(work_dir, config.iqtree_dir)
-    flags = f"-T {config.iqtree_threads} -b {config.bootstrap} -m {config.iqtree_model}  -s {input_file} -o {outgroup} -keep-ident"
+    flags = f"-nt AUTO -ntmax {config.iqtree_threads} -b {config.bootstrap} -m {config.iqtree_model}  -s {input_file} -o {outgroup} -keep-ident -redo"
     # Return to Parsl to be executed on the workflow
     return f"cd {iqtree_dir}; {config.iqtree} {flags}"
 
