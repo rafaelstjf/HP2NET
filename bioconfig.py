@@ -187,7 +187,7 @@ class ConfigFactory:
         execution_provider = cf['GENERAL']['ExecutionProvider']
         #SYSTEM
         #WORKFLOW
-        workflow_name = cf["WORKFLOW"]["Name"]
+        workflow_name = "BioComp Workflow"
         workflow_monitor = cf["WORKFLOW"].getboolean("Monitor")
         workflow_part_f = cf["WORKFLOW"]["PartitionFast"]
         workflow_part_t = cf["WORKFLOW"]["PartitionThread"]
