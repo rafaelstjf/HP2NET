@@ -250,7 +250,6 @@ class ConfigFactory:
         quartet_maxcut_exec_dir = cf['QUARTETMAXCUT']['QmcExecDir']
         quartet_maxcut_dir = 'qmc'
         self.bioconfig = BioConfig(script_dir=script_dir,
-                                   workload_path=workload_path,
                                    execution_provider=execution_provider,
                                    network_method=network_method,
                                    tree_method=tree_method,
