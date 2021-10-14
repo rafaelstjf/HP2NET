@@ -184,7 +184,7 @@ def main(config_file='default.ini'):
                 logging.error(f'Invalid parameter combination: {bio_config.network_method} and {bio_config.tree_method}')
         else:
             logging.error(f'Invalid network method: {bio_config.network_method}')
-        if r not None:
+        if r is not None:
             results.extend(r)
     wait_for_all(results)
     return
