@@ -57,13 +57,13 @@ class BioConfig:
     env_path:           str
     environ:            str
     script_dir:         str
-    workload_path:      str
     execution_provider: str
     network_method:     str
     tree_method:        str
     bootstrap:          str
     workload:           field(default_factory=list)
     workflow_name:      str
+    workflow_path:      str
     workflow_monitor:   bool
     workflow_part_f:    str
     workflow_part_t:    str
@@ -119,29 +119,29 @@ class BioConfig:
 @borg
 class ConfigFactory:
 
-    def __init__(self, config_file: str = "config/default.ini") -> None:
+    def __init__(self, config_file: str = "default.ini") -> None:
         import configparser
 
-        self.config_file = config_file
+        self.config_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.path.join('config', config_file))
         self.config = configparser.ConfigParser()
         self.config.read(self.config_file)
-
         return
 
     def build_config(self) -> BioConfig:
 
         cf = self.config
-        script_dir = cf['GENERAL']['ScriptDir']
-
-        env_path = cf['GENERAL']['Environ']
+        workflow_path = os.path.dirname(os.path.realpath(__file__))
+        script_dir = os.path.join(workflow_path, 'scripts')
+        env_path = os.path.join(workflow_path, os.path.join('config', cf['GENERAL']['Environ']))
         environ = ""  # empty
         with open(f"{env_path}", "r") as f:
             environ = f.read()
+            environ+=f'\nexport PYTHONPATH=$PYTHONPATH:{workflow_path}'
         #Choose which method is going to be used to construct the network (Phylonet, SNAQ and others)
         network_method = cf['GENERAL']['NetworkMethod']
         tree_method = cf['GENERAL']['TreeMethod']
         # Read where datasets are...
-        workload_path = cf['GENERAL']['Workload']
+        workload_path = os.path.join(workflow_path, os.path.join('config', cf['GENERAL']['Workload']))
         workload = list()
         with open(f"{workload_path}", "r") as f:
             for line in f:
@@ -187,7 +187,7 @@ class ConfigFactory:
         execution_provider = cf['GENERAL']['ExecutionProvider']
         #SYSTEM
         #WORKFLOW
-        workflow_name = "BioComp Workflow"
+        workflow_name = "HP2NETW"
         workflow_monitor = cf["WORKFLOW"].getboolean("Monitor")
         workflow_part_f = cf["WORKFLOW"]["PartitionFast"]
         workflow_part_t = cf["WORKFLOW"]["PartitionThread"]
@@ -260,6 +260,7 @@ class ConfigFactory:
                                    environ=environ,
                                    workflow_monitor=workflow_monitor,
                                    workflow_name=workflow_name,
+                                   workflow_path=workflow_path,
                                    workflow_part_f=workflow_part_f,
                                    workflow_part_t=workflow_part_t,
                                    workflow_part_l=workflow_part_l,

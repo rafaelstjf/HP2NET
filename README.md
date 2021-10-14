@@ -10,28 +10,28 @@ In view of the complexity in modeling network experiments, the present work intr
 
 ## Requirements
 
-1. Python >= 3.8
-   1. Biopython >= 1.75
-   2. Pandas >= 1.3.2
-   3. Parsl >= 1.0
-3. Raxml >= 8.2.12
-4. Astral  >= 5.7.1
-5. SnaQ (PhyloNetworks) >= 0.13.0
-6. MrBayes >= 3.2.7a
-7. BUCKy >=  1.4.4
-8. Quartet MaxCut >= 2.10
-9. PhyloNet >= 3.8.2
-10. Julia >= 1.4.1
-11. IQTREE >= 2.0
+1. [Python](https://www.python.org/) >= 3.8
+   1. [Biopython](https://biopython.org/) >= 1.75
+   2. [Pandas](https://pandas.pydata.org/) >= 1.3.2
+   3. [Parsl](https://parsl-project.org/) >= 1.0
+3. [Raxml](https://cme.h-its.org/exelixis/web/software/raxml/) >= 8.2.12
+4. [ASTRAL](https://github.com/smirarab/ASTRAL)  >= 5.7.1
+5. [SnaQ (PhyloNetworks)](https://crsl4.github.io/PhyloNetworks.jl/latest/) >= 0.13.0
+6. [MrBayes](http://nbisweden.github.io/MrBayes/) >= 3.2.7a
+7. [BUCKy and mbsum](http://pages.stat.wisc.edu/~ane/bucky/) >=  1.4.4
+8. [Quartet MaxCut](http://research.haifa.ac.il/~ssagi/software/QMCN.tar.gz) >= 2.10
+9. [Julia](https://julialang.org/) >= 1.4.1
+10. [PhyloNet](https://bioinfocs.rice.edu/phylonet) >= 3.8.2
+11. [IQTREE](http://www.iqtree.org/) >= 2.0
 
 
 ## How to use
 
 ### Setting up the workflow
 
-The workflow uses a file to get all the needed parameters. For default it loads the file *default.ini* in the config folder, but you can explicitly load other files using the argument ``--cf name_of_the_file``, *e.g.* ``--cf config/test.ini``.
+The workflow uses a file to get all the needed parameters. For default it loads the file *default.ini* in the config folder, but you can explicitly load other files in the same folder using the argument ``--cf name_of_the_file``, *e.g.* ``--cf test.ini``.
 
-* Edit *parl.env* with the environment variables and add your folder to ``PYTHONPATH``.
+* Edit *parl.env* with the environment variables. The workflow will automatically add its path to the ``PYTHONPATH`` during the execution.
 * Edit *work.config* with the directories of your phylogeny studies (the workflow receives as input a set of homologous gene alignments of species in the nexus format).
 * Edit *default.ini* with the path for each of the needed softwares and the parameters of the execution provider.
 
@@ -42,20 +42,18 @@ The workflow uses a file to get all the needed parameters. For default it loads 
 ```ini
 [GENERAL]
 ExecutionProvider = SlurmProvider
-ScriptDir 		= ./scripts
-Environ			= config/parsl.env
-Workload		= config/work.config
+Environ			= parsl.env
+Workload		= work.config
 NetworkMethod   = MP
 TreeMethod      = ML_RAXML
 BootStrap       = 1000
 ```
 
 1. The workflow can be executed in a HPC environment using the Slurm resource manager using the parameter ``ExecutionProvider`` equals to ``SlurmProvider`` or locally with ``LocalProvider``. 
-2. The path of the scripts folder is assigned  in ``ScriptDir``. It's recommended to use the absolute path to avoid errors.
-3. The ``Environ`` parameter contains the path of the file used to set environment variables. More details can be seen below.
-4. In ``Workload`` is the path of the experiments that will be performed.
-5. ``NetworkMethod`` and ``TreeMethod`` are the default network and tree methods that will be used to perform the workloads' studies.
-6. ``Bootstrap`` is the parameter used in all the software that use bootstrap (RAxML, IQTREE and ASTRAL)
+2. The ``Environ`` parameter contains the path of the file used to set environment variables. Located at the ``config`` folder. More details can be seen below. 
+3. In ``Workload`` is the path of the experiments that will be performed. Located at the ``config`` folder.
+4. ``NetworkMethod`` and ``TreeMethod`` are the default network and tree methods that will be used to perform the workloads' studies. 
+5. ``Bootstrap`` is the parameter used in all the software that use bootstrap (RAxML, IQTREE and ASTRAL)
 
 * Workflow execution settings
 
@@ -169,7 +167,7 @@ You can also run a specific flow for a path using ``@TreeMethod|NetworkMethod`` 
 
 #### Environment file
 
-The environment file contains all the environment variables (like module files used in Slurm) used during the workflow execution, including the Python Path. It's very important to set the workflow's absolute path in the Python Path present in this file. Example:
+The environment file contains all the environment variables (like module files used in Slurm) used during the workflow execution, including the Python Path. The workflow is automatically add its path to the ``PYTHONPATH``. Example:
 
 ```sh
 module load python/3.8.2
@@ -179,7 +177,6 @@ module load iqtree/2.1.1
 module load bucky/1.4.4
 module load mrbayes/3.2.7a-OpenMPI-4.0.4
 source /scratch/app/modulos/julia-1.5.1.sh
-export PYTHONPATH=$PYTHONPATH:/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp
 ```
 
 #### Experiment folder

@@ -3,7 +3,7 @@ from pandas.core import base
 from workflow import workflow_config, wait_for_all
 
 cache = dict()
-# LOGGING SECTION
+#LOGGING SECTION
 logging.basicConfig(level=logging.DEBUG)
 
 def raxml_snaq(bio_config, basedir):
@@ -154,7 +154,7 @@ def prepare_to_run(config):
         r.append(apps.create_folders(basedir, config,folders=folder_list))
     wait_for_all(r)
         
-def main(config_file='config/default.ini'):
+def main(config_file='default.ini'):
     logging.info('Starting the Workflow Orchestration')
     cf = bioconfig.ConfigFactory(config_file)
     bio_config = cf.build_config()
