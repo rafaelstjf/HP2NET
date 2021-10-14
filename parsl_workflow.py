@@ -163,6 +163,7 @@ def main(config_file='default.ini'):
     results = list()
     prepare_to_run(bio_config)
     for basedir in bio_config.workload:
+        r = None
         network_method = basedir['network_method']
         tree_method = basedir['tree_method']
         if(network_method == 'MPL'):
@@ -183,7 +184,8 @@ def main(config_file='default.ini'):
                 logging.error(f'Invalid parameter combination: {bio_config.network_method} and {bio_config.tree_method}')
         else:
             logging.error(f'Invalid network method: {bio_config.network_method}')
-        results.extend(r)
+        if r not None:
+            results.extend(r)
     wait_for_all(results)
     return
 
