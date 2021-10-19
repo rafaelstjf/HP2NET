@@ -343,18 +343,18 @@ def snaq(basedir: dict,
         raxml_tree = os.path.join(os.path.join(work_dir, config.raxml_dir), config.raxml_output)
         astral_tree = os.path.join(work_dir, os.path.join(config.astral_dir, config.raxml_dir))
         astral_tree = os.path.join(astral_tree, config.astral_output)
-        return f'julia {snaq_exec} {tree_method} {raxml_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs} {outgroup}'
+        return f'julia {snaq_exec} {tree_method} {raxml_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs}'
     elif tree_method == "IQTREE":
         iqtree_tree = os.path.join(os.path.join(work_dir, config.iqtree_dir), config.iqtree_output)
         astral_tree = os.path.join(work_dir, os.path.join(config.astral_dir,config.iqtree_dir))
         astral_tree = os.path.join(astral_tree, config.astral_output)
-        return f'julia {snaq_exec} {tree_method} {iqtree_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs} {outgroup}'
+        return f'julia {snaq_exec} {tree_method} {iqtree_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs}'
     elif tree_method == "MRBAYES":
         dir_name = os.path.basename(work_dir)
         qmc_output = os.path.join(os.path.join(work_dir, config.quartet_maxcut_dir), f'{dir_name}.tre')
         bucky_folder = os.path.join(work_dir, config.bucky_dir)
         bucky_table = os.path.join(bucky_folder, f"{dir_name}.csv")
-        return f'julia {snaq_exec} {tree_method} {bucky_table} {qmc_output} {output_folder} {num_threads} {hmax} {runs} {outgroup}'
+        return f'julia {snaq_exec} {tree_method} {bucky_table} {qmc_output} {output_folder} {num_threads} {hmax} {runs}'
     else:
         return
 
