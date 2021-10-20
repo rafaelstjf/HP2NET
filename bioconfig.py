@@ -94,7 +94,7 @@ class BioConfig:
     astral_output:      str
     snaq:               str
     snaq_threads:       int
-    snaq_hmax:          int
+    snaq_hmax:          field(default_factory=list)
     snaq_runs:          int
     snaq_dir:           str
     mrbayes:            str
@@ -111,7 +111,7 @@ class BioConfig:
     phylonet_exec_dir:  str
     phylonet_jar:       str
     phylonet_threads:   str
-    phylonet_hmax:      str
+    phylonet_hmax:      field(default_factory=list)
     phylonet_input:     str
     phylonet_dir:       str
     phylonet_runs:      str
@@ -222,7 +222,10 @@ class ConfigFactory:
         #SNAQ
         snaq = 'snaq.jl'
         snaq_threads = int(cf['SNAQ']['SnaqThreads'])
-        snaq_hmax = int(cf['SNAQ']['SnaqHMax'])
+        snaq_hmax_raw = cf['SNAQ']['SnaqHMax']
+        snaq_hmax = list()
+        for h in snaq_hmax_raw.split(','):
+            snaq_hmax.append(h.strip())
         snaq_runs = int(cf['SNAQ']['SnaqRuns'])
         snaq_dir = 'snaq'
         
@@ -232,7 +235,10 @@ class ConfigFactory:
         phylonet = f"java -jar {os.path.join(phylonet_exec_dir, phylonet_jar)}"
         phylonet_threads = cf['PHYLONET']['PhyloNetThreads']
         phylonet_runs = cf['PHYLONET']['PhyloNetRuns']
-        phylonet_hmax = cf['PHYLONET']['PhyloNetHMax']
+        phylonet_hmax_raw = cf['PHYLONET']['PhyloNetHMax']
+        phylonet_hmax = list()
+        for h in phylonet_hmax_raw.split(','):
+            phylonet_hmax.append(h.strip())
         phylonet_input = 'phylonet_phase_1.nex'
         phylonet_dir = 'phylonet'
         #MRBAYES

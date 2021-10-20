@@ -151,6 +151,7 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
                     label='single_thread',
                     # Optional: The network interface on node 0 which compute nodes can communicate with.
                     # address=address_by_interface('enp4s0f0' or 'ib0')
+                    address='127.0.0.1',
                     max_workers=config.workflow_core_f,
                     cores_per_worker=1,
                     worker_debug=False,
@@ -166,6 +167,7 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
                     label=f'tree_and_statistics',
                     # Optional: The network interface on node 0 which compute nodes can communicate with.
                     # address=address_by_interface('enp4s0f0' or 'ib0')
+                    address='127.0.0.1',
                     max_workers=1,
                     cores_per_worker=config.workflow_core_t,
                     worker_debug=False,
@@ -179,6 +181,7 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
                 ),
                 HighThroughputExecutor(
                     label=f'phylogenetic_network',
+                    address= '127.0.0.1',
                     # Optional: The network interface on node 0 which compute nodes can communicate with.
                     # address=address_by_interface('enp4s0f0' or 'ib0')
                     max_workers=1,

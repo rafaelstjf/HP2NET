@@ -22,9 +22,9 @@ else
     println("Number of processors: ", ARGS[5])
     println("Hybridization max: ", ARGS[6])
     println("Number of runs max: ", ARGS[7])
-    println("Outgroup taxon: ", ARGS[8])
-    if(length(ARGS) == 9)
-        println("Species mapping: ", ARGS[9])
+    #println("Outgroup taxon: ", ARGS[8])
+    if(length(ARGS) == 8)
+        println("Species mapping: ", ARGS[8])
     end
 end
 using PhyloNetworks
@@ -40,10 +40,10 @@ println("Using PhyloNetworks on every processor")
 @everywhere using PhyloNetworks
 @everywhere using PhyloPlots
 if ARGS[1] == "RAXML" || ARGS[1] == "IQTREE"
-    if length(ARGS) == 9
+    if length(ARGS) == 8
         genetrees = readMultiTopology(ARGS[2])
         taxon_map = Dict{String, String}()
-        spec_list = split(ARGS[9], ';')
+        spec_list = split(ARGS[8], ';')
         for spec in spec_list
             sp = split(strip(spec), ':')
             for allele in split(sp[2], ',')
@@ -56,13 +56,13 @@ if ARGS[1] == "RAXML" || ARGS[1] == "IQTREE"
     else
         raxmlCF = readTrees2CF(ARGS[2], writeTab=false, writeSummary=false)
         astraltree = readTopology(last(readlines(ARGS[3]))) # main tree with BS as node labels
-        net = snaq!(astraltree,  raxmlCF, hmax=parse(Int64,ARGS[6]), filename=string(output), runs=parse(Int64,ARGS[7]), outgroup=ARGS[8])
+        net = snaq!(astraltree,  raxmlCF, hmax=parse(Int64,ARGS[6]), filename=string(output), runs=parse(Int64,ARGS[7]))
     end
 
 elseif ARGS[1] == "MRBAYES"
     buckyCF = readTableCF(ARGS[2])
     qmc_tree = readTopology(ARGS[3])
-    net = snaq!(qmc_tree,  buckyCF, hmax=parse(Int64,ARGS[6]), filename=string(output), runs=parse(Int64,ARGS[7]), outgroup=ARGS[8])
+    net = snaq!(qmc_tree,  buckyCF, hmax=parse(Int64,ARGS[6]), filename=string(output), runs=parse(Int64,ARGS[7]))
 else
     println("Wrong argument!")
     exit(1)
