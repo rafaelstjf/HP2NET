@@ -309,6 +309,7 @@ def astral(basedir: dict,
 @parsl.bash_app(executors=['Single_partition'])
 def snaq(basedir: dict,
         config: BioConfig,
+        hmax: str,
         inputs=[],
         outputs=[],
         stderr=parsl.AUTO_LOGNAME,
@@ -337,24 +338,23 @@ def snaq(basedir: dict,
     snaq_exec = os.path.join(config.script_dir, config.snaq)
     num_threads = config.snaq_threads
     output_folder = os.path.join(work_dir, config.snaq_dir)
-    hmax = config.snaq_hmax
     runs = config.snaq_runs
     if tree_method == "RAXML":
         raxml_tree = os.path.join(os.path.join(work_dir, config.raxml_dir), config.raxml_output)
         astral_tree = os.path.join(work_dir, os.path.join(config.astral_dir, config.raxml_dir))
         astral_tree = os.path.join(astral_tree, config.astral_output)
-        return f'julia {snaq_exec} {tree_method} {raxml_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs} {outgroup}'
+        return f'julia {snaq_exec} {tree_method} {raxml_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs}'
     elif tree_method == "IQTREE":
         iqtree_tree = os.path.join(os.path.join(work_dir, config.iqtree_dir), config.iqtree_output)
         astral_tree = os.path.join(work_dir, os.path.join(config.astral_dir,config.iqtree_dir))
         astral_tree = os.path.join(astral_tree, config.astral_output)
-        return f'julia {snaq_exec} {tree_method} {iqtree_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs} {outgroup}'
+        return f'julia {snaq_exec} {tree_method} {iqtree_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs}'
     elif tree_method == "MRBAYES":
         dir_name = os.path.basename(work_dir)
         qmc_output = os.path.join(os.path.join(work_dir, config.quartet_maxcut_dir), f'{dir_name}.tre')
         bucky_folder = os.path.join(work_dir, config.bucky_dir)
         bucky_table = os.path.join(bucky_folder, f"{dir_name}.csv")
-        return f'julia {snaq_exec} {tree_method} {bucky_table} {qmc_output} {output_folder} {num_threads} {hmax} {runs} {outgroup}'
+        return f'julia {snaq_exec} {tree_method} {bucky_table} {qmc_output} {output_folder} {num_threads} {hmax} {runs}'
     else:
         return
 
@@ -807,6 +807,7 @@ def setup_qmc_output(basedir: dict,
 @parsl.python_app(executors=['Single_partition'])
 def setup_phylonet_data(basedir: dict,
                         config: BioConfig,
+                        hmax: str,
                         inputs=[],
                         outputs=[],
                         stderr=parsl.AUTO_LOGNAME,
@@ -836,7 +837,7 @@ def setup_phylonet_data(basedir: dict,
     elif(tree_method == "IQTREE"):
         gene_trees = os.path.join(os.path.join(work_dir, config.iqtree_dir), config.iqtree_output)
     out_dir = os.path.join(work_dir, config.phylonet_dir)
-    out_filepath = os.path.join(out_dir, (tree_method + '_' + config.phylonet_input))
+    out_filepath = os.path.join(out_dir, (tree_method + '_' + hmax +'_' + config.phylonet_input))
     try:
         in_file = open(gene_trees, 'r')
     except IOError:
@@ -856,12 +857,12 @@ def setup_phylonet_data(basedir: dict,
     buffer+='END;\nBEGIN PHYLONET;\nInferNetwork_MP ('
     for i in range(0, tree_index-1):
         buffer+="geneTree" + str(i+1) +','
-    filename = f"{os.path.basename(work_dir)}_{tree_method}_{network_method}_{config.phylonet_hmax}.nex"
+    filename = f"{os.path.basename(work_dir)}_{tree_method}_{network_method}_{hmax}.nex"
     output_network = os.path.join(out_dir,filename)
     if(len(mapping) == 0):
-        buffer+="geneTree" + str(tree_index) +') ' + config.phylonet_hmax + " -pl " + config.phylonet_threads + " -x " + config.phylonet_runs + " " + output_network + ';\nEND;'
+        buffer+="geneTree" + str(tree_index) +') ' + hmax + " -pl " + config.phylonet_threads + " -x " + config.phylonet_runs + " " + output_network + ';\nEND;'
     else:
-        buffer+="geneTree" + str(tree_index) +') ' + config.phylonet_hmax + " -pl " + config.phylonet_threads + " -a <" + mapping +"> -x " + config.phylonet_runs + " " + output_network + ';\nEND;'
+        buffer+="geneTree" + str(tree_index) +') ' + hmax + " -pl " + config.phylonet_threads + " -a <" + mapping +"> -x " + config.phylonet_runs + " " + output_network + ';\nEND;'
 
     #---
     out_file.write(buffer)
@@ -872,6 +873,7 @@ def setup_phylonet_data(basedir: dict,
 @parsl.bash_app(executors=['Single_partition'])
 def phylonet(basedir: dict,
             config: BioConfig,
+            input_file: str,
             inputs=[],
             outputs=[],
             stderr=parsl.AUTO_LOGNAME,
@@ -895,7 +897,6 @@ def phylonet(basedir: dict,
     import os, logging
     logging.info(f'PhyloNet with {work_dir}')
     output_dir = os.path.join(work_dir, config.phylonet_dir)
-    input_file = os.path.join(output_dir, (tree_method + '_' + config.phylonet_input))
     # Return to Parsl to be executed on the workflow
     return f'cd {output_dir};{exec_phylonet} {input_file}'
 
@@ -925,7 +926,7 @@ def iqtree(basedir: dict,
     outgroup = basedir['outgroup']
     logging.info(f'IQ-TREE with {work_dir}')
     iqtree_dir = os.path.join(work_dir, config.iqtree_dir)
-    flags = f"-nt AUTO -ntmax {config.iqtree_threads} -b {config.bootstrap} -m {config.iqtree_model}  -s {input_file} -o {outgroup} -keep-ident -redo"
+    flags = f"-nt AUTO -ntmax {config.iqtree_threads} -b {config.bootstrap} -m {config.iqtree_model}  -s {input_file} -o {outgroup} --keep-ident -redo"
     # Return to Parsl to be executed on the workflow
     return f"cd {iqtree_dir}; {config.iqtree} {flags}"
 

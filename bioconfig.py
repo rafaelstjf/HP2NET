@@ -57,13 +57,13 @@ class BioConfig:
     env_path:           str
     environ:            str
     script_dir:         str
-    workload_path:      str
     execution_provider: str
     network_method:     str
     tree_method:        str
     bootstrap:          str
     workload:           field(default_factory=list)
     workflow_name:      str
+    workflow_path:      str
     workflow_monitor:   bool
     workflow_part_f:    str
     workflow_part_t:    str
@@ -94,7 +94,7 @@ class BioConfig:
     astral_output:      str
     snaq:               str
     snaq_threads:       int
-    snaq_hmax:          int
+    snaq_hmax:          field(default_factory=list)
     snaq_runs:          int
     snaq_dir:           str
     mrbayes:            str
@@ -111,7 +111,7 @@ class BioConfig:
     phylonet_exec_dir:  str
     phylonet_jar:       str
     phylonet_threads:   str
-    phylonet_hmax:      str
+    phylonet_hmax:      field(default_factory=list)
     phylonet_input:     str
     phylonet_dir:       str
     phylonet_runs:      str
@@ -119,29 +119,29 @@ class BioConfig:
 @borg
 class ConfigFactory:
 
-    def __init__(self, config_file: str = "config/default.ini") -> None:
+    def __init__(self, config_file: str = "default.ini") -> None:
         import configparser
 
-        self.config_file = config_file
+        self.config_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.path.join('config', config_file))
         self.config = configparser.ConfigParser()
         self.config.read(self.config_file)
-
         return
 
     def build_config(self) -> BioConfig:
 
         cf = self.config
-        script_dir = cf['GENERAL']['ScriptDir']
-
-        env_path = cf['GENERAL']['Environ']
+        workflow_path = os.path.dirname(os.path.realpath(__file__))
+        script_dir = os.path.join(workflow_path, 'scripts')
+        env_path = os.path.join(workflow_path, os.path.join('config', cf['GENERAL']['Environ']))
         environ = ""  # empty
         with open(f"{env_path}", "r") as f:
             environ = f.read()
+            environ+=f'\nexport PYTHONPATH=$PYTHONPATH:{workflow_path}'
         #Choose which method is going to be used to construct the network (Phylonet, SNAQ and others)
         network_method = cf['GENERAL']['NetworkMethod']
         tree_method = cf['GENERAL']['TreeMethod']
         # Read where datasets are...
-        workload_path = cf['GENERAL']['Workload']
+        workload_path = os.path.join(workflow_path, os.path.join('config', cf['GENERAL']['Workload']))
         workload = list()
         with open(f"{workload_path}", "r") as f:
             for line in f:
@@ -187,7 +187,7 @@ class ConfigFactory:
         execution_provider = cf['GENERAL']['ExecutionProvider']
         #SYSTEM
         #WORKFLOW
-        workflow_name = "BioComp Workflow"
+        workflow_name = "HP2NETW"
         workflow_monitor = cf["WORKFLOW"].getboolean("Monitor")
         workflow_part_f = cf["WORKFLOW"]["PartitionFast"]
         workflow_part_t = cf["WORKFLOW"]["PartitionThread"]
@@ -222,7 +222,10 @@ class ConfigFactory:
         #SNAQ
         snaq = 'snaq.jl'
         snaq_threads = int(cf['SNAQ']['SnaqThreads'])
-        snaq_hmax = int(cf['SNAQ']['SnaqHMax'])
+        snaq_hmax_raw = cf['SNAQ']['SnaqHMax']
+        snaq_hmax = list()
+        for h in snaq_hmax_raw.split(','):
+            snaq_hmax.append(h.strip())
         snaq_runs = int(cf['SNAQ']['SnaqRuns'])
         snaq_dir = 'snaq'
         
@@ -232,7 +235,10 @@ class ConfigFactory:
         phylonet = f"java -jar {os.path.join(phylonet_exec_dir, phylonet_jar)}"
         phylonet_threads = cf['PHYLONET']['PhyloNetThreads']
         phylonet_runs = cf['PHYLONET']['PhyloNetRuns']
-        phylonet_hmax = cf['PHYLONET']['PhyloNetHMax']
+        phylonet_hmax_raw = cf['PHYLONET']['PhyloNetHMax']
+        phylonet_hmax = list()
+        for h in phylonet_hmax_raw.split(','):
+            phylonet_hmax.append(h.strip())
         phylonet_input = 'phylonet_phase_1.nex'
         phylonet_dir = 'phylonet'
         #MRBAYES
@@ -250,7 +256,6 @@ class ConfigFactory:
         quartet_maxcut_exec_dir = cf['QUARTETMAXCUT']['QmcExecDir']
         quartet_maxcut_dir = 'qmc'
         self.bioconfig = BioConfig(script_dir=script_dir,
-                                   workload_path=workload_path,
                                    execution_provider=execution_provider,
                                    network_method=network_method,
                                    tree_method=tree_method,
@@ -260,6 +265,7 @@ class ConfigFactory:
                                    environ=environ,
                                    workflow_monitor=workflow_monitor,
                                    workflow_name=workflow_name,
+                                   workflow_path=workflow_path,
                                    workflow_part_f=workflow_part_f,
                                    workflow_part_t=workflow_part_t,
                                    workflow_part_l=workflow_part_l,

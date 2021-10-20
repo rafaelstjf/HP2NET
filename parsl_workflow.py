@@ -3,7 +3,7 @@ from pandas.core import base
 from workflow import workflow_config, wait_for_all
 
 cache = dict()
-# LOGGING SECTION
+#LOGGING SECTION
 logging.basicConfig(level=logging.DEBUG)
 
 def raxml_snaq(bio_config, basedir):
@@ -26,8 +26,9 @@ def raxml_snaq(bio_config, basedir):
         ret_sad = cache[(basedir['dir'], 'raxml')]
     logging.info("Using the Maximum Pseudo Likelihood Method")
     ret_ast = apps.astral(basedir, bio_config, inputs=[ret_sad])
-    ret_snq = apps.snaq(basedir, bio_config, inputs=[ret_ast])
-    result.append(ret_snq)
+    for h in bio_config.snaq_hmax:
+        ret_snq = apps.snaq(basedir, bio_config, h, inputs=[ret_ast])
+        result.append(ret_snq)
     return result
 
 def raxml_phylonet(bio_config, basedir):
@@ -49,9 +50,12 @@ def raxml_phylonet(bio_config, basedir):
         logging.info('Using cached raxml')
         ret_sad = cache[(basedir['dir'], 'raxml')]
     logging.info("Using the Maximum Parsimony Method")
-    ret_spd = apps.setup_phylonet_data(basedir, bio_config, inputs=[ret_sad])
-    ret_phylonet = apps.phylonet(basedir, bio_config, inputs=[ret_spd])
-    result.append(ret_phylonet)
+    out_dir = os.path.join(basedir['dir'], bio_config.phylonet_dir)
+    for h in bio_config.phylonet_hmax:
+        ret_spd = apps.setup_phylonet_data(basedir, bio_config, h, inputs=[ret_sad])
+        filename = os.path.join(out_dir, (basedir['tree_method'] + '_' + h +'_' + bio_config.phylonet_input))
+        ret_phylonet = apps.phylonet(basedir, bio_config, filename, inputs=[ret_spd])
+        result.append(ret_phylonet)
     return result
 
 def iqtree_snaq(bio_config, basedir):
@@ -74,8 +78,9 @@ def iqtree_snaq(bio_config, basedir):
         ret_sad = cache[(basedir['dir'], 'iqtree')]
     logging.info("Using the Maximum Pseudo Likelihood Method")
     ret_ast = apps.astral(basedir, bio_config, inputs=[ret_sad])
-    ret_snq = apps.snaq(basedir, bio_config, inputs=[ret_ast])
-    result.append(ret_snq)
+    for h in bio_config.snaq_hmax:
+        ret_snq = apps.snaq(basedir, bio_config, h, inputs=[ret_ast])
+        result.append(ret_snq)
     return result
 
 def iqtree_phylonet(bio_config, basedir):
@@ -97,9 +102,12 @@ def iqtree_phylonet(bio_config, basedir):
         logging.info('Using cached iqtree')
         ret_sad = cache[(basedir['dir'], 'iqtree')]
     logging.info("Using the Maximum Parsimony Method")
-    ret_spd = apps.setup_phylonet_data(basedir, bio_config, inputs=[ret_sad])
-    ret_phylonet = apps.phylonet(basedir, bio_config, inputs=[ret_spd])
-    result.append(ret_phylonet)
+    out_dir = os.path.join(basedir['dir'], bio_config.phylonet_dir)
+    for h in bio_config.phylonet_hmax:
+        ret_spd = apps.setup_phylonet_data(basedir, bio_config, h, inputs=[ret_sad])
+        filename = os.path.join(out_dir, (basedir['tree_method'] + '_' + h +'_' + bio_config.phylonet_input))
+        ret_phylonet = apps.phylonet(basedir, bio_config, filename, inputs=[ret_spd])
+        result.append(ret_phylonet)
     return result
 
 def mrbayes_snaq(bio_config, basedir):
@@ -125,8 +133,9 @@ def mrbayes_snaq(bio_config, basedir):
     ret_qmc = apps.quartet_maxcut(basedir, bio_config, inputs = [ret_pre_qmc])
     ret_tree.append(apps.setup_qmc_output(basedir, bio_config, inputs = [ret_qmc]))
     logging.info("Using the Maximum Pseudo Likelihood Method")
-    ret_snq = apps.snaq(basedir, bio_config, inputs=ret_tree)
-    result.append(ret_snq)
+    for h in bio_config.snaq_hmax:
+        ret_snq = apps.snaq(basedir, bio_config, h, inputs=[ret_tree])
+        result.append(ret_snq)
     return result
 
 def prepare_to_run(config):
@@ -154,7 +163,7 @@ def prepare_to_run(config):
         r.append(apps.create_folders(basedir, config,folders=folder_list))
     wait_for_all(r)
         
-def main(config_file='config/default.ini'):
+def main(config_file='default.ini'):
     logging.info('Starting the Workflow Orchestration')
     cf = bioconfig.ConfigFactory(config_file)
     bio_config = cf.build_config()
@@ -163,6 +172,7 @@ def main(config_file='config/default.ini'):
     results = list()
     prepare_to_run(bio_config)
     for basedir in bio_config.workload:
+        r = None
         network_method = basedir['network_method']
         tree_method = basedir['tree_method']
         if(network_method == 'MPL'):
@@ -183,7 +193,8 @@ def main(config_file='config/default.ini'):
                 logging.error(f'Invalid parameter combination: {bio_config.network_method} and {bio_config.tree_method}')
         else:
             logging.error(f'Invalid network method: {bio_config.network_method}')
-        results.extend(r)
+        if r is not None:
+            results.extend(r)
     wait_for_all(results)
     return
 
