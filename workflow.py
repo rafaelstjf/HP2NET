@@ -85,7 +85,6 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
                         # scheduler_options='',
                         parallelism=1,
                         init_blocks=1,
-                        max_blocks=1,
                         nodes_per_block=config.workflow_node_f,
                         max_blocks = config.workflow_node_f,
                         cmd_timeout=120,
@@ -109,7 +108,6 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
                         # scheduler_options='',
                         parallelism=1,
                         init_blocks=1,
-                        max_blocks=1,
                         nodes_per_block=config.workflow_node_t,
                         max_blocks = config.workflow_node_t,
                         cmd_timeout=120,
@@ -133,7 +131,6 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
                         # scheduler_options='',
                         parallelism=1,
                         init_blocks=1,
-                        max_blocks=1,
                         nodes_per_block=config.workflow_node_l,
                         max_blocks = config.workflow_node_l,
                         cmd_timeout=120,
@@ -173,7 +170,7 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
                     # Optional: The network interface on node 0 which compute nodes can communicate with.
                     # address=address_by_interface('enp4s0f0' or 'ib0')
                     address='127.0.0.1',
-                    max_workers=1,
+                    max_workers=config.workflow_node_t,
                     cores_per_worker=config.workflow_core_t,
                     worker_debug=False,
                     provider=LocalProvider(
@@ -189,7 +186,7 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
                     address= '127.0.0.1',
                     # Optional: The network interface on node 0 which compute nodes can communicate with.
                     # address=address_by_interface('enp4s0f0' or 'ib0')
-                    max_workers=1,
+                    max_workers=config.workflow_node_l,
                     cores_per_worker=config.workflow_core_l,
                     worker_debug=False,
                     provider=LocalProvider(
