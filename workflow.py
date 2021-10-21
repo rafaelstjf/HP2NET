@@ -76,10 +76,10 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
                     label='single_thread',
                     # Optional: The network interface on node 0 which compute nodes can communicate with.
                     # address=address_by_interface('enp4s0f0' or 'ib0')
-                    address=address_by_interface('ib0'),
-                    max_workers=int(config.workflow_core_f),
+                    worker_options = '--cores=0',
                     shared_fs = False,
                     use_cache = True,
+                    working_dir = config.workflow_path,
                     provider=SlurmProvider(
                         partition=config.workflow_part_f,
                         # scheduler_options='',
@@ -87,21 +87,23 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
                         init_blocks=1,
                         max_blocks=1,
                         nodes_per_block=config.workflow_node_f,
+                        max_blocks = config.workflow_node_f,
                         cmd_timeout=120,
                         worker_init=env_str,
                         move_files=False,
                         walltime=config.workflow_wall_t_f,
                         launcher=SrunLauncher(
-                            overrides=f'-c {config.workflow_core_f}'),
+                            overrides=f'--cpus-per-task {config.workflow_core_f}'),
                     ),
                 ),
                 WorkQueueExecutor(
                     label=f'tree_and_statistics',
                     # Optional: The network interface on node 0 which compute nodes can communicate with.
                     # address=address_by_interface('enp4s0f0' or 'ib0')
-                    address=address_by_interface('ib0'),
+                    worker_options = '--cores=0',
                     shared_fs = False,
                     use_cache = True,
+                    working_dir = config.workflow_path,
                     provider=SlurmProvider(
                         partition=config.workflow_part_t,
                         # scheduler_options='',
@@ -109,21 +111,23 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
                         init_blocks=1,
                         max_blocks=1,
                         nodes_per_block=config.workflow_node_t,
+                        max_blocks = config.workflow_node_t,
                         cmd_timeout=120,
                         worker_init=env_str,
                         move_files=False,
                         walltime=config.workflow_wall_t_t,
                         launcher=SrunLauncher(
-                            overrides=f'-c {config.workflow_core_t}'),
+                            overrides=f'--cpus-per-task {config.workflow_core_t}'),
                     ),
                 ),
                 WorkQueueExecutor(
                     label=f'phylogenetic_network',
                     # Optional: The network interface on node 0 which compute nodes can communicate with.
                     # address=address_by_interface('enp4s0f0' or 'ib0')
-                    address=address_by_interface('ib0'),
+                    worker_options = '--cores=0',
                     shared_fs = False,
                     use_cache = True,
+                    working_dir = config.workflow_path,
                     provider=SlurmProvider(
                         partition=config.workflow_part_l,
                         # scheduler_options='',
@@ -131,12 +135,13 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
                         init_blocks=1,
                         max_blocks=1,
                         nodes_per_block=config.workflow_node_l,
+                        max_blocks = config.workflow_node_l,
                         cmd_timeout=120,
                         worker_init=env_str,
                         move_files=False,
-                        walltime=config.workflow_wall_t_l,
+                        walltime=config.workflow_wall_t_f,
                         launcher=SrunLauncher(
-                            overrides=f'-c {config.workflow_core_l}'),
+                            overrides=f'--cpus-per-task {config.workflow_core_l}'),
                     ),
                 ),
 
