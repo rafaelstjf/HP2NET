@@ -49,7 +49,7 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
     name = config.workflow_name
     interval = 30
     monitor = config.workflow_monitor
-    cores_per_worker = max(config.raxml_threads, config.iqtree_threads, config.snaq_threads, config.phylonet_threads)
+    cores_per_worker = max(int(config.raxml_threads), int(config.iqtree_threads), int(config.snaq_threads), int(config.phylonet_threads))
     parsl.set_stream_logger(level=logging.ERROR)
     parsl.set_file_logger(f'{name}_script.output', level=logging.DEBUG)
 
