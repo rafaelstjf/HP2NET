@@ -78,7 +78,7 @@ def setup_phylip_data(basedir: dict, config: BioConfig,
     input_phylip_dir = os.path.join(input_dir, "phylip")
     if os.path.exists(input_phylip_dir):
         try:
-            shutil.rmtree(input_phylip_dir)
+            shutil.rmtree(input_phylip_dir, ignore_errors = True)
         except Exception:
             #it's important to raise this exception because iqtree creates files in this folder
             raise FolderDeletionError(input_phylip_dir)
@@ -948,7 +948,7 @@ def create_folders(basedir: dict,
         full_path = os.path.join(work_dir, folder)
         if(os.path.exists(full_path)):
             try:
-                shutil.rmtree(full_path)
+                shutil.rmtree(full_path, ignore_errors = True)
             except Exception:
                 raise FolderDeletionError(full_path)
     logging.info(f'Creating folders in {work_dir}')
