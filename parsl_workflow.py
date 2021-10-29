@@ -134,7 +134,7 @@ def mrbayes_snaq(bio_config, basedir):
     ret_tree.append(apps.setup_qmc_output(basedir, bio_config, inputs = [ret_qmc]))
     logging.info("Using the Maximum Pseudo Likelihood Method")
     for h in bio_config.snaq_hmax:
-        ret_snq = apps.snaq(basedir, bio_config, h, inputs=[ret_tree])
+        ret_snq = apps.snaq(basedir, bio_config, h, inputs=ret_tree)
         result.append(ret_snq)
     return result
 
