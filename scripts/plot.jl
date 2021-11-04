@@ -15,14 +15,15 @@ end
 function getnamempl(network)
     net_file = open(network, "r")
     line = first(eachline(net_file))
+    net_string = ""
     for i in 1:length(line)
         net_string = string(net_string, line[i])
         if line[i] == ';'
             break
         end
     end
-    return line
     close(net_file)
+    return net_string
 end
 #---
 function plotnet(network, network_method)
@@ -35,11 +36,12 @@ function plotnet(network, network_method)
         imagefilename = string(replace(network, ".nex" => ".svg"))
         net_string = getnamemp(network)
     end
-    if network_method == "MPL" || network_method == "MP"
-        net = readTopology(net_string)
+    if network_method == "MPL" || network_method == "MP" && length(net_string) > 0
+        net = readTopology(string(net_string))
         R"svg"(imagefilename, width=10, height=10) # starts image file
         R"par"(mar=[0,0,0,0]) # to reduce margins (no margins at all here)
         plot(net, :R, showEdgeLength=false, showGamma=false);
+        R"dev.off()"; # wrap up and save image file
         R"pdf"(string(replace(imagefilename, ".svg" => ".pdf")), width=10, height=10) # starts image file
         R"par"(mar=[0,0,0,0]) # to reduce margins (no margins at all here)
         plot(net, :R, showEdgeLength=false, showGamma=false);
@@ -55,6 +57,7 @@ else
     #arg[2] = SNAQ (MPL) or Phylonet (MP)
     networks = split(ARGS[1], ',')
     for net in networks
+        println(net)
         if last(split(strip(net), '.')) == "out"
             plotnet(strip(net), "MPL") 
         else
