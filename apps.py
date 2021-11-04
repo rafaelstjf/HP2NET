@@ -183,11 +183,6 @@ def setup_tree_output(basedir: dict,
                     tar.add(f, arcname=os.path.basename(f))
                 for f in files:
                     os.remove(f)
-        except Exception:
-            #although it's an error, it's not a vital part of the workflow, so it isn't necessary to raise an error
-            print("Error! Directory does not exist or not enough privileges")
-        #append all the besttrees into a single file(in the working dir), compress the files and remove them
-        try:
             raxml_input = open(besttree_file, 'w')
             files = glob.glob(os.path.join(raxml_dir, 'RAxML_bestTree.*'))
             trees = ""
@@ -199,6 +194,18 @@ def setup_tree_output(basedir: dict,
             raxml_input.close()
             with tarfile.open(os.path.join(raxml_dir, "besttrees.tgz"), "w:gz") as tar:
                 files = glob.glob(os.path.join(raxml_dir, 'RAxML_bestTree.*'))
+                for f in files:
+                    tar.add(f, arcname=os.path.basename(f))
+                for f in files:
+                    os.remove(f)
+            with tarfile.open(os.path.join(raxml_dir, "bipartitionsBranchLabels.tgz"), "w:gz") as tar:
+                files = glob.glob(os.path.join(raxml_dir, 'RAxML_bipartitionsBranchLabels.*'))
+                for f in files:
+                    tar.add(f, arcname=os.path.basename(f))
+                for f in files:
+                    os.remove(f)
+            with tarfile.open(os.path.join(raxml_dir, "info.tgz"), "w:gz") as tar:
+                files = glob.glob(os.path.join(raxml_dir, 'RAxML_info.*'))
                 for f in files:
                     tar.add(f, arcname=os.path.basename(f))
                 for f in files:
@@ -218,7 +225,7 @@ def setup_tree_output(basedir: dict,
             files += glob.glob(os.path.join(phylip_dir, '*.log'))
             files += glob.glob(os.path.join(phylip_dir, '*.ckp.gz'))
             files += glob.glob(os.path.join(phylip_dir, '*.bionj'))
-            files += glob.glob(os.path.join(phylip_dir, '*.reduced'))
+            #files += glob.glob(os.path.join(phylip_dir, '*.reduced'))
             files += glob.glob(os.path.join(phylip_dir, '*.boottrees'))
             for f in files:
                 new_f = os.path.join(iqtree_dir, os.path.basename(f))
@@ -233,6 +240,77 @@ def setup_tree_output(basedir: dict,
             iq_input.write(trees)
             iq_input.close()
         except IOError:
+            raise FileCreationError(iqtree_dir)
+        bootstrap_dir = os.path.join(iqtree_dir, "bootstrap")
+        try:
+            Path(bootstrap_dir).mkdir(exist_ok=True)
+        except Exception:
+            raise FolderCreationError(bootstrap_dir)
+        old_files = glob.glob(f'{bootstrap_dir}/*')
+        try:
+            for f in old_files:
+                os.remove(f)
+        except Exception:
+            raise FolderDeletionError(bootstrap_dir)
+        try:
+            with tarfile.open(os.path.join(iqtree_dir, "iqtree.tgz"), "w:gz") as tar:
+                files = glob.glob(os.path.join(iqtree_dir,'*.iqtree'))
+                for f in files:
+                    tar.add(f, arcname=os.path.basename(f))
+                for f in files:
+                    os.remove(f)
+            with tarfile.open(os.path.join(iqtree_dir, "treefile.tgz"), "w:gz") as tar:
+                files = glob.glob(os.path.join(iqtree_dir,'*.treefile'))
+                for f in files:
+                    tar.add(f, arcname=os.path.basename(f))
+                for f in files:
+                    os.remove(f)
+            with tarfile.open(os.path.join(iqtree_dir, "mldist.tgz"), "w:gz") as tar:
+                files = glob.glob(os.path.join(iqtree_dir,'*.mldist'))
+                for f in files:
+                    tar.add(f, arcname=os.path.basename(f))
+                for f in files:
+                    os.remove(f)
+            with tarfile.open(os.path.join(iqtree_dir, "nex.tgz"), "w:gz") as tar:
+                files = glob.glob(os.path.join(iqtree_dir,'*.nex'))
+                for f in files:
+                    tar.add(f, arcname=os.path.basename(f))
+                for f in files:
+                    os.remove(f)
+            with tarfile.open(os.path.join(iqtree_dir, "contree.tgz"), "w:gz") as tar:
+                files = glob.glob(os.path.join(iqtree_dir,'*.contree'))
+                for f in files:
+                    tar.add(f, arcname=os.path.basename(f))
+                for f in files:
+                    os.remove(f)
+            with tarfile.open(os.path.join(iqtree_dir, "log.tgz"), "w:gz") as tar:
+                files = glob.glob(os.path.join(iqtree_dir,'*.log'))
+                for f in files:
+                    tar.add(f, arcname=os.path.basename(f))
+                for f in files:
+                    os.remove(f)
+            with tarfile.open(os.path.join(iqtree_dir, "ckp.tgz"), "w:gz") as tar:
+                files = glob.glob(os.path.join(iqtree_dir,'*.ckp.gz'))
+                for f in files:
+                    tar.add(f, arcname=os.path.basename(f))
+                for f in files:
+                    os.remove(f)
+            with tarfile.open(os.path.join(iqtree_dir, "bionj.tgz"), "w:gz") as tar:
+                files = glob.glob(os.path.join(iqtree_dir,'*.bionj.gz'))
+                for f in files:
+                    tar.add(f, arcname=os.path.basename(f))
+                for f in files:
+                    os.remove(f)
+            with tarfile.open(os.path.join(iqtree_dir, "reduced.tgz"), "w:gz") as tar:
+                files = glob.glob(os.path.join(iqtree_dir,'*.reduced.gz'))
+                for f in files:
+                    tar.add(f, arcname=os.path.basename(f))
+                for f in files:
+                    os.remove(f)
+            files = glob.glob(os.path.join(iqtree_dir,'*.boottrees'))
+            for f in files:
+                os.rename(f, os.path.join(bootstrap_dir, os.path.basename(f)))
+        except:
             raise FileCreationError(iqtree_dir)
     return
 
@@ -289,7 +367,7 @@ def astral(basedir: dict,
         bs_file = os.path.join(astral_iqtree,'BSlistfiles')
         iqtree_dir = os.path.join(work_dir, config.iqtree_dir)
         tree_output = os.path.join(iqtree_dir,config.iqtree_output)
-        boot_strap = os.path.join(os.path.join(work_dir,config.iqtree_dir),'*.boottrees')
+        boot_strap = os.path.join(os.path.join(work_dir,config.iqtree_dir),"bootstrap/*")
         with open(bs_file, 'w') as f:
             for i in glob.glob(boot_strap):
                 f.write(f'{i}\n')
@@ -959,3 +1037,29 @@ def create_folders(basedir: dict,
         except Exception:
             FolderCreationError(full_path)
     return
+
+@parsl.bash_app(executors=['single_thread'])
+def plot_networks(config: BioConfig,
+                    inputs=[],
+                    outputs=[],
+                    stderr=parsl.AUTO_LOGNAME,
+                    stdout=parsl.AUTO_LOGNAME):
+    import os, logging
+    logging.info("Plotting networks")
+    networks = ""
+    for basedir in config.workload:
+        if basedir['network_method'] == "MPL":
+            snaq_dir = os.path.join(basedir['dir'], config.snaq_dir)
+            for h in config.snaq_hmax:
+                name = f'{os.path.basename(basedir["dir"])}_{basedir["tree_method"]}_MPL_{h}.out'
+                if len(networks) > 0:
+                    networks+=','
+                networks+=os.path.join(snaq_dir, name)
+        if basedir['network_method'] == "MP":
+            phylonet_dir = os.path.join(basedir['dir'], config.phylonet_dir)
+            for h in config.snaq_hmax:
+                name = f'{os.path.basename(basedir["dir"])}_{basedir["tree_method"]}_MP_{h}.nex'
+                if len(networks) > 0:
+                    networks+=','
+                networks+=os.path.join(phylonet_dir, name)
+    return f'julia {config.plot_script} \'{networks}\''
