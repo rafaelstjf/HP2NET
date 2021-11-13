@@ -115,6 +115,7 @@ class BioConfig:
     phylonet_input:     str
     phylonet_dir:       str
     phylonet_runs:      str
+    plot_script:        str
 
 @borg
 class ConfigFactory:
@@ -255,6 +256,8 @@ class ConfigFactory:
         quartet_maxcut = cf['QUARTETMAXCUT']['QmcExecutable']
         quartet_maxcut_exec_dir = cf['QUARTETMAXCUT']['QmcExecDir']
         quartet_maxcut_dir = 'qmc'
+        #PLOT SCRIPT
+        plot_script = os.path.join(script_dir, "plot.jl")
         self.bioconfig = BioConfig(script_dir=script_dir,
                                    execution_provider=execution_provider,
                                    network_method=network_method,
@@ -315,6 +318,7 @@ class ConfigFactory:
                                    phylonet_hmax=phylonet_hmax,
                                    phylonet_input=phylonet_input,
                                    phylonet_dir=phylonet_dir,
-                                   phylonet_runs=phylonet_runs
+                                   phylonet_runs=phylonet_runs,
+                                   plot_script=plot_script
                                    )
         return self.bioconfig
