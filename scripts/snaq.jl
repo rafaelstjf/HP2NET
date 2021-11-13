@@ -30,7 +30,7 @@ end
 using PhyloNetworks
 using PhyloPlots
 using Distributed
-
+using CSV
 addprocs(parse(Int64,ARGS[5]) - 1)
 
 basedir = dirname(ARGS[4])
@@ -50,14 +50,16 @@ if ARGS[1] == "RAXML" || ARGS[1] == "IQTREE"
                 merge!(taxon_map, Dict(allele=>sp[1]))
             end
         end
-        df_sp = writeTableCF(countquartetsintrees(genetrees, taxonmap))
+        q, t = countquartetsintrees(genetrees, taxon_map)
+        df_sp = writeTableCF(q, t)
+        println(df_sp)
         CSV.write(joinpath(ARGS[4], "tableCF_species.csv"), df_sp)
         raxmlCF = readTableCF(joinpath(ARGS[4], "tableCF_species.csv"))
     else
         raxmlCF = readTrees2CF(ARGS[2], writeTab=false, writeSummary=false)
-        astraltree = readTopology(last(readlines(ARGS[3]))) # main tree with BS as node labels
-        net = snaq!(astraltree,  raxmlCF, hmax=parse(Int64,ARGS[6]), filename=string(output), runs=parse(Int64,ARGS[7]))
     end
+    astraltree = readTopology(last(readlines(ARGS[3]))) # main tree with BS as node labels
+    net = snaq!(astraltree,  raxmlCF, hmax=parse(Int64,ARGS[6]), filename=string(output), runs=parse(Int64,ARGS[7]))
 
 elseif ARGS[1] == "MRBAYES"
     buckyCF = readTableCF(ARGS[2])

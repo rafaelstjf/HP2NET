@@ -378,7 +378,7 @@ def astral(basedir: dict,
         with open(map_filename, 'w') as map_:
             species = mapping.split(';')
             for specie in species:
-                map_.write(specie.strip())
+                map_.write(specie.strip() + '\n')
             map_.close()
         return f'{exec_astral} -i {tree_output} -b {bs_file} -r {config.bootstrap} -a {map_filename} -o {astral_output}'
     else:
