@@ -167,6 +167,8 @@ class ConfigFactory:
                         dir_['network_method'] = network_method
                     #read the json
                     input_dir = os.path.join(dir_['dir'], 'input')
+                    if os.path.isdir(input_dir) == False:
+                        input_dir = os.path.join(dir_['dir'], 'Input')
                     json_file = glob.glob(os.path.join(input_dir, '*.json'))
                     if len(json_file) > 0:
                         with open(json_file[0], 'r') as jf:
