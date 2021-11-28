@@ -62,7 +62,7 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
     env_str = config.environ
 
     logging.info(f'Task Environment {env_str}')
-    if config.execution_provider == 'SlurmProvider':
+    if config.execution_provider == 'SlurmProvider-wq':
         mon_hub = parsl.monitoring.monitoring.MonitoringHub(
             workflow_name=name,
             hub_address=address_by_interface('ib0'),
@@ -143,6 +143,84 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
                     ),
                 ),
 
+            ],
+            monitoring=mon_hub,
+            strategy=None,
+        )
+    elif config.execution_provider == 'SlurmProvider':
+        mon_hub = parsl.monitoring.monitoring.MonitoringHub(
+            workflow_name=name,
+            hub_address=address_by_interface('ib0'),
+            hub_port=60001,
+            resource_monitoring_enabled=True,
+            monitoring_debug=False,
+            resource_monitoring_interval=interval,
+        ) if monitor else None
+        return parsl.config.Config(
+            executors=[
+                HighThroughputExecutor(
+                    label='single_thread',
+                    # Optional: The network interface on node 0 which compute nodes can communicate with.
+                    # address=address_by_interface('enp4s0f0' or 'ib0')
+                    address=address_by_interface('ib0'),
+                    worker_debug=False,
+                    interchange_port_range=(50000, 55000),
+                    provider=SlurmProvider(
+                        partition=config.workflow_part_f,
+                        # scheduler_options='',
+                        parallelism=1,
+                        init_blocks=1,
+                        max_blocks=1,
+                        nodes_per_block=config.workflow_node_f,
+                        cmd_timeout=120,
+                        worker_init=env_str,
+                        move_files=False,
+                        walltime=config.workflow_wall_t_f,
+                        launcher=SrunLauncher(overrides=f'-c {config.workflow_core_f}'),
+                    ),
+                ),
+                HighThroughputExecutor(
+                    label=f'raxml',
+                    # Optional: The network interface on node 0 which compute nodes can communicate with.
+                    # address=address_by_interface('enp4s0f0' or 'ib0')
+                    address=address_by_interface('ib0'),
+                    worker_debug=False,
+                    interchange_port_range=(55000, 60000),
+                    provider=SlurmProvider(
+                        partition=config.workflow_part_t,
+                        # scheduler_options='',
+                        parallelism=1,
+                        init_blocks=1,
+                        max_blocks=1,
+                        nodes_per_block=config.workflow_node_t,
+                        cmd_timeout=120,
+                        worker_init=env_str,
+                        move_files=False,
+                        walltime=config.workflow_wall_t_t,
+                        launcher=SrunLauncher(overrides=f'-c {config.workflow_core_t}'),
+                    ),
+                ),
+                HighThroughputExecutor(
+                    label=f'snaq',
+                    # Optional: The network interface on node 0 which compute nodes can communicate with.
+                    # address=address_by_interface('enp4s0f0' or 'ib0')
+                    address=address_by_interface('ib0'),
+                    worker_debug=False,
+                    interchange_port_range=(40000, 45000),
+                    provider=SlurmProvider(
+                        partition=config.workflow_part_l,
+                        # scheduler_options='',
+                        parallelism=1,
+                        init_blocks=1,
+                        max_blocks=1,
+                        nodes_per_block=config.workflow_node_l,
+                        cmd_timeout=120,
+                        worker_init=env_str,
+                        move_files=False,
+                        walltime=config.workflow_wall_t_l,
+                        launcher=SrunLauncher(overrides=f'-c {config.workflow_core_l,}'),
+                    ),
+                ),
             ],
             monitoring=mon_hub,
             strategy=None,
