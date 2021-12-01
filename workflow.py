@@ -66,7 +66,6 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
         mon_hub = parsl.monitoring.monitoring.MonitoringHub(
             workflow_name=name,
             hub_address=address_by_interface('ib0'),
-            hub_port=60001,
             resource_monitoring_enabled=True,
             monitoring_debug=False,
             resource_monitoring_interval=interval,
@@ -151,7 +150,6 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
         mon_hub = parsl.monitoring.monitoring.MonitoringHub(
             workflow_name=name,
             hub_address=address_by_interface('ib0'),
-            hub_port=60001,
             resource_monitoring_enabled=True,
             monitoring_debug=False,
             resource_monitoring_interval=interval,
@@ -164,7 +162,6 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
                     # address=address_by_interface('enp4s0f0' or 'ib0')
                     address=address_by_interface('ib0'),
                     worker_debug=False,
-                    interchange_port_range=(50000, 55000),
                     provider=SlurmProvider(
                         partition=config.workflow_part_f,
                         # scheduler_options='',
@@ -185,7 +182,6 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
                     # address=address_by_interface('enp4s0f0' or 'ib0')
                     address=address_by_interface('ib0'),
                     worker_debug=False,
-                    interchange_port_range=(55000, 60000),
                     provider=SlurmProvider(
                         partition=config.workflow_part_t,
                         # scheduler_options='',
@@ -206,7 +202,6 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
                     # address=address_by_interface('enp4s0f0' or 'ib0')
                     address=address_by_interface('ib0'),
                     worker_debug=False,
-                    interchange_port_range=(40000, 45000),
                     provider=SlurmProvider(
                         partition=config.workflow_part_l,
                         # scheduler_options='',
@@ -229,7 +224,6 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
         mon_hub = parsl.monitoring.monitoring.MonitoringHub(
             workflow_name=name,
             hub_address='127.0.01',
-            hub_port=60001,
             resource_monitoring_enabled=True,
             monitoring_debug=False,
             resource_monitoring_interval=interval,
