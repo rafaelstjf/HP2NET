@@ -38,7 +38,7 @@ from bioconfig import BioConfig
 
 
 # setup_phylip_data bash app
-@parsl.python_app(executors=['Single_partition'])
+@parsl.python_app(executors=['single_partition'])
 def setup_phylip_data(basedir: dict, config: BioConfig,
                       stderr=parsl.AUTO_LOGNAME,
                       stdout=parsl.AUTO_LOGNAME):
@@ -94,7 +94,7 @@ def setup_phylip_data(basedir: dict, config: BioConfig,
 
 
 # raxml bash app
-@parsl.bash_app(executors=['Single_partition'])
+@parsl.bash_app(executors=['single_partition'])
 def raxml(basedir: dict, 
           config: BioConfig,
           input_file: str,
@@ -131,7 +131,7 @@ def raxml(basedir: dict,
     return f"cd {raxml_dir}; {raxml_exec} {params} -s {input_file} -n {output_file}"
 
 
-@parsl.python_app(executors=['Single_partition'])
+@parsl.python_app(executors=['single_partition'])
 def setup_tree_output(basedir: dict,
                       config: BioConfig,
                       inputs=[],
@@ -314,7 +314,7 @@ def setup_tree_output(basedir: dict,
             raise FileCreationError(iqtree_dir)
     return
 
-@parsl.bash_app(executors=['Single_partition'])
+@parsl.bash_app(executors=['single_partition'])
 def astral(basedir: dict,
            config: BioConfig,
            inputs=[],
@@ -384,7 +384,7 @@ def astral(basedir: dict,
     else:
         return f'{exec_astral} -i {tree_output} -b {bs_file} -r {config.bootstrap} -o {astral_output}'
 
-@parsl.bash_app(executors=['Single_partition'])
+@parsl.bash_app(executors=['single_partition'])
 def snaq(basedir: dict,
         config: BioConfig,
         hmax: str,
@@ -447,7 +447,7 @@ def snaq(basedir: dict,
 # Mr.Bayes bash app
 
 
-@parsl.bash_app(executors=['Single_partition'])
+@parsl.bash_app(executors=['single_partition'])
 def mrbayes(basedir: dict,
             config: BioConfig,
             input_file: str,
@@ -486,7 +486,7 @@ def mrbayes(basedir: dict,
 # mbsum bash app
 
 
-@parsl.bash_app(executors=['Single_partition'])
+@parsl.bash_app(executors=['single_partition'])
 def mbsum(basedir: dict,
           config: BioConfig,
           input_file: str,
@@ -528,7 +528,7 @@ def mbsum(basedir: dict,
     return f"{config.mbsum} {(' ').join(trees)} -n {trim} -o {os.path.join(mbsum_folder, gene_name + '.sum')}"
 
 
-@parsl.python_app(executors=['Single_partition'])
+@parsl.python_app(executors=['single_partition'])
 def setup_bucky_data(basedir: dict,
                      config: BioConfig,
                      inputs=[],
@@ -599,7 +599,7 @@ def setup_bucky_data(basedir: dict,
     return
 
 
-@parsl.bash_app(executors=['Single_partition'])
+@parsl.bash_app(executors=['single_partition'])
 def bucky(basedir: dict,
           config: BioConfig,
           prune_file: str,
@@ -633,7 +633,7 @@ def bucky(basedir: dict,
     return f"{config.bucky} -a 1 -n 1000000 -cf 0 -o {output_file} -p {prune_file} {(' ').join(files)}"
 
 
-@parsl.python_app(executors=['Single_partition'])
+@parsl.python_app(executors=['single_partition'])
 def setup_bucky_output(basedir: dict,
                        config: BioConfig,
                        inputs=[],
@@ -726,7 +726,7 @@ def setup_bucky_output(basedir: dict,
     return
 
 
-@parsl.python_app(executors=['Single_partition'])
+@parsl.python_app(executors=['single_partition'])
 def setup_qmc_data(basedir: dict,
                    config: BioConfig,
                    inputs=[],
@@ -808,7 +808,7 @@ def setup_qmc_data(basedir: dict,
     return
 
 
-@parsl.bash_app(executors=['Single_partition'])
+@parsl.bash_app(executors=['single_partition'])
 def quartet_maxcut(basedir: dict,
                    config: BioConfig,
                    inputs=[],
@@ -839,7 +839,7 @@ def quartet_maxcut(basedir: dict,
     return f'{exec_qmc} qrtt={qmc_input} otre={qmc_output}'
 
 
-@parsl.python_app(executors=['Single_partition'])
+@parsl.python_app(executors=['single_partition'])
 def setup_qmc_output(basedir: dict,
                      config: BioConfig,
                      inputs=[],
@@ -890,7 +890,7 @@ def setup_qmc_output(basedir: dict,
     return
 
 
-@parsl.python_app(executors=['Single_partition'])
+@parsl.python_app(executors=['single_partition'])
 def setup_phylonet_data(basedir: dict,
                         config: BioConfig,
                         hmax: str,
@@ -956,7 +956,7 @@ def setup_phylonet_data(basedir: dict,
     return
 
 
-@parsl.bash_app(executors=['Single_partition'])
+@parsl.bash_app(executors=['single_partition'])
 def phylonet(basedir: dict,
             config: BioConfig,
             input_file: str,
@@ -987,7 +987,7 @@ def phylonet(basedir: dict,
     return f'cd {output_dir};{exec_phylonet} {input_file}'
 
 
-@parsl.bash_app(executors=['Single_partition'])
+@parsl.bash_app(executors=['single_partition'])
 def iqtree(basedir: dict,
             config: BioConfig,
             input_file: str,
@@ -1017,7 +1017,7 @@ def iqtree(basedir: dict,
     return f"cd {iqtree_dir}; {config.iqtree} {flags}"
 
 
-@parsl.python_app(executors=['Single_partition'])
+@parsl.python_app(executors=['single_partition'])
 def create_folders(basedir: dict,
                    config: BioConfig,
                    folders=[],
@@ -1046,7 +1046,7 @@ def create_folders(basedir: dict,
             FolderCreationError(full_path)
     return
 
-@parsl.bash_app(executors=['Single_partition'])
+@parsl.bash_app(executors=['single_partition'])
 def plot_networks(config: BioConfig,
                     inputs=[],
                     outputs=[],

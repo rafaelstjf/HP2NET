@@ -65,18 +65,9 @@ class BioConfig:
     workflow_name:      str
     workflow_path:      str
     workflow_monitor:   bool
-    workflow_part_f:    str
-    workflow_part_t:    str
-    workflow_part_l:    str
-    workflow_wall_t_f:  str
-    workflow_wall_t_t:  str
-    workflow_wall_t_l:  str
-    workflow_core_f:    int
-    workflow_core_t:    int
-    workflow_core_l:    int
-    workflow_node_f:    int
-    workflow_node_t:    int
-    workflow_node_l:    int
+    workflow_walltime:  str
+    workflow_core:    int
+    workflow_node:    int
     raxml:              str
     raxml_dir:          str
     raxml_output:       str
@@ -192,18 +183,9 @@ class ConfigFactory:
         #WORKFLOW
         workflow_name = "HP2NETW"
         workflow_monitor = cf["WORKFLOW"].getboolean("Monitor")
-        workflow_part_f = cf["WORKFLOW"]["PartitionFast"]
-        workflow_part_t = cf["WORKFLOW"]["PartitionThread"]
-        workflow_part_l = cf["WORKFLOW"]["PartitionLong"]
-        workflow_wall_t_f = cf["WORKFLOW"]["WalltimeFast"]
-        workflow_wall_t_t = cf["WORKFLOW"]["WalltimeThread"]
-        workflow_wall_t_l = cf["WORKFLOW"]["WalltimeLong"]
-        workflow_core_f = int(cf["WORKFLOW"]["PartCoreFast"])
-        workflow_core_t = int(cf["WORKFLOW"]["PartCoreThread"])
-        workflow_core_l = int(cf["WORKFLOW"]["PartCoreLong"])
-        workflow_node_f = int(cf["WORKFLOW"]["PartNodeFast"])
-        workflow_node_t = int(cf["WORKFLOW"]["PartNodeThread"])
-        workflow_node_l = int(cf["WORKFLOW"]["PartNodeLong"])
+        workflow_walltime = cf["WORKFLOW"]["Walltime"]
+        workflow_core = int(cf["WORKFLOW"]["PartCore"])
+        workflow_node = int(cf["WORKFLOW"]["PartNode"])
         #RAXML
         raxml = cf['RAXML']['RaxmlExecutable']
         raxml_dir = 'raxml'
@@ -271,18 +253,9 @@ class ConfigFactory:
                                    workflow_monitor=workflow_monitor,
                                    workflow_name=workflow_name,
                                    workflow_path=workflow_path,
-                                   workflow_part_f=workflow_part_f,
-                                   workflow_part_t=workflow_part_t,
-                                   workflow_part_l=workflow_part_l,
-                                   workflow_wall_t_f=workflow_wall_t_f,
-                                   workflow_wall_t_t=workflow_wall_t_t,
-                                   workflow_wall_t_l=workflow_wall_t_l,
-                                   workflow_core_f=workflow_core_f,
-                                   workflow_core_t=workflow_core_t,
-                                   workflow_core_l=workflow_core_l,
-                                   workflow_node_f=workflow_node_f,
-                                   workflow_node_t=workflow_node_t,
-                                   workflow_node_l=workflow_node_l,
+                                   workflow_walltime=workflow_walltime,
+                                   workflow_core=workflow_core,
+                                   workflow_node=workflow_node,
                                    raxml=raxml,
                                    raxml_dir=raxml_dir,
                                    raxml_output=raxml_output,

@@ -72,19 +72,19 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
     return parsl.config.Config(
         executors=[
             HighThroughputExecutor(
-                label=f'Single_partition',
+                label=f'single_partition',
                 # Optional: The network interface on node 0 which compute nodes can communicate with.
                 # address=address_by_interface('enp4s0f0' or 'ib0')
                 cores_per_worker=cores_per_worker,
                 worker_debug=False,
                 provider=LocalProvider(
                     nodes_per_block=1,
-                    channel=LocalChannel(config.script_dir),
+                    channel=LocalChannel(script_dir = config.script_dir),
                     parallelism=1,
-                    init_blocks=config.workflow_node_l,
+                    init_blocks=config.workflow_node,
                     worker_init=env_str,
-                    max_blocks=config.workflow_node_l,
-                    launcher=SrunLauncher(overrides=f'-c {config.workflow_core_l}')
+                    max_blocks=config.workflow_node,
+                    launcher=SrunLauncher(overrides=f'-c {config.workflow_core}')
                 ),
             ),
         ],
