@@ -195,8 +195,11 @@ def main(config_file='default.ini'):
             logging.error(f'Invalid network method: {bio_config.network_method}')
         if r is not None:
             results.extend(r)
-    plot = apps.plot_networks(bio_config, inputs=results)
-    wait_for_all([plot])
+    if bio_config.plot_networks == True:
+        plot = apps.plot_networks(bio_config, inputs=results)
+        wait_for_all([plot])
+    else:
+        wait_for_all(results)
     return
 
 if __name__ == "__main__":
