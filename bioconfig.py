@@ -21,7 +21,6 @@ this program. If not, see <http://www.gnu.org/licenses/>.
 from genericpath import isfile
 from parsl import bash_app, python_app
 import parsl, os, json, glob
-from apps import plot_networks
 from appsexception import JsonMissingData, RootMissing, TarMissingData
 
 # COPYRIGHT SECTION
