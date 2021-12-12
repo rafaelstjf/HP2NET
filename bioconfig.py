@@ -58,6 +58,7 @@ class BioConfig:
     environ:            str
     script_dir:         str
     execution_provider: str
+    plot_networks:               bool
     network_method:     str
     tree_method:        str
     bootstrap:          str
@@ -188,6 +189,7 @@ class ConfigFactory:
                     workload.append(dir_)
         bootstrap = cf['GENERAL']['BootStrap']
         execution_provider = cf['GENERAL']['ExecutionProvider']
+        plot_networks = cf["WORKFLOW"].getboolean("Plot")
         #SYSTEM
         #WORKFLOW
         workflow_name = "HP2NETW"
@@ -262,6 +264,7 @@ class ConfigFactory:
         plot_script = os.path.join(script_dir, "plot.jl")
         self.bioconfig = BioConfig(script_dir=script_dir,
                                    execution_provider=execution_provider,
+                                   plot_networks=plot_networks,
                                    network_method=network_method,
                                    tree_method=tree_method,
                                    bootstrap=bootstrap,
