@@ -154,6 +154,7 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
             resource_monitoring_interval=interval,
         ) if monitor else None
         return parsl.config.Config(
+            retries = 2,
             executors=[
                 HighThroughputExecutor(
                     label='single_thread',
