@@ -28,8 +28,7 @@ __email__ = "d.carvalho@ieee.org"
 __status__ = "Research"
 
 
-import parsl
-import logging
+import parsl, logging, math
 from parsl.channels import LocalChannel
 from parsl.launchers import SrunLauncher, SingleNodeLauncher
 from parsl.addresses import address_by_interface
@@ -192,6 +191,7 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
                         cmd_timeout=120,
                         worker_init=env_str,
                         move_files=False,
+                        workers_per_node = math.ceil(config.workflow_core_t / max(int(config.raxml_threads, config.iqtree_threads))),
                         walltime=config.workflow_wall_t_t,
                         launcher=SrunLauncher(overrides=f'-c {config.workflow_core_t}'),
                     ),
@@ -213,6 +213,7 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
                         worker_init=env_str,
                         move_files=False,
                         walltime=config.workflow_wall_t_l,
+                        workers_per_node = math.ceil(config.workflow_core_t / max(int(config.snaq_threads, config.phylonet_threads))),
                         launcher=SrunLauncher(overrides=f'-c {config.workflow_core_l}'),
                     ),
                 ),
