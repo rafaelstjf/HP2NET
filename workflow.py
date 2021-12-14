@@ -181,6 +181,7 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
                     # address=address_by_interface('enp4s0f0' or 'ib0')
                     address=address_by_interface('ib0'),
                     worker_debug=False,
+                    workers_per_node = math.ceil(config.workflow_core_t / max(int(config.raxml_threads), int(config.iqtree_threads))),
                     provider=SlurmProvider(
                         partition=config.workflow_part_t,
                         # scheduler_options='',
@@ -191,7 +192,6 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
                         cmd_timeout=120,
                         worker_init=env_str,
                         move_files=False,
-                        workers_per_node = math.ceil(config.workflow_core_t / max(int(config.raxml_threads), int(config.iqtree_threads))),
                         walltime=config.workflow_wall_t_t,
                         launcher=SrunLauncher(overrides=f'-c {config.workflow_core_t}'),
                     ),
@@ -202,6 +202,7 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
                     # address=address_by_interface('enp4s0f0' or 'ib0')
                     address=address_by_interface('ib0'),
                     worker_debug=False,
+                    workers_per_node = math.ceil(config.workflow_core_t / max(int(config.snaq_threads), int(config.phylonet_threads))),
                     provider=SlurmProvider(
                         partition=config.workflow_part_l,
                         # scheduler_options='',
@@ -213,7 +214,6 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
                         worker_init=env_str,
                         move_files=False,
                         walltime=config.workflow_wall_t_l,
-                        workers_per_node = math.ceil(config.workflow_core_t / max(int(config.snaq_threads), int(config.phylonet_threads))),
                         launcher=SrunLauncher(overrides=f'-c {config.workflow_core_l}'),
                     ),
                 ),
