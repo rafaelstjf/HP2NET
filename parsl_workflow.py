@@ -163,9 +163,12 @@ def prepare_to_run(config):
         r.append(apps.create_folders(basedir, config,folders=folder_list))
     wait_for_all(r)
         
-def main(config_file='default.ini'):
+def main(config_file='default.ini', workload_file = None):
     logging.info('Starting the Workflow Orchestration')
-    cf = bioconfig.ConfigFactory(config_file)
+    if workload_file is not None:
+        cf = bioconfig.ConfigFactory(config_file, custom_workload = workload_file)
+    else:
+        cf = bioconfig.ConfigFactory(config_file)
     bio_config = cf.build_config()
     dkf_config = workflow_config(bio_config)
     dkf = parsl.load(dkf_config)
@@ -205,8 +208,15 @@ def main(config_file='default.ini'):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Process the configuration file.')
     parser.add_argument('--cf', help='Settings file', required=False, type=str)
+    parser.add_argument('--wf', help='Workload file', required=False, type=str)
     args = parser.parse_args()
     if args.cf is not None:
-        main(config_file=args.cf)
+        if args.wf is not None:
+            main(config_file=args.cf, workload_file=args.wf)
+        else:
+            main(config_file=args.cf)
     else:
-        main()
+        if args.wf is not None:
+            main(workload_file=args.wf)
+        else:
+            main()

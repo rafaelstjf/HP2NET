@@ -81,7 +81,7 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
                     nodes_per_block=1,
                     channel=LocalChannel(script_dir = config.script_dir),
                     parallelism=1,
-                    init_blocks=config.workflow_node,
+                    init_blocks=1,
                     worker_init=env_str,
                     max_blocks=config.workflow_node,
                     launcher=SrunLauncher(overrides=f'-c {config.workflow_core}')

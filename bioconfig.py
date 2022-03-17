@@ -112,14 +112,13 @@ class BioConfig:
 @borg
 class ConfigFactory:
 
-    def __init__(self, config_file: str = "default.ini") -> None:
+    def __init__(self, config_file: str = "default.ini", custom_workload: str = None) -> None:
         import configparser
-
+        self.custom_workload = custom_workload
         self.config_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.path.join('config', config_file))
         self.config = configparser.ConfigParser()
         self.config.read(self.config_file)
         return
-
     def build_config(self) -> BioConfig:
 
         cf = self.config
@@ -134,7 +133,10 @@ class ConfigFactory:
         network_method = cf['GENERAL']['NetworkMethod']
         tree_method = cf['GENERAL']['TreeMethod']
         # Read where datasets are...
-        workload_path = os.path.join(workflow_path, os.path.join('config', cf['GENERAL']['Workload']))
+        if self.custom_workload is not None:
+            workload_path = os.path.join(workflow_path, os.path.join('config', self.custom_workload))
+        else:
+            workload_path = os.path.join(workflow_path, os.path.join('config', cf['GENERAL']['Workload']))
         workload = list()
         with open(f"{workload_path}", "r") as f:
             for line in f:
