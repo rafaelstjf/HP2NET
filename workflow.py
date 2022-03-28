@@ -31,7 +31,7 @@ __status__ = "Research"
 import parsl
 import logging
 from parsl.channels import LocalChannel
-from parsl.launchers import SrunLauncher, SingleNodeLauncher
+from parsl.launchers import SrunLauncher, SimpleLauncher
 from parsl.addresses import address_by_interface
 from parsl.executors import HighThroughputExecutor, WorkQueueExecutor
 from parsl.providers import LocalProvider, SlurmProvider
@@ -69,28 +69,51 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
         monitoring_debug=False,
         resource_monitoring_interval=interval,
     ) if monitor else None
-    return parsl.config.Config(
-        executors=[
-            HighThroughputExecutor(
-                label=f'single_partition',
-                # Optional: The network interface on node 0 which compute nodes can communicate with.
-                # address=address_by_interface('enp4s0f0' or 'ib0')
-                cores_per_worker=cores_per_worker,
-                worker_debug=False,
-                provider=LocalProvider(
-                    nodes_per_block=1,
-                    channel=LocalChannel(script_dir = config.script_dir),
-                    parallelism=1,
-                    init_blocks=config.workflow_node,
-                    worker_init=env_str,
-                    max_blocks=config.workflow_node,
-                    launcher=SrunLauncher(overrides=f'-c {config.workflow_core}')
+    if config.execution_provider == "LocalProvider":
+        return parsl.config.Config(
+            executors=[
+                HighThroughputExecutor(
+                    label=f'single_partition',
+                    # Optional: The network interface on node 0 which compute nodes can communicate with.
+                    # address=address_by_interface('enp4s0f0' or 'ib0')
+                    worker_debug=False,
+                    provider=LocalProvider(
+                        nodes_per_block=1,
+                        channel=LocalChannel(script_dir = config.script_dir),
+                        parallelism=1,
+                        init_blocks=1,
+                        worker_init=env_str,
+                        max_blocks=config.workflow_node,
+                        launcher=SimpleLauncher()
+                    ),
                 ),
-            ),
-        ],
-        monitoring=mon_hub,
-        strategy=None,
-    )
+            ],
+            monitoring=mon_hub,
+            strategy=None,
+        )
+    else:
+        return parsl.config.Config(
+            executors=[
+                HighThroughputExecutor(
+                    label=f'single_partition',
+                    # Optional: The network interface on node 0 which compute nodes can communicate with.
+                    # address=address_by_interface('enp4s0f0' or 'ib0')
+                    cores_per_worker=cores_per_worker,
+                    worker_debug=False,
+                    provider=LocalProvider(
+                        nodes_per_block=1,
+                        channel=LocalChannel(script_dir = config.script_dir),
+                        parallelism=1,
+                        init_blocks=1,
+                        worker_init=env_str,
+                        max_blocks=config.workflow_node,
+                        launcher=SrunLauncher(overrides=f'-c {config.workflow_core}')
+                    ),
+                ),
+            ],
+            monitoring=mon_hub,
+            strategy=None,
+        )
 
 # SYNCHRONIZATION ROUTINES
 
