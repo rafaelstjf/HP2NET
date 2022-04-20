@@ -35,6 +35,7 @@ from pandas.core import base
 import parsl
 from appsexception import FileCreationError, FolderDeletionError
 from bioconfig import BioConfig
+from typing import Any
 
 
 # setup_phylip_data bash app
@@ -99,6 +100,7 @@ def raxml(basedir: dict,
           config: BioConfig,
           input_file: str,
           inputs=[],
+          next_pipe: Any = None,
           stderr=parsl.AUTO_LOGNAME,
           stdout=parsl.AUTO_LOGNAME):
     """Runs the Raxml's executable on a sequence alignment in phylip format

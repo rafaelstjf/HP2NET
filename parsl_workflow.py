@@ -1,22 +1,25 @@
 import parsl, apps, glob, bioconfig, os, logging, argparse
 from pandas.core import base
-from workflow import workflow_config, wait_for_all
+from workflow import workflow_config, wait_for_all, CircularList
 
 cache = dict()
 #LOGGING SECTION
 logging.basicConfig(level=logging.DEBUG)
 
 def raxml_snaq(bio_config, basedir):
+    import math
     result = list()
     ret_tree = list()
     datalist = list()
+    pool = CircularList(math.floor(bio_config.workflow_core/int(bio_config.raxml_threads)))
     #append the input files
     dir_ = os.path.join(os.path.join(basedir['dir'], "input"), "phylip")
     datalist = glob.glob(os.path.join(dir_, '*.phy'))
     if(basedir['dir'], 'raxml') not in cache:        
         #create trees       
         for input_file in datalist:
-            ret = apps.raxml(basedir, bio_config, input_file)
+            ret = apps.raxml(basedir, bio_config, input_file=input_file, next_pipe=pool.next())
+            pool.current(ret)
             ret_tree.append(ret)
         ret_sad = apps.setup_tree_output(basedir, bio_config, inputs=ret_tree)
         cache[(basedir['dir'], 'raxml')] = ret_sad

@@ -28,7 +28,6 @@ else
     end
 end
 using PhyloNetworks
-using PhyloPlots
 using Distributed
 using CSV
 addprocs(parse(Int64,ARGS[5]) - 1)
@@ -38,7 +37,6 @@ name = string(replace(basename(basedir),"/" => "" ), "_", ARGS[1], "_", "MPL_", 
 output = joinpath(ARGS[4], name)
 println("Using PhyloNetworks on every processor")
 @everywhere using PhyloNetworks
-@everywhere using PhyloPlots
 if ARGS[1] == "RAXML" || ARGS[1] == "IQTREE"
     if length(ARGS) == 8
         genetrees = readMultiTopology(ARGS[2])

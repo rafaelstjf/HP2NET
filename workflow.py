@@ -30,14 +30,15 @@ __status__ = "Research"
 
 import parsl
 import logging
+import math
 from parsl.channels import LocalChannel
 from parsl.launchers import SrunLauncher, SingleNodeLauncher
-from parsl.addresses import address_by_interface
+from parsl.addresses import address_by_interface, address_by_hostname
 from parsl.executors import HighThroughputExecutor, WorkQueueExecutor
 from parsl.providers import LocalProvider, SlurmProvider
 from datetime import datetime
 from bioconfig import BioConfig
-
+from typing import Any
 # PARSL CONFIGURATION
 def workflow_config(config: BioConfig, ) -> parsl.config.Config:
     """ Configures and loads Parsl's Workflow configuration
@@ -49,7 +50,6 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
     name = config.workflow_name
     interval = 30
     monitor = config.workflow_monitor
-    cores_per_worker = max(int(config.raxml_threads), int(config.iqtree_threads), int(config.snaq_threads), int(config.phylonet_threads))
     now = datetime.now()
     date_time = now.strftime("%d-%m-%Y_%H-%M-%S")
     parsl.set_stream_logger(level=logging.ERROR)
@@ -63,8 +63,7 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
     logging.info(f'Task Environment {env_str}')
     mon_hub = parsl.monitoring.monitoring.MonitoringHub(
         workflow_name=name,
-        hub_address=address_by_interface('ib0'),
-        hub_port=60001,
+        hub_address=address_by_hostname(),
         resource_monitoring_enabled=True,
         monitoring_debug=False,
         resource_monitoring_interval=interval,
@@ -74,16 +73,17 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
             HighThroughputExecutor(
                 label=f'single_partition',
                 # Optional: The network interface on node 0 which compute nodes can communicate with.
-                # address=address_by_interface('enp4s0f0' or 'ib0')
-                cores_per_worker=cores_per_worker,
+                address=address_by_hostname(),
+                cores_per_worker=1,
+                max_workers=config.workflow_core,
                 worker_debug=False,
                 provider=LocalProvider(
                     nodes_per_block=1,
                     channel=LocalChannel(script_dir = config.script_dir),
                     parallelism=1,
                     init_blocks=1,
-                    worker_init=env_str,
                     max_blocks=config.workflow_node,
+                    worker_init=env_str,
                     launcher=SrunLauncher(overrides=f'-c {config.workflow_core}')
                 ),
             ),
@@ -127,3 +127,22 @@ def wait_for_all(list_of_futures: list, sleep_interval=10) -> None:
         r.result()
 
     return
+
+class CircularList:
+    def __init__(self, slots: int) -> None:
+        if not slots:
+            raise ValueError
+        self.list = [None for _ in range(slots)]
+        self.index = 0
+        self.max_index = len(self.list) - 1
+
+    def next(self) -> Any:
+        if self.index == self.max_index:
+            self.index = 0
+        else:
+            self.index += 1
+        return self.list[self.index]
+
+    def current(self, value: Any) -> None:
+        self.list[self.index] = value
+        return
