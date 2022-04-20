@@ -1,4 +1,4 @@
-import parsl, apps, glob, bioconfig, os, logging, argparse
+import parsl, apps, glob, bioconfig, os, logging, argparse, math
 from pandas.core import base
 from workflow import workflow_config, wait_for_all, CircularList
 
@@ -7,7 +7,6 @@ cache = dict()
 logging.basicConfig(level=logging.DEBUG)
 
 def raxml_snaq(bio_config, basedir):
-    import math
     result = list()
     ret_tree = list()
     datalist = list()
@@ -29,8 +28,10 @@ def raxml_snaq(bio_config, basedir):
         ret_sad = cache[(basedir['dir'], 'raxml')]
     logging.info("Using the Maximum Pseudo Likelihood Method")
     ret_ast = apps.astral(basedir, bio_config, inputs=[ret_sad])
+    pool_phylo = CircularList(math.floor(bio_config.workflow_core/int(bio_config.snaq_threads)))
     for h in bio_config.snaq_hmax:
-        ret_snq = apps.snaq(basedir, bio_config, h, inputs=[ret_ast])
+        ret_snq = apps.snaq(basedir, bio_config, h, inputs=[ret_ast], next_pipe=pool_phylo.next())
+        pool_phylo.current(ret_snq)
         result.append(ret_snq)
     return result
 
@@ -38,13 +39,15 @@ def raxml_phylonet(bio_config, basedir):
     result = list()
     ret_tree = list()
     datalist = list()
+    pool = CircularList(math.floor(bio_config.workflow_core/int(bio_config.raxml_threads)))
     #append the input files
     dir_ = os.path.join(os.path.join(basedir['dir'], "input"), "phylip")
     datalist = glob.glob(os.path.join(dir_, '*.phy'))
     if (basedir['dir'], 'raxml') not in cache:
         #create trees
         for input_file in datalist:
-            ret = apps.raxml(basedir, bio_config, input_file)
+            ret = apps.raxml(basedir, bio_config, input_file=input_file, next_pipe=pool.next())
+            pool.current(ret)
             ret_tree.append(ret)
         ret_sad = apps.setup_tree_output(basedir, bio_config, inputs=ret_tree)
         cache[(basedir['dir'], 'raxml')] = ret_sad
@@ -54,10 +57,12 @@ def raxml_phylonet(bio_config, basedir):
         ret_sad = cache[(basedir['dir'], 'raxml')]
     logging.info("Using the Maximum Parsimony Method")
     out_dir = os.path.join(basedir['dir'], bio_config.phylonet_dir)
+    pool_phylo = CircularList(math.floor(bio_config.workflow_core/int(bio_config.phylonet_threads)))
     for h in bio_config.phylonet_hmax:
         ret_spd = apps.setup_phylonet_data(basedir, bio_config, h, inputs=[ret_sad])
         filename = os.path.join(out_dir, (basedir['tree_method'] + '_' + h +'_' + bio_config.phylonet_input))
-        ret_phylonet = apps.phylonet(basedir, bio_config, filename, inputs=[ret_spd])
+        ret_phylonet = apps.phylonet(basedir, bio_config, filename, inputs=[ret_spd], next_pipe=pool_phylo.next())
+        pool_phylo.current(ret_phylonet)
         result.append(ret_phylonet)
     return result
 
@@ -65,13 +70,15 @@ def iqtree_snaq(bio_config, basedir):
     result = list()
     ret_tree = list()
     datalist = list()
+    pool = CircularList(math.floor(bio_config.workflow_core/int(bio_config.iqtree_threads)))
     #append the input files
     dir_ = os.path.join(os.path.join(basedir['dir'], "input"), "phylip")
     datalist = glob.glob(os.path.join(dir_, '*.phy'))
     if (basedir['dir'], 'iqtree') not in cache:
         #create trees
         for input_file in datalist:
-            ret  = apps.iqtree(basedir, bio_config, input_file)
+            ret  = apps.iqtree(basedir, bio_config, input_file=input_file, next_pipe=pool.next())
+            pool.current(ret)
             ret_tree.append(ret)
         ret_sad = apps.setup_tree_output(basedir, bio_config, inputs=ret_tree)
         logging.info('Creating cache on iqtree')
@@ -81,8 +88,10 @@ def iqtree_snaq(bio_config, basedir):
         ret_sad = cache[(basedir['dir'], 'iqtree')]
     logging.info("Using the Maximum Pseudo Likelihood Method")
     ret_ast = apps.astral(basedir, bio_config, inputs=[ret_sad])
+    pool_phylo = CircularList(math.floor(bio_config.workflow_core/int(bio_config.snaq_threads)))
     for h in bio_config.snaq_hmax:
-        ret_snq = apps.snaq(basedir, bio_config, h, inputs=[ret_ast])
+        ret_snq = apps.snaq(basedir, bio_config, h, inputs=[ret_ast], next_pipe=pool_phylo.next())
+        pool_phylo.current(ret_snq)
         result.append(ret_snq)
     return result
 
@@ -90,13 +99,15 @@ def iqtree_phylonet(bio_config, basedir):
     result = list()
     ret_tree = list()
     datalist = list()
+    pool = CircularList(math.floor(bio_config.workflow_core/int(bio_config.iqtree_threads)))
     #append the input files
     dir_ = os.path.join(os.path.join(basedir['dir'], "input"), "phylip")
     datalist = glob.glob(os.path.join(dir_, '*.phy'))
     if (basedir['dir'], 'iqtree') not in cache:
         #create trees
         for input_file in datalist:
-            ret  = apps.iqtree(basedir, bio_config, input_file)
+            ret  = apps.iqtree(basedir, bio_config, input_file=input_file, next_pipe=pool.next())
+            pool.current(ret)
             ret_tree.append(ret)
         ret_sad = apps.setup_tree_output(basedir, bio_config, inputs=ret_tree)
         logging.info('Creating cache on iqtree')
@@ -106,10 +117,12 @@ def iqtree_phylonet(bio_config, basedir):
         ret_sad = cache[(basedir['dir'], 'iqtree')]
     logging.info("Using the Maximum Parsimony Method")
     out_dir = os.path.join(basedir['dir'], bio_config.phylonet_dir)
+    pool_phylo = CircularList(math.floor(bio_config.workflow_core/int(bio_config.phylonet_threads)))
     for h in bio_config.phylonet_hmax:
         ret_spd = apps.setup_phylonet_data(basedir, bio_config, h, inputs=[ret_sad])
         filename = os.path.join(out_dir, (basedir['tree_method'] + '_' + h +'_' + bio_config.phylonet_input))
-        ret_phylonet = apps.phylonet(basedir, bio_config, filename, inputs=[ret_spd])
+        ret_phylonet = apps.phylonet(basedir, bio_config, filename, inputs=[ret_spd], next_pipe=pool_phylo.next())
+        pool_phylo.current(ret_phylonet)
         result.append(ret_phylonet)
     return result
 
@@ -136,8 +149,10 @@ def mrbayes_snaq(bio_config, basedir):
     ret_qmc = apps.quartet_maxcut(basedir, bio_config, inputs = [ret_pre_qmc])
     ret_tree.append(apps.setup_qmc_output(basedir, bio_config, inputs = [ret_qmc]))
     logging.info("Using the Maximum Pseudo Likelihood Method")
+    pool_phylo = CircularList(math.floor(bio_config.workflow_core/int(bio_config.snaq_threads)))
     for h in bio_config.snaq_hmax:
-        ret_snq = apps.snaq(basedir, bio_config, h, inputs=ret_tree)
+        ret_snq = apps.snaq(basedir, bio_config, h, inputs=ret_tree, next_pipe=pool_phylo.next())
+        pool_phylo.current(ret_snq)
         result.append(ret_snq)
     return result
 

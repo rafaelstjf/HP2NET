@@ -81,15 +81,16 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
                     nodes_per_block=1,
                     channel=LocalChannel(script_dir = config.script_dir),
                     parallelism=1,
-                    init_blocks=1,
+                    init_blocks=config.workflow_node,
                     max_blocks=config.workflow_node,
                     worker_init=env_str,
                     launcher=SrunLauncher(overrides=f'-c {config.workflow_core}')
                 ),
-            ],
-            monitoring=mon_hub,
-            strategy=None,
-        )
+            ),
+        ],
+        monitoring=mon_hub,
+        strategy=None,
+    )
         
 # SYNCHRONIZATION ROUTINES
 

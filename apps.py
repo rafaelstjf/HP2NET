@@ -392,6 +392,7 @@ def snaq(basedir: dict,
         hmax: str,
         inputs=[],
         outputs=[],
+        next_pipe: Any = None,
         stderr=parsl.AUTO_LOGNAME,
         stdout=parsl.AUTO_LOGNAME):
     """Runs the phylonetwork algorithm (snaq) and create the phylogenetic network in newick format
@@ -964,6 +965,7 @@ def phylonet(basedir: dict,
             input_file: str,
             inputs=[],
             outputs=[],
+            next_pipe: Any = None,
             stderr=parsl.AUTO_LOGNAME,
             stdout=parsl.AUTO_LOGNAME):
     """Runs PhyloNet using as input the phylonet_input variable
@@ -994,6 +996,7 @@ def iqtree(basedir: dict,
             config: BioConfig,
             input_file: str,
             inputs=[],
+            next_pipe: Any = None,
             stderr=parsl.AUTO_LOGNAME,
             stdout=parsl.AUTO_LOGNAME):
     """Runs IQ-TREE's executable using as input a sequence alignment in phylip format
