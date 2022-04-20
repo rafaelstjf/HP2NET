@@ -86,12 +86,11 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
                     worker_init=env_str,
                     launcher=SrunLauncher(overrides=f'-c {config.workflow_core}')
                 ),
-            ),
-        ],
-        monitoring=mon_hub,
-        strategy=None,
-    )
-
+            ],
+            monitoring=mon_hub,
+            strategy=None,
+        )
+        
 # SYNCHRONIZATION ROUTINES
 
 
