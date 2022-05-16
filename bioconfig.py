@@ -72,6 +72,7 @@ class BioConfig:
     raxml:              str
     raxml_dir:          str
     raxml_output:       str
+    raxml_rooted_output: str
     raxml_threads:      int
     raxml_model:        str
     iqtree:             str
@@ -79,6 +80,7 @@ class BioConfig:
     iqtree_model:       str
     iqtree_threads:     int
     iqtree_output:      str
+    iqtree_rooted_output: str
     astral_exec_dir:    str
     astral_jar:         str
     astral:             str
@@ -195,6 +197,7 @@ class ConfigFactory:
         raxml = cf['RAXML']['RaxmlExecutable']
         raxml_dir = 'raxml'
         raxml_output = 'besttrees.tre'
+        raxml_rooted_output = 'besttrees_rooted.tre'
         raxml_threads = cf['RAXML']['RaxmlThreads']
         raxml_model = cf['RAXML']['RaxmlEvolutionaryModel']
         #IQTREE
@@ -203,6 +206,7 @@ class ConfigFactory:
         iqtree_model = cf['IQTREE']['IqTreeEvolutionaryModel']
         iqtree_threads = cf['IQTREE']['IqTreeThreads']
         iqtree_output = 'besttrees.tre'
+        iqtree_rooted_output = 'besttrees_rooted.tre'
         #ASTRAL
         astral_exec_dir = cf['ASTRAL']['AstralExecDir']
         astral_jar = cf['ASTRAL']['AstralJar']
@@ -265,6 +269,7 @@ class ConfigFactory:
                                    raxml=raxml,
                                    raxml_dir=raxml_dir,
                                    raxml_output=raxml_output,
+                                   raxml_rooted_output=raxml_rooted_output,
                                    raxml_threads=raxml_threads,
                                    raxml_model=raxml_model,
                                    iqtree=iqtree,
@@ -272,6 +277,7 @@ class ConfigFactory:
                                    iqtree_model=iqtree_model,
                                    iqtree_threads=iqtree_threads,
                                    iqtree_output=iqtree_output,
+                                   iqtree_rooted_output=iqtree_rooted_output,
                                    astral_exec_dir=astral_exec_dir,
                                    astral_jar=astral_jar,
                                    astral=astral,

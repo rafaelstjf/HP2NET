@@ -339,26 +339,31 @@ def root_tree(basedir: dict,
     tree_method = basedir['tree_method']
     work_dir = basedir['dir']
     outgroup = basedir['outgroup']
+    buffer = ""
     if tree_method == "RAXML":
-        tree_path = os.path.join(work_dir, 
-            tree_dir = os.path.join(config.raxml_dir, config.raxml_output)
-        )
+        tree_dir = os.path.join(work_dir, config.raxml_dir)
+        tree_path = os.path.join(tree_dir, config.raxml_output)
         try:
             trees = Phylo.parse(tree_path, "newick")
             for tree in trees:
                 tree.root_with_outgroup(outgroup)
-            Phylo.write(trees, tree_path, "newick")
+                buffer+=tree.format("newick")
+            with open(os.path.join(tree_dir, config.raxml_rooted_output), 'w') as out:
+                out.write(buffer)  
+                out.close() 
         except:
             pass
     if tree_method == "IQTREE":
-        tree_path = os.path.join(work_dir, 
-            tree_dir = os.path.join(config.iqtree_dir, config.iqtree_output)
-        )
+        tree_dir = os.path.join(work_dir, config.iqtree_dir)
+        tree_path = os.path.join(tree_dir, config.iqtree_output)
         try:
             trees = Phylo.parse(tree_path, "newick")
             for tree in trees:
                 tree.root_with_outgroup(outgroup)
-            Phylo.write(trees, tree_path, "newick")
+                buffer+=tree.format("newick")
+            with open(os.path.join(tree_dir, config.iqtree_rooted_output), 'w') as out:
+                out.write(buffer)    
+                out.close()
         except:
             pass
     return
@@ -969,9 +974,9 @@ def setup_phylonet_data(basedir: dict,
     logging.info(f'Setting up Phylonet data in {work_dir}')
     gene_trees = ""
     if(tree_method == "RAXML"):
-        gene_trees = os.path.join(os.path.join(work_dir, config.raxml_dir), config.raxml_output)
+        gene_trees = os.path.join(os.path.join(work_dir, config.raxml_dir), config.raxml_rooted_output)
     elif(tree_method == "IQTREE"):
-        gene_trees = os.path.join(os.path.join(work_dir, config.iqtree_dir), config.iqtree_output)
+        gene_trees = os.path.join(os.path.join(work_dir, config.iqtree_dir), config.iqtree_rooted_output)
     out_dir = os.path.join(work_dir, config.phylonet_dir)
     out_filepath = os.path.join(out_dir, (tree_method + '_' + hmax +'_' + config.phylonet_input))
     try:
