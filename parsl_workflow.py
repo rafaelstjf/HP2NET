@@ -55,11 +55,12 @@ def raxml_phylonet(bio_config, basedir):
     else:
         logging.info('Using cached raxml')
         ret_sad = cache[(basedir['dir'], 'raxml')]
+    ret_rooted = apps.root_tree(basedir, bio_config, inputs=[ret_sad])
     logging.info("Using the Maximum Parsimony Method")
     out_dir = os.path.join(basedir['dir'], bio_config.phylonet_dir)
     pool_phylo = CircularList(math.floor(bio_config.workflow_core/int(bio_config.phylonet_threads)))
     for h in bio_config.phylonet_hmax:
-        ret_spd = apps.setup_phylonet_data(basedir, bio_config, h, inputs=[ret_sad])
+        ret_spd = apps.setup_phylonet_data(basedir, bio_config, h, inputs=[ret_rooted])
         filename = os.path.join(out_dir, (basedir['tree_method'] + '_' + h +'_' + bio_config.phylonet_input))
         ret_phylonet = apps.phylonet(basedir, bio_config, filename, inputs=[ret_spd], next_pipe=pool_phylo.next())
         pool_phylo.current(ret_phylonet)
@@ -115,11 +116,12 @@ def iqtree_phylonet(bio_config, basedir):
     else:
         logging.info('Using cached iqtree')
         ret_sad = cache[(basedir['dir'], 'iqtree')]
+    ret_rooted = apps.root_tree(basedir, bio_config, inputs=[ret_sad])
     logging.info("Using the Maximum Parsimony Method")
     out_dir = os.path.join(basedir['dir'], bio_config.phylonet_dir)
     pool_phylo = CircularList(math.floor(bio_config.workflow_core/int(bio_config.phylonet_threads)))
     for h in bio_config.phylonet_hmax:
-        ret_spd = apps.setup_phylonet_data(basedir, bio_config, h, inputs=[ret_sad])
+        ret_spd = apps.setup_phylonet_data(basedir, bio_config, h, inputs=[ret_rooted])
         filename = os.path.join(out_dir, (basedir['tree_method'] + '_' + h +'_' + bio_config.phylonet_input))
         ret_phylonet = apps.phylonet(basedir, bio_config, filename, inputs=[ret_spd], next_pipe=pool_phylo.next())
         pool_phylo.current(ret_phylonet)

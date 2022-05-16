@@ -316,6 +316,53 @@ def setup_tree_output(basedir: dict,
             raise FileCreationError(iqtree_dir)
     return
 
+@parsl.python_app(executors=['single_partition'])
+def root_tree(basedir: dict,
+              config: BioConfig,
+              inputs=[],
+              outputs=[],
+              stderr=parsl.AUTO_LOGNAME,
+              stdout=parsl.AUTO_LOGNAME):
+    """Opens the best tree file from raxml or iqtree and root all the trees according to an outgroup 
+
+    Parameters:
+        basedir: current working directory
+    TODO: 
+        Provide provenance.
+
+    NB:
+        Stdout and Stderr are defaulted to parsl.AUTO_LOGNAME, so the log will be automatically 
+        named according to task id and saved under task_logs in the run directory.
+    """
+    from Bio import Phylo
+    import os
+    tree_method = basedir['tree_method']
+    work_dir = basedir['dir']
+    outgroup = basedir['outgroup']
+    if tree_method == "RAXML":
+        tree_path = os.path.join(work_dir, 
+            tree_dir = os.path.join(config.raxml_dir, config.raxml_output)
+        )
+        try:
+            trees = Phylo.parse(tree_path, "newick")
+            for tree in trees:
+                tree.root_with_outgroup(outgroup)
+            Phylo.write(trees, tree_path, "newick")
+        except:
+            pass
+    if tree_method == "IQTREE":
+        tree_path = os.path.join(work_dir, 
+            tree_dir = os.path.join(config.iqtree_dir, config.iqtree_output)
+        )
+        try:
+            trees = Phylo.parse(tree_path, "newick")
+            for tree in trees:
+                tree.root_with_outgroup(outgroup)
+            Phylo.write(trees, tree_path, "newick")
+        except:
+            pass
+    return
+        
 @parsl.bash_app(executors=['single_partition'])
 def astral(basedir: dict,
            config: BioConfig,
