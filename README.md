@@ -46,7 +46,7 @@ ScriptDir 		= ./scripts
 Environ			= config/parsl.env
 Workload		= config/work.config
 NetworkMethod   = MP
-TreeMethod      = ML_RAXML
+TreeMethod      = RAXML
 BootStrap       = 1000
 ```
 
