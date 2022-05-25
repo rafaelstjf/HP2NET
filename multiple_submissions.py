@@ -22,17 +22,17 @@ def check_waiting():
     else:
         return False
 times = list()
-#configs = ['100g6t_iqtree_phylonet.config', '100g6t_iqtree_snaq.config', '100g6t_raxml_phylonet.config', '100g6t_raxml_snaq.config', '100g6t_mrbayes_snaq.config', '100g6t_all.config']
+configs = ['100g6t_iqtree_phylonet.config', '100g6t_iqtree_snaq.config', '100g6t_raxml_phylonet.config', '100g6t_raxml_snaq.config', '100g6t_mrbayes_snaq.config', '100g6t_all.config']
 #configs = ['300g6t_iqtree_phylonet.config', '300g6t_iqtree_snaq.config', '300g6t_raxml_phylonet.config', '300g6t_raxml_snaq.config', '300g6t_mrbayes_snaq.config', '300g6t_all.config']
 #configs = ['1000g6t_iqtree_phylonet.config', '1000g6t_iqtree_snaq.config', '1000g6t_raxml_phylonet.config', '1000g6t_raxml_snaq.config', '1000g6t_mrbayes_snaq.config', '1000g6t_all.config']
-configs = ['1000g6t_all.config']
+#configs = ['1000g6t_all.config']
 for i in range(0, NUMBER_EXEC*len(configs)):
     ind = i % len(configs)
     print(f'Submitting {configs[ind]}')
     while(check_runing()):
         print(f'There is a job running. Sleeping...')
         time.sleep(SLEEP_TIME)
-    subprocess.call(f'sbatch --export=ALL,SCRATCH=\'{os.environ["SCRATCH"]}\',WF=\'{configs[ind]}\' submit.sh', shell=True)
+    subprocess.call(f'sbatch --export=ALL,SCRATCH=\'{os.environ["SCRATCH"]}\',WF=\'{os.path.join(os.getcwd(), os.path.join("config",configs[ind]))}\' submit.sh', shell=True)
     while(check_runing() or check_waiting()):
         print(f'There is a job waiting or running. Sleeping...')
         time.sleep(SLEEP_TIME)

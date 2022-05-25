@@ -143,7 +143,8 @@ class ConfigFactory:
         with open(f"{workload_path}", "r") as f:
             for line in f:
                 dir_ = {}
-                if line[0] != '#':
+                line = line.strip()
+                if len(line) > 0 and line[0] != '#':
                     line_with_method = line.split('@')
                     dir_['dir'] = line_with_method[0].strip()
                     #check if the line contains a specific method
