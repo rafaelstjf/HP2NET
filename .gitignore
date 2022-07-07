@@ -144,3 +144,7 @@ Input_Workflow
 *.out
 *.err
 *.output
+
+# config files
+*.config
+*.config.ssd
