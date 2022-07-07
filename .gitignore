@@ -141,5 +141,6 @@ config/work_local.config
 Input_Workflow
 
 # stdout and stderr files
-*out
-*err
+*.out
+*.err
+*.output
