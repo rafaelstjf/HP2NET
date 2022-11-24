@@ -35,10 +35,11 @@ from pandas.core import base
 import parsl
 from appsexception import FileCreationError, FolderDeletionError
 from bioconfig import BioConfig
+from typing import Any
 
 
 # setup_phylip_data bash app
-@parsl.python_app(executors=['single_thread'])
+@parsl.python_app(executors=['single_partition'])
 def setup_phylip_data(basedir: dict, config: BioConfig,
                       stderr=parsl.AUTO_LOGNAME,
                       stdout=parsl.AUTO_LOGNAME):
@@ -99,6 +100,7 @@ def raxml(basedir: dict,
           config: BioConfig,
           input_file: str,
           inputs=[],
+          next_pipe: Any = None,
           stderr=parsl.AUTO_LOGNAME,
           stdout=parsl.AUTO_LOGNAME):
     """Runs the Raxml's executable on a sequence alignment in phylip format
@@ -125,7 +127,7 @@ def raxml(basedir: dict,
 
     p = random.randint(1, 10000)
     x = random.randint(1, 10000)
-    params = f"-T {num_threads} -p {p} -x {x} -f a -m {config.raxml_model} -N {config.bootstrap} -o {basedir['outgroup']}"
+    params = f"-T {num_threads} -p {p} -x {x} -f a -m {config.raxml_model} -N {config.bootstrap}"
     output_file = os.path.splitext(os.path.basename(input_file))[0]
     # Return to Parsl to be executed on the workflow
     return f"cd {raxml_dir}; {raxml_exec} {params} -s {input_file} -n {output_file}"
@@ -314,6 +316,58 @@ def setup_tree_output(basedir: dict,
             raise FileCreationError(iqtree_dir)
     return
 
+@parsl.python_app(executors=['single_thread'])
+def root_tree(basedir: dict,
+              config: BioConfig,
+              inputs=[],
+              outputs=[],
+              stderr=parsl.AUTO_LOGNAME,
+              stdout=parsl.AUTO_LOGNAME):
+    """Opens the best tree file from raxml or iqtree and root all the trees according to an outgroup 
+
+    Parameters:
+        basedir: current working directory
+    TODO: 
+        Provide provenance.
+
+    NB:
+        Stdout and Stderr are defaulted to parsl.AUTO_LOGNAME, so the log will be automatically 
+        named according to task id and saved under task_logs in the run directory.
+    """
+    from Bio import Phylo
+    import os
+    tree_method = basedir['tree_method']
+    work_dir = basedir['dir']
+    outgroup = basedir['outgroup']
+    buffer = ""
+    if tree_method == "RAXML":
+        tree_dir = os.path.join(work_dir, config.raxml_dir)
+        tree_path = os.path.join(tree_dir, config.raxml_output)
+        try:
+            trees = Phylo.parse(tree_path, "newick")
+            for tree in trees:
+                tree.root_with_outgroup(outgroup)
+                buffer+=tree.format("newick")
+            with open(os.path.join(tree_dir, config.raxml_rooted_output), 'w') as out:
+                out.write(buffer)  
+                out.close() 
+        except:
+            pass
+    if tree_method == "IQTREE":
+        tree_dir = os.path.join(work_dir, config.iqtree_dir)
+        tree_path = os.path.join(tree_dir, config.iqtree_output)
+        try:
+            trees = Phylo.parse(tree_path, "newick")
+            for tree in trees:
+                tree.root_with_outgroup(outgroup)
+                buffer+=tree.format("newick")
+            with open(os.path.join(tree_dir, config.iqtree_rooted_output), 'w') as out:
+                out.write(buffer)    
+                out.close()
+        except:
+            pass
+    return
+        
 @parsl.bash_app(executors=['single_thread'])
 def astral(basedir: dict,
            config: BioConfig,
@@ -390,6 +444,7 @@ def snaq(basedir: dict,
         hmax: str,
         inputs=[],
         outputs=[],
+        next_pipe: Any = None,
         stderr=parsl.AUTO_LOGNAME,
         stdout=parsl.AUTO_LOGNAME):
     """Runs the phylonetwork algorithm (snaq) and create the phylogenetic network in newick format
@@ -919,9 +974,9 @@ def setup_phylonet_data(basedir: dict,
     logging.info(f'Setting up Phylonet data in {work_dir}')
     gene_trees = ""
     if(tree_method == "RAXML"):
-        gene_trees = os.path.join(os.path.join(work_dir, config.raxml_dir), config.raxml_output)
+        gene_trees = os.path.join(os.path.join(work_dir, config.raxml_dir), config.raxml_rooted_output)
     elif(tree_method == "IQTREE"):
-        gene_trees = os.path.join(os.path.join(work_dir, config.iqtree_dir), config.iqtree_output)
+        gene_trees = os.path.join(os.path.join(work_dir, config.iqtree_dir), config.iqtree_rooted_output)
     out_dir = os.path.join(work_dir, config.phylonet_dir)
     out_filepath = os.path.join(out_dir, (tree_method + '_' + hmax +'_' + config.phylonet_input))
     try:
@@ -962,6 +1017,7 @@ def phylonet(basedir: dict,
             input_file: str,
             inputs=[],
             outputs=[],
+            next_pipe: Any = None,
             stderr=parsl.AUTO_LOGNAME,
             stdout=parsl.AUTO_LOGNAME):
     """Runs PhyloNet using as input the phylonet_input variable
@@ -992,6 +1048,7 @@ def iqtree(basedir: dict,
             config: BioConfig,
             input_file: str,
             inputs=[],
+            next_pipe: Any = None,
             stderr=parsl.AUTO_LOGNAME,
             stdout=parsl.AUTO_LOGNAME):
     """Runs IQ-TREE's executable using as input a sequence alignment in phylip format
@@ -1012,7 +1069,7 @@ def iqtree(basedir: dict,
     outgroup = basedir['outgroup']
     logging.info(f'IQ-TREE with {work_dir}')
     iqtree_dir = os.path.join(work_dir, config.iqtree_dir)
-    flags = f"-T {config.iqtree_threads} -ntmax {config.iqtree_threads} -b {config.bootstrap} -m {config.iqtree_model}  -s {input_file} -o {outgroup} --keep-ident -redo"
+    flags = f"-T AUTO -ntmax {config.iqtree_threads} -b {config.bootstrap} -m {config.iqtree_model}  -s {input_file} --keep-ident -redo"
     # Return to Parsl to be executed on the workflow
     return f"cd {iqtree_dir}; {config.iqtree} {flags}"
 
@@ -1046,7 +1103,7 @@ def create_folders(basedir: dict,
             FolderCreationError(full_path)
     return
 
-@parsl.bash_app(executors=['single_thread'])
+@parsl.bash_app(executors=['single_partition'])
 def plot_networks(config: BioConfig,
                     inputs=[],
                     outputs=[],
