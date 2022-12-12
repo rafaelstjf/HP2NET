@@ -102,7 +102,8 @@ def raxml(basedir: dict,
           inputs=[],
           next_pipe: Any = None,
           stderr=parsl.AUTO_LOGNAME,
-          stdout=parsl.AUTO_LOGNAME):
+          stdout=parsl.AUTO_LOGNAME,
+          seed = None):
     """Runs the Raxml's executable on a sequence alignment in phylip format
     Parameters:
         basedir: current working directory
@@ -125,9 +126,14 @@ def raxml(basedir: dict,
 
     # TODO: Create the following parameters(external configuration): -m, -N,
 
-    p = random.randint(1, 10000)
-    x = random.randint(1, 10000)
+    if seed is not None:
+        p = seed
+        x = seed
+    else:
+        p = random.randint(1, 10000)
+        x = random.randint(1, 10000)
     params = f"-T {num_threads} -p {p} -x {x} -f a -m {config.raxml_model} -N {config.bootstrap}"
+        
     output_file = os.path.splitext(os.path.basename(input_file))[0]
     # Return to Parsl to be executed on the workflow
     return f"cd {raxml_dir}; {raxml_exec} {params} -s {input_file} -n {output_file}"
@@ -374,7 +380,8 @@ def astral(basedir: dict,
            inputs=[],
            outputs=[],
            stderr=parsl.AUTO_LOGNAME,
-           stdout=parsl.AUTO_LOGNAME):
+           stdout=parsl.AUTO_LOGNAME,
+           seed = None):
     """Runs the Astral's executable using the besttree file and create the species tree in the astral folder
 
     Parameters:
@@ -427,6 +434,7 @@ def astral(basedir: dict,
                 f.write(f'{i}\n')
         astral_output = os.path.join(astral_iqtree, config.astral_output)
     # Return to Parsl to be executed on the workflow
+    params = f'-i {tree_output} -b {bs_file} -r {config.bootstrap} -o {astral_output}'
     if len(mapping) > 0:
         map_filename = os.path.join(astral_dir, 'mapping.dat')
         with open(map_filename, 'w') as map_:
@@ -434,9 +442,10 @@ def astral(basedir: dict,
             for specie in species:
                 map_.write(specie.strip() + '\n')
             map_.close()
-        return f'{exec_astral} -i {tree_output} -b {bs_file} -r {config.bootstrap} -a {map_filename} -o {astral_output}'
-    else:
-        return f'{exec_astral} -i {tree_output} -b {bs_file} -r {config.bootstrap} -o {astral_output}'
+            params+=f' -a {map_filename}'
+    if seed is not None:
+        params+=f' -s {seed}'
+    return f'{exec_astral} {params}'
 
 @parsl.bash_app(executors=['phylogenetic_network'])
 def snaq(basedir: dict,
@@ -446,7 +455,8 @@ def snaq(basedir: dict,
         outputs=[],
         next_pipe: Any = None,
         stderr=parsl.AUTO_LOGNAME,
-        stdout=parsl.AUTO_LOGNAME):
+        stdout=parsl.AUTO_LOGNAME,
+        seed = None):
     """Runs the phylonetwork algorithm (snaq) and create the phylogenetic network in newick format
 
     Parameters:
@@ -473,32 +483,29 @@ def snaq(basedir: dict,
     num_threads = config.snaq_threads
     output_folder = os.path.join(work_dir, config.snaq_dir)
     runs = config.snaq_runs
+    params = ""
     if tree_method == "RAXML":
         raxml_tree = os.path.join(os.path.join(work_dir, config.raxml_dir), config.raxml_output)
         astral_tree = os.path.join(work_dir, os.path.join(config.astral_dir, config.raxml_dir))
         astral_tree = os.path.join(astral_tree, config.astral_output)
-        if len(mapping) > 0:
-            return f'julia {snaq_exec} {tree_method} {raxml_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs} {mapping}'
-        else:
-            return f'julia {snaq_exec} {tree_method} {raxml_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs}'
+        params = f"{tree_method} {raxml_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs}"
     elif tree_method == "IQTREE":
         iqtree_tree = os.path.join(os.path.join(work_dir, config.iqtree_dir), config.iqtree_output)
         astral_tree = os.path.join(work_dir, os.path.join(config.astral_dir,config.iqtree_dir))
         astral_tree = os.path.join(astral_tree, config.astral_output)
-        if len(mapping) > 0:
-            return f'julia {snaq_exec} {tree_method} {iqtree_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs} {mapping}'
-        else:
-            return f'julia {snaq_exec} {tree_method} {iqtree_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs}'
+        params = f"{tree_method} {iqtree_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs}"
     elif tree_method == "MRBAYES":
         dir_name = os.path.basename(work_dir)
         qmc_output = os.path.join(os.path.join(work_dir, config.quartet_maxcut_dir), f'{dir_name}.tre')
         bucky_folder = os.path.join(work_dir, config.bucky_dir)
         bucky_table = os.path.join(bucky_folder, f"{dir_name}.csv")
         #mrbayes flow doesn't support mapping
-        return f'julia {snaq_exec} {tree_method} {bucky_table} {qmc_output} {output_folder} {num_threads} {hmax} {runs}'
-    else:
-        return
-
+        params = f"{tree_method} {bucky_table} {qmc_output} {output_folder} {num_threads} {hmax} {runs}"
+    if tree_method != "MRBAYES" and len(mapping) > 0:
+        params+= f" {mapping}"
+    if seed is not None:
+        params += f" {seed}"
+    return f'julia {snaq_exec} {params}'
 # Mr.Bayes bash app
 
 
@@ -508,7 +515,8 @@ def mrbayes(basedir: dict,
             input_file: str,
             inputs=[],
             stderr=parsl.AUTO_LOGNAME,
-            stdout=parsl.AUTO_LOGNAME):
+            stdout=parsl.AUTO_LOGNAME,
+            seed = None):
     """Runs the Mr. Bayes' executable on a sequence alignment file
 
     Parameters:
@@ -535,6 +543,8 @@ def mrbayes(basedir: dict,
     gene_par = open(os.path.join(mb_folder, gene_name), 'w+')
     gene_par.write(gene_string)
     par = f"begin mrbayes;\nset nowarnings=yes;\nset autoclose=yes;\nlset nst=2;\n{config.mrbayes_parameters};\nmcmc;\nsumt;\nend;"
+    if seed is not None:
+        par = f"begin mrbayes;\nset nowarnings=yes;\nset autoclose=yes;\nlset nst=2;\n{config.mrbayes_parameters};\nSeed={seed};\nmcmc;\nsumt;\nend;"
     gene_par.write(par)
     return f"{config.mrbayes} {os.path.join(mb_folder, gene_name)}"
 
@@ -547,7 +557,8 @@ def mbsum(basedir: dict,
           input_file: str,
           inputs=[],
           stderr=parsl.AUTO_LOGNAME,
-          stdout=parsl.AUTO_LOGNAME):
+          stdout=parsl.AUTO_LOGNAME,
+          seed = None):
     """Runs the mbsum's executable on the Mr.Bayes output for a certain sequence alignment
 
     Parameters:
@@ -580,7 +591,10 @@ def mbsum(basedir: dict,
             par_dir['nruns']*par_dir['burninfrac'])/par_dir['nruns']) + 1
     # select all the mrbayes .t files of the gene alignment file
     trees = glob.glob(os.path.join(mrbayes_folder, gene_name + '*.t'))
-    return f"{config.mbsum} {(' ').join(trees)} -n {trim} -o {os.path.join(mbsum_folder, gene_name + '.sum')}"
+    params = f"{(' ').join(trees)} -n {trim} -o {os.path.join(mbsum_folder, gene_name + '.sum')}"
+    if seed is not None:
+        pass
+    return f"{config.mbsum} {params}"
 
 
 @parsl.python_app(executors=['single_thread'])
@@ -661,7 +675,8 @@ def bucky(basedir: dict,
           inputs=[],
           outputs=[],
           stderr=parsl.AUTO_LOGNAME,
-          stdout=parsl.AUTO_LOGNAME):
+          stdout=parsl.AUTO_LOGNAME,
+          seed = None):
     """Runs bucky's executable using as input a certain prune tree file
 
     Parameters:
@@ -685,7 +700,11 @@ def bucky(basedir: dict,
     output_file = os.path.basename(prune_file)
     output_file = re.sub("-prune.txt", "", output_file)
     output_file = os.path.join(bucky_folder, output_file)
-    return f"{config.bucky} -a 1 -n 1000000 -cf 0 -o {output_file} -p {prune_file} {(' ').join(files)}"
+
+    params = f"-a 1 -n 1000000 -cf 0 -o {output_file} -p {prune_file} {(' ').join(files)}"
+    if seed is not None:
+        params+= f" -s1 {seed} -s2 {seed}"
+    return f"{config.bucky} {params}"
 
 
 @parsl.python_app(executors=['single_thread'])
