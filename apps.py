@@ -39,7 +39,7 @@ from typing import Any
 
 
 # setup_phylip_data bash app
-@parsl.python_app(executors=['single_partition'])
+@parsl.python_app(executors=['single_thread'])
 def setup_phylip_data(basedir: dict, config: BioConfig,
                       stderr=parsl.AUTO_LOGNAME,
                       stdout=parsl.AUTO_LOGNAME):
@@ -1122,7 +1122,7 @@ def create_folders(basedir: dict,
             FolderCreationError(full_path)
     return
 
-@parsl.bash_app(executors=['single_partition'])
+@parsl.bash_app(executors=['single_thread'])
 def plot_networks(config: BioConfig,
                     inputs=[],
                     outputs=[],
