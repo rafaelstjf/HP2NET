@@ -85,7 +85,7 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
                         parallelism=1,
                         init_blocks=1,
                         max_blocks=config.workflow_node_f,
-                        workers_per_node=config.workflow_core_f,
+                        cores_per_node=config.workflow_core_f,
                         nodes_per_block=1,
                         cmd_timeout=120,
                         worker_init=env_str,
@@ -107,7 +107,7 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
                         parallelism=1,
                         init_blocks=1,
                         max_blocks=config.workflow_node_t,
-                        workers_per_node=config.workflow_core_t,
+                        cores_per_node=config.workflow_core_t,
                         nodes_per_block=1,
                         cmd_timeout=120,
                         worker_init=env_str,
@@ -129,7 +129,7 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
                         parallelism=1,
                         init_blocks=1,
                         max_blocks=config.workflow_node_l,
-                        workers_per_node=config.workflow_core_l,
+                        cores_per_node=config.workflow_core_l,
                         nodes_per_block=1,
                         cmd_timeout=120,
                         worker_init=env_str,
@@ -242,20 +242,20 @@ def wait_for_all(list_of_futures: list, sleep_interval=10) -> None:
     return
 
 class CircularList:
-    def __init__(self, slots: int) -> None:
+    def __init__(self, slots: int):
         if not slots:
             raise ValueError
         self.list = [None for _ in range(slots)]
         self.index = 0
         self.max_index = len(self.list) - 1
 
-    def next(self) -> Any:
+    def next(self):
         if self.index == self.max_index:
             self.index = 0
         else:
             self.index += 1
         return self.list[self.index]
 
-    def current(self, value: Any) -> None:
+    def current(self, value):
         self.list[self.index] = value
         return

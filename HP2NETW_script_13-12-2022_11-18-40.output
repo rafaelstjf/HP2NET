@@ -1,0 +1,847 @@
+2022-12-13 11:18:40.504 parsl.addresses:63 [DEBUG]  Finding address by using local hostname
+2022-12-13 11:18:40.504 parsl.addresses:65 [DEBUG]  Address found: sdumont13
+2022-12-13 11:18:40.506 parsl.executors.high_throughput.executor:186 [DEBUG]  Initializing HighThroughputExecutor
+2022-12-13 11:18:40.506 parsl.addresses:63 [DEBUG]  Finding address by using local hostname
+2022-12-13 11:18:40.506 parsl.addresses:65 [DEBUG]  Address found: sdumont13
+2022-12-13 11:18:40.507 parsl.executors.high_throughput.executor:186 [DEBUG]  Initializing HighThroughputExecutor
+2022-12-13 11:18:40.507 parsl.addresses:63 [DEBUG]  Finding address by using local hostname
+2022-12-13 11:18:40.507 parsl.addresses:65 [DEBUG]  Address found: sdumont13
+2022-12-13 11:18:40.507 parsl.executors.high_throughput.executor:186 [DEBUG]  Initializing HighThroughputExecutor
+2022-12-13 11:18:40.511 parsl.dataflow.rundirs:36 [DEBUG]  Parsl run initializing in rundir: runinfo/000
+2022-12-13 11:18:40.518 parsl.dataflow.dflow:82 [DEBUG]  Starting DataFlowKernel with config
+Config(
+    app_cache=True, 
+    checkpoint_files=None, 
+    checkpoint_mode=None, 
+    checkpoint_period=None, 
+    data_management_max_threads=10, 
+    executors=[HighThroughputExecutor(
+        address='sdumont13', 
+        address_probe_timeout=None, 
+        cores_per_worker=1, 
+        heartbeat_period=30, 
+        heartbeat_threshold=120, 
+        interchange_port_range=(55000, 56000), 
+        label='single_thread', 
+        launch_cmd='process_worker_pool.py {debug} {max_workers} -a {addresses} -p {prefetch_capacity} -c {cores_per_worker} -m {mem_per_worker} --poll {poll_period} --task_port={task_port} --result_port={result_port} --logdir={logdir} --block_id={{block_id}} --hb_period={heartbeat_period} {address_probe_timeout_string} --hb_threshold={heartbeat_threshold} ', 
+        managed=True, 
+        max_workers=inf, 
+        mem_per_worker=None, 
+        poll_period=10, 
+        prefetch_capacity=0, 
+        provider=SlurmProvider(
+            'cpu_dev',
+            channel=LocalChannel(
+                envs={}, 
+                script_dir=None, 
+                userhome='/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions'
+            ), 
+            cmd_timeout=120, 
+            cores_per_node=24, 
+            exclusive=True, 
+            init_blocks=1, 
+            launcher=SrunLauncher(overrides='-c 24'), 
+            max_blocks=1, 
+            mem_per_node=None, 
+            min_blocks=0, 
+            move_files=False, 
+            nodes_per_block=1, 
+            parallelism=1, 
+            scheduler_options='\n#SBATCH --exclusive\n#SBATCH --partition=cpu_dev\n', 
+            walltime='00:20:00', 
+            worker_init='module load R/4.1.0_gnu\nmodule unload python/2.7\nmodule load python/3.8.2\nmodule load raxml/8.2_openmpi-2.0_gnu\nmodule load java/jdk-12\nmodule load iqtree/2.1.1\nmodule load bucky/1.4.4\nmodule load mrbayes/3.2.7a-OpenMPI-4.0.4\nsource /scratch/app/modulos/julia-1.5.1.sh\n\n\nexport PYTHONPATH=$PYTHONPATH:/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions\n'
+        ), 
+        storage_access=None, 
+        worker_debug=False, 
+        worker_logdir_root=None, 
+        worker_port_range=(54000, 55000), 
+        worker_ports=None, 
+        working_dir=None
+    ), HighThroughputExecutor(
+        address='sdumont13', 
+        address_probe_timeout=None, 
+        cores_per_worker=1, 
+        heartbeat_period=30, 
+        heartbeat_threshold=120, 
+        interchange_port_range=(55000, 56000), 
+        label='tree_and_statistics', 
+        launch_cmd='process_worker_pool.py {debug} {max_workers} -a {addresses} -p {prefetch_capacity} -c {cores_per_worker} -m {mem_per_worker} --poll {poll_period} --task_port={task_port} --result_port={result_port} --logdir={logdir} --block_id={{block_id}} --hb_period={heartbeat_period} {address_probe_timeout_string} --hb_threshold={heartbeat_threshold} ', 
+        managed=True, 
+        max_workers=inf, 
+        mem_per_worker=None, 
+        poll_period=10, 
+        prefetch_capacity=0, 
+        provider=SlurmProvider(
+            'cpu_small',
+            channel=LocalChannel(
+                envs={}, 
+                script_dir=None, 
+                userhome='/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions'
+            ), 
+            cmd_timeout=120, 
+            cores_per_node=24, 
+            exclusive=True, 
+            init_blocks=1, 
+            launcher=SrunLauncher(overrides='-c 24'), 
+            max_blocks=1, 
+            mem_per_node=None, 
+            min_blocks=0, 
+            move_files=False, 
+            nodes_per_block=1, 
+            parallelism=1, 
+            scheduler_options='\n#SBATCH --exclusive\n#SBATCH --partition=cpu_small\n', 
+            walltime='00:20:00', 
+            worker_init='module load R/4.1.0_gnu\nmodule unload python/2.7\nmodule load python/3.8.2\nmodule load raxml/8.2_openmpi-2.0_gnu\nmodule load java/jdk-12\nmodule load iqtree/2.1.1\nmodule load bucky/1.4.4\nmodule load mrbayes/3.2.7a-OpenMPI-4.0.4\nsource /scratch/app/modulos/julia-1.5.1.sh\n\n\nexport PYTHONPATH=$PYTHONPATH:/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions\n'
+        ), 
+        storage_access=None, 
+        worker_debug=False, 
+        worker_logdir_root=None, 
+        worker_port_range=(54000, 55000), 
+        worker_ports=None, 
+        working_dir=None
+    ), HighThroughputExecutor(
+        address='sdumont13', 
+        address_probe_timeout=None, 
+        cores_per_worker=1, 
+        heartbeat_period=30, 
+        heartbeat_threshold=120, 
+        interchange_port_range=(55000, 56000), 
+        label='phylogenetic_network', 
+        launch_cmd='process_worker_pool.py {debug} {max_workers} -a {addresses} -p {prefetch_capacity} -c {cores_per_worker} -m {mem_per_worker} --poll {poll_period} --task_port={task_port} --result_port={result_port} --logdir={logdir} --block_id={{block_id}} --hb_period={heartbeat_period} {address_probe_timeout_string} --hb_threshold={heartbeat_threshold} ', 
+        managed=True, 
+        max_workers=inf, 
+        mem_per_worker=None, 
+        poll_period=10, 
+        prefetch_capacity=0, 
+        provider=SlurmProvider(
+            'cpu_small',
+            channel=LocalChannel(
+                envs={}, 
+                script_dir=None, 
+                userhome='/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions'
+            ), 
+            cmd_timeout=120, 
+            cores_per_node=24, 
+            exclusive=True, 
+            init_blocks=1, 
+            launcher=SrunLauncher(overrides='-c 24'), 
+            max_blocks=1, 
+            mem_per_node=None, 
+            min_blocks=0, 
+            move_files=False, 
+            nodes_per_block=1, 
+            parallelism=1, 
+            scheduler_options='\n#SBATCH --exclusive\n#SBATCH --partition=cpu_small\n', 
+            walltime='00:10:00', 
+            worker_init='module load R/4.1.0_gnu\nmodule unload python/2.7\nmodule load python/3.8.2\nmodule load raxml/8.2_openmpi-2.0_gnu\nmodule load java/jdk-12\nmodule load iqtree/2.1.1\nmodule load bucky/1.4.4\nmodule load mrbayes/3.2.7a-OpenMPI-4.0.4\nsource /scratch/app/modulos/julia-1.5.1.sh\n\n\nexport PYTHONPATH=$PYTHONPATH:/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions\n'
+        ), 
+        storage_access=None, 
+        worker_debug=False, 
+        worker_logdir_root=None, 
+        worker_port_range=(54000, 55000), 
+        worker_ports=None, 
+        working_dir=None
+    )], 
+    initialize_logging=True, 
+    max_idletime=120.0, 
+    monitoring=None, 
+    retries=2, 
+    run_dir='runinfo', 
+    strategy=None, 
+    usage_tracking=False
+)
+2022-12-13 11:18:40.519 parsl.dataflow.dflow:87 [INFO]  Parsl version: 1.0.0
+2022-12-13 11:18:40.520 parsl.dataflow.usage_tracking.usage:126 [DEBUG]  Tracking status: False
+2022-12-13 11:18:40.564 parsl.dataflow.dflow:114 [INFO]  Run id is: abd6a8d7-1298-4e21-bc23-f7327aaab6fe
+2022-12-13 11:18:40.922 parsl.dataflow.memoization:128 [INFO]  App caching initialized
+2022-12-13 11:18:40.922 parsl.dataflow.strategy:128 [DEBUG]  Scaling strategy: None
+2022-12-13 11:18:41.103 parsl.executors.high_throughput.executor:457 [DEBUG]  Starting queue management thread
+2022-12-13 11:18:41.104 parsl.executors.high_throughput.executor:341 [DEBUG]  [MTHREAD] queue management worker starting
+2022-12-13 11:18:41.104 parsl.executors.high_throughput.executor:461 [DEBUG]  Started queue management thread
+2022-12-13 11:18:41.178 parsl.executors.high_throughput.executor:304 [DEBUG]  Created management thread: <Thread(HTEX-Queue-Management-Thread, started daemon 139673603139328)>
+2022-12-13 11:18:41.179 parsl.executors.high_throughput.executor:280 [DEBUG]  Launch command: process_worker_pool.py   -a sdumont13 -p 0 -c 1 -m None --poll 10 --task_port=54403 --result_port=54430 --logdir=/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions/runinfo/000/single_thread --block_id={block_id} --hb_period=30  --hb_threshold=120 
+2022-12-13 11:18:41.179 parsl.executors.high_throughput.executor:283 [DEBUG]  Starting HighThroughputExecutor with provider:
+SlurmProvider(
+    'cpu_dev',
+    channel=LocalChannel(
+        envs={}, 
+        script_dir='/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions/runinfo/000/submit_scripts', 
+        userhome='/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions'
+    ), 
+    cmd_timeout=120, 
+    cores_per_node=24, 
+    exclusive=True, 
+    init_blocks=1, 
+    launcher=SrunLauncher(overrides='-c 24'), 
+    max_blocks=1, 
+    mem_per_node=None, 
+    min_blocks=0, 
+    move_files=False, 
+    nodes_per_block=1, 
+    parallelism=1, 
+    scheduler_options='\n#SBATCH --exclusive\n#SBATCH --partition=cpu_dev\n', 
+    walltime='00:20:00', 
+    worker_init='module load R/4.1.0_gnu\nmodule unload python/2.7\nmodule load python/3.8.2\nmodule load raxml/8.2_openmpi-2.0_gnu\nmodule load java/jdk-12\nmodule load iqtree/2.1.1\nmodule load bucky/1.4.4\nmodule load mrbayes/3.2.7a-OpenMPI-4.0.4\nsource /scratch/app/modulos/julia-1.5.1.sh\n\n\nexport PYTHONPATH=$PYTHONPATH:/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions\n'
+)
+2022-12-13 11:18:41.182 parsl.providers.slurm.slurm:197 [DEBUG]  Requesting one block with 1 nodes
+2022-12-13 11:18:41.182 parsl.providers.slurm.slurm:213 [DEBUG]  Writing submit script
+2022-12-13 11:18:41.184 parsl.providers.slurm.slurm:220 [DEBUG]  not moving files
+2022-12-13 11:18:41.923 parsl.dataflow.task_status_poller:62 [DEBUG]  Polling
+2022-12-13 11:18:42.206 parsl.executors.high_throughput.executor:581 [DEBUG]  Launched block 0->10727731
+2022-12-13 11:18:42.209 parsl.executors.high_throughput.executor:457 [DEBUG]  Starting queue management thread
+2022-12-13 11:18:42.210 parsl.executors.high_throughput.executor:341 [DEBUG]  [MTHREAD] queue management worker starting
+2022-12-13 11:18:42.210 parsl.executors.high_throughput.executor:461 [DEBUG]  Started queue management thread
+2022-12-13 11:18:42.222 parsl.executors.high_throughput.executor:304 [DEBUG]  Created management thread: <Thread(HTEX-Queue-Management-Thread, started daemon 139677276206848)>
+2022-12-13 11:18:42.223 parsl.executors.high_throughput.executor:280 [DEBUG]  Launch command: process_worker_pool.py   -a sdumont13 -p 0 -c 1 -m None --poll 10 --task_port=54149 --result_port=54228 --logdir=/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions/runinfo/000/tree_and_statistics --block_id={block_id} --hb_period=30  --hb_threshold=120 
+2022-12-13 11:18:42.223 parsl.executors.high_throughput.executor:283 [DEBUG]  Starting HighThroughputExecutor with provider:
+SlurmProvider(
+    'cpu_small',
+    channel=LocalChannel(
+        envs={}, 
+        script_dir='/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions/runinfo/000/submit_scripts', 
+        userhome='/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions'
+    ), 
+    cmd_timeout=120, 
+    cores_per_node=24, 
+    exclusive=True, 
+    init_blocks=1, 
+    launcher=SrunLauncher(overrides='-c 24'), 
+    max_blocks=1, 
+    mem_per_node=None, 
+    min_blocks=0, 
+    move_files=False, 
+    nodes_per_block=1, 
+    parallelism=1, 
+    scheduler_options='\n#SBATCH --exclusive\n#SBATCH --partition=cpu_small\n', 
+    walltime='00:20:00', 
+    worker_init='module load R/4.1.0_gnu\nmodule unload python/2.7\nmodule load python/3.8.2\nmodule load raxml/8.2_openmpi-2.0_gnu\nmodule load java/jdk-12\nmodule load iqtree/2.1.1\nmodule load bucky/1.4.4\nmodule load mrbayes/3.2.7a-OpenMPI-4.0.4\nsource /scratch/app/modulos/julia-1.5.1.sh\n\n\nexport PYTHONPATH=$PYTHONPATH:/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions\n'
+)
+2022-12-13 11:18:42.225 parsl.providers.slurm.slurm:197 [DEBUG]  Requesting one block with 1 nodes
+2022-12-13 11:18:42.225 parsl.providers.slurm.slurm:213 [DEBUG]  Writing submit script
+2022-12-13 11:18:42.228 parsl.providers.slurm.slurm:220 [DEBUG]  not moving files
+2022-12-13 11:18:42.250 parsl.executors.high_throughput.executor:581 [DEBUG]  Launched block 0->10727732
+2022-12-13 11:18:42.253 parsl.executors.high_throughput.executor:457 [DEBUG]  Starting queue management thread
+2022-12-13 11:18:42.253 parsl.executors.high_throughput.executor:341 [DEBUG]  [MTHREAD] queue management worker starting
+2022-12-13 11:18:42.254 parsl.executors.high_throughput.executor:461 [DEBUG]  Started queue management thread
+2022-12-13 11:18:42.267 parsl.executors.high_throughput.executor:304 [DEBUG]  Created management thread: <Thread(HTEX-Queue-Management-Thread, started daemon 139676135323392)>
+2022-12-13 11:18:42.267 parsl.executors.high_throughput.executor:280 [DEBUG]  Launch command: process_worker_pool.py   -a sdumont13 -p 0 -c 1 -m None --poll 10 --task_port=54948 --result_port=54101 --logdir=/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions/runinfo/000/phylogenetic_network --block_id={block_id} --hb_period=30  --hb_threshold=120 
+2022-12-13 11:18:42.268 parsl.executors.high_throughput.executor:283 [DEBUG]  Starting HighThroughputExecutor with provider:
+SlurmProvider(
+    'cpu_small',
+    channel=LocalChannel(
+        envs={}, 
+        script_dir='/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions/runinfo/000/submit_scripts', 
+        userhome='/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions'
+    ), 
+    cmd_timeout=120, 
+    cores_per_node=24, 
+    exclusive=True, 
+    init_blocks=1, 
+    launcher=SrunLauncher(overrides='-c 24'), 
+    max_blocks=1, 
+    mem_per_node=None, 
+    min_blocks=0, 
+    move_files=False, 
+    nodes_per_block=1, 
+    parallelism=1, 
+    scheduler_options='\n#SBATCH --exclusive\n#SBATCH --partition=cpu_small\n', 
+    walltime='00:10:00', 
+    worker_init='module load R/4.1.0_gnu\nmodule unload python/2.7\nmodule load python/3.8.2\nmodule load raxml/8.2_openmpi-2.0_gnu\nmodule load java/jdk-12\nmodule load iqtree/2.1.1\nmodule load bucky/1.4.4\nmodule load mrbayes/3.2.7a-OpenMPI-4.0.4\nsource /scratch/app/modulos/julia-1.5.1.sh\n\n\nexport PYTHONPATH=$PYTHONPATH:/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions\n'
+)
+2022-12-13 11:18:42.270 parsl.providers.slurm.slurm:197 [DEBUG]  Requesting one block with 1 nodes
+2022-12-13 11:18:42.270 parsl.providers.slurm.slurm:213 [DEBUG]  Writing submit script
+2022-12-13 11:18:42.273 parsl.providers.slurm.slurm:220 [DEBUG]  not moving files
+2022-12-13 11:18:42.295 parsl.executors.high_throughput.executor:581 [DEBUG]  Launched block 0->10727733
+2022-12-13 11:18:42.333 parsl.dataflow.task_status_poller:74 [DEBUG]  Adding executor single_thread
+2022-12-13 11:18:42.334 parsl.dataflow.task_status_poller:74 [DEBUG]  Adding executor tree_and_statistics
+2022-12-13 11:18:42.334 parsl.dataflow.task_status_poller:74 [DEBUG]  Adding executor phylogenetic_network
+2022-12-13 11:18:42.334 parsl.dataflow.dflow:533 [DEBUG]  Adding output dependencies
+2022-12-13 11:18:42.334 parsl.dataflow.dflow:772 [INFO]  Task 0 submitted for App setup_phylip_data, not waiting on any dependency
+2022-12-13 11:18:42.335 parsl.dataflow.dflow:780 [DEBUG]  Task 0 set to pending state with AppFuture: <AppFuture super=<AppFuture at 0x7f0925eab370 state=pending>>
+2022-12-13 11:18:42.335 parsl.dataflow.memoization:196 [DEBUG]  Task 0 will not be memoized
+2022-12-13 11:18:42.341 parsl.dataflow.dflow:480 [ERROR]  Task 0 requested invalid executor single_partition: config is
+Config(
+    app_cache=True, 
+    checkpoint_files=None, 
+    checkpoint_mode=None, 
+    checkpoint_period=None, 
+    data_management_max_threads=10, 
+    executors=[HighThroughputExecutor(
+        address='sdumont13', 
+        address_probe_timeout=None, 
+        cores_per_worker=1, 
+        heartbeat_period=30, 
+        heartbeat_threshold=120, 
+        interchange_port_range=(55000, 56000), 
+        label='single_thread', 
+        launch_cmd='process_worker_pool.py   -a sdumont13 -p 0 -c 1 -m None --poll 10 --task_port=54403 --result_port=54430 --logdir=/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions/runinfo/000/single_thread --block_id={block_id} --hb_period=30  --hb_threshold=120 ', 
+        managed=True, 
+        max_workers=inf, 
+        mem_per_worker=None, 
+        poll_period=10, 
+        prefetch_capacity=0, 
+        provider=SlurmProvider(
+            'cpu_dev',
+            channel=LocalChannel(
+                envs={}, 
+                script_dir='/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions/runinfo/000/submit_scripts', 
+                userhome='/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions'
+            ), 
+            cmd_timeout=120, 
+            cores_per_node=24, 
+            exclusive=True, 
+            init_blocks=1, 
+            launcher=SrunLauncher(overrides='-c 24'), 
+            max_blocks=1, 
+            mem_per_node=None, 
+            min_blocks=0, 
+            move_files=False, 
+            nodes_per_block=1, 
+            parallelism=1, 
+            scheduler_options='\n#SBATCH --exclusive\n#SBATCH --partition=cpu_dev\n', 
+            walltime='00:20:00', 
+            worker_init='module load R/4.1.0_gnu\nmodule unload python/2.7\nmodule load python/3.8.2\nmodule load raxml/8.2_openmpi-2.0_gnu\nmodule load java/jdk-12\nmodule load iqtree/2.1.1\nmodule load bucky/1.4.4\nmodule load mrbayes/3.2.7a-OpenMPI-4.0.4\nsource /scratch/app/modulos/julia-1.5.1.sh\n\n\nexport PYTHONPATH=$PYTHONPATH:/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions\n'
+        ), 
+        storage_access=None, 
+        worker_debug=False, 
+        worker_logdir_root=None, 
+        worker_port_range=(54000, 55000), 
+        worker_ports=None, 
+        working_dir=None
+    ), HighThroughputExecutor(
+        address='sdumont13', 
+        address_probe_timeout=None, 
+        cores_per_worker=1, 
+        heartbeat_period=30, 
+        heartbeat_threshold=120, 
+        interchange_port_range=(55000, 56000), 
+        label='tree_and_statistics', 
+        launch_cmd='process_worker_pool.py   -a sdumont13 -p 0 -c 1 -m None --poll 10 --task_port=54149 --result_port=54228 --logdir=/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions/runinfo/000/tree_and_statistics --block_id={block_id} --hb_period=30  --hb_threshold=120 ', 
+        managed=True, 
+        max_workers=inf, 
+        mem_per_worker=None, 
+        poll_period=10, 
+        prefetch_capacity=0, 
+        provider=SlurmProvider(
+            'cpu_small',
+            channel=LocalChannel(
+                envs={}, 
+                script_dir='/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions/runinfo/000/submit_scripts', 
+                userhome='/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions'
+            ), 
+            cmd_timeout=120, 
+            cores_per_node=24, 
+            exclusive=True, 
+            init_blocks=1, 
+            launcher=SrunLauncher(overrides='-c 24'), 
+            max_blocks=1, 
+            mem_per_node=None, 
+            min_blocks=0, 
+            move_files=False, 
+            nodes_per_block=1, 
+            parallelism=1, 
+            scheduler_options='\n#SBATCH --exclusive\n#SBATCH --partition=cpu_small\n', 
+            walltime='00:20:00', 
+            worker_init='module load R/4.1.0_gnu\nmodule unload python/2.7\nmodule load python/3.8.2\nmodule load raxml/8.2_openmpi-2.0_gnu\nmodule load java/jdk-12\nmodule load iqtree/2.1.1\nmodule load bucky/1.4.4\nmodule load mrbayes/3.2.7a-OpenMPI-4.0.4\nsource /scratch/app/modulos/julia-1.5.1.sh\n\n\nexport PYTHONPATH=$PYTHONPATH:/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions\n'
+        ), 
+        storage_access=None, 
+        worker_debug=False, 
+        worker_logdir_root=None, 
+        worker_port_range=(54000, 55000), 
+        worker_ports=None, 
+        working_dir=None
+    ), HighThroughputExecutor(
+        address='sdumont13', 
+        address_probe_timeout=None, 
+        cores_per_worker=1, 
+        heartbeat_period=30, 
+        heartbeat_threshold=120, 
+        interchange_port_range=(55000, 56000), 
+        label='phylogenetic_network', 
+        launch_cmd='process_worker_pool.py   -a sdumont13 -p 0 -c 1 -m None --poll 10 --task_port=54948 --result_port=54101 --logdir=/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions/runinfo/000/phylogenetic_network --block_id={block_id} --hb_period=30  --hb_threshold=120 ', 
+        managed=True, 
+        max_workers=inf, 
+        mem_per_worker=None, 
+        poll_period=10, 
+        prefetch_capacity=0, 
+        provider=SlurmProvider(
+            'cpu_small',
+            channel=LocalChannel(
+                envs={}, 
+                script_dir='/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions/runinfo/000/submit_scripts', 
+                userhome='/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions'
+            ), 
+            cmd_timeout=120, 
+            cores_per_node=24, 
+            exclusive=True, 
+            init_blocks=1, 
+            launcher=SrunLauncher(overrides='-c 24'), 
+            max_blocks=1, 
+            mem_per_node=None, 
+            min_blocks=0, 
+            move_files=False, 
+            nodes_per_block=1, 
+            parallelism=1, 
+            scheduler_options='\n#SBATCH --exclusive\n#SBATCH --partition=cpu_small\n', 
+            walltime='00:10:00', 
+            worker_init='module load R/4.1.0_gnu\nmodule unload python/2.7\nmodule load python/3.8.2\nmodule load raxml/8.2_openmpi-2.0_gnu\nmodule load java/jdk-12\nmodule load iqtree/2.1.1\nmodule load bucky/1.4.4\nmodule load mrbayes/3.2.7a-OpenMPI-4.0.4\nsource /scratch/app/modulos/julia-1.5.1.sh\n\n\nexport PYTHONPATH=$PYTHONPATH:/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions\n'
+        ), 
+        storage_access=None, 
+        worker_debug=False, 
+        worker_logdir_root=None, 
+        worker_port_range=(54000, 55000), 
+        worker_ports=None, 
+        working_dir=None
+    )], 
+    initialize_logging=True, 
+    max_idletime=120.0, 
+    monitoring=None, 
+    retries=2, 
+    run_dir='runinfo', 
+    strategy=None, 
+    usage_tracking=False
+)
+Traceback (most recent call last):
+  File "/scratch/app/python/3.8.2-gcc-7.4-gnu/lib/python3.8/site-packages/parsl/dataflow/dflow.py", line 478, in launch_task
+    executor = self.executors[executor_label]
+KeyError: 'single_partition'
+2022-12-13 11:18:42.343 parsl.dataflow.dflow:414 [DEBUG]  Got an exception launching task
+Traceback (most recent call last):
+  File "/scratch/app/python/3.8.2-gcc-7.4-gnu/lib/python3.8/site-packages/parsl/dataflow/dflow.py", line 478, in launch_task
+    executor = self.executors[executor_label]
+KeyError: 'single_partition'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/scratch/app/python/3.8.2-gcc-7.4-gnu/lib/python3.8/site-packages/parsl/dataflow/dflow.py", line 404, in launch_if_ready
+    exec_fu = self.launch_task(
+  File "/scratch/app/python/3.8.2-gcc-7.4-gnu/lib/python3.8/site-packages/parsl/dataflow/dflow.py", line 481, in launch_task
+    raise ValueError("Task {} requested invalid executor {}".format(task_id, executor_label))
+ValueError: Task 0 requested invalid executor single_partition
+2022-12-13 11:18:42.344 parsl.dataflow.dflow:266 [DEBUG]  Task 0 failed
+2022-12-13 11:18:42.344 parsl.dataflow.dflow:276 [INFO]  Task 0 marked for retry
+2022-12-13 11:18:42.344 parsl.dataflow.memoization:196 [DEBUG]  Task 0 will not be memoized
+2022-12-13 11:18:42.350 parsl.dataflow.dflow:480 [ERROR]  Task 0 requested invalid executor single_partition: config is
+Config(
+    app_cache=True, 
+    checkpoint_files=None, 
+    checkpoint_mode=None, 
+    checkpoint_period=None, 
+    data_management_max_threads=10, 
+    executors=[HighThroughputExecutor(
+        address='sdumont13', 
+        address_probe_timeout=None, 
+        cores_per_worker=1, 
+        heartbeat_period=30, 
+        heartbeat_threshold=120, 
+        interchange_port_range=(55000, 56000), 
+        label='single_thread', 
+        launch_cmd='process_worker_pool.py   -a sdumont13 -p 0 -c 1 -m None --poll 10 --task_port=54403 --result_port=54430 --logdir=/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions/runinfo/000/single_thread --block_id={block_id} --hb_period=30  --hb_threshold=120 ', 
+        managed=True, 
+        max_workers=inf, 
+        mem_per_worker=None, 
+        poll_period=10, 
+        prefetch_capacity=0, 
+        provider=SlurmProvider(
+            'cpu_dev',
+            channel=LocalChannel(
+                envs={}, 
+                script_dir='/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions/runinfo/000/submit_scripts', 
+                userhome='/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions'
+            ), 
+            cmd_timeout=120, 
+            cores_per_node=24, 
+            exclusive=True, 
+            init_blocks=1, 
+            launcher=SrunLauncher(overrides='-c 24'), 
+            max_blocks=1, 
+            mem_per_node=None, 
+            min_blocks=0, 
+            move_files=False, 
+            nodes_per_block=1, 
+            parallelism=1, 
+            scheduler_options='\n#SBATCH --exclusive\n#SBATCH --partition=cpu_dev\n', 
+            walltime='00:20:00', 
+            worker_init='module load R/4.1.0_gnu\nmodule unload python/2.7\nmodule load python/3.8.2\nmodule load raxml/8.2_openmpi-2.0_gnu\nmodule load java/jdk-12\nmodule load iqtree/2.1.1\nmodule load bucky/1.4.4\nmodule load mrbayes/3.2.7a-OpenMPI-4.0.4\nsource /scratch/app/modulos/julia-1.5.1.sh\n\n\nexport PYTHONPATH=$PYTHONPATH:/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions\n'
+        ), 
+        storage_access=None, 
+        worker_debug=False, 
+        worker_logdir_root=None, 
+        worker_port_range=(54000, 55000), 
+        worker_ports=None, 
+        working_dir=None
+    ), HighThroughputExecutor(
+        address='sdumont13', 
+        address_probe_timeout=None, 
+        cores_per_worker=1, 
+        heartbeat_period=30, 
+        heartbeat_threshold=120, 
+        interchange_port_range=(55000, 56000), 
+        label='tree_and_statistics', 
+        launch_cmd='process_worker_pool.py   -a sdumont13 -p 0 -c 1 -m None --poll 10 --task_port=54149 --result_port=54228 --logdir=/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions/runinfo/000/tree_and_statistics --block_id={block_id} --hb_period=30  --hb_threshold=120 ', 
+        managed=True, 
+        max_workers=inf, 
+        mem_per_worker=None, 
+        poll_period=10, 
+        prefetch_capacity=0, 
+        provider=SlurmProvider(
+            'cpu_small',
+            channel=LocalChannel(
+                envs={}, 
+                script_dir='/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions/runinfo/000/submit_scripts', 
+                userhome='/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions'
+            ), 
+            cmd_timeout=120, 
+            cores_per_node=24, 
+            exclusive=True, 
+            init_blocks=1, 
+            launcher=SrunLauncher(overrides='-c 24'), 
+            max_blocks=1, 
+            mem_per_node=None, 
+            min_blocks=0, 
+            move_files=False, 
+            nodes_per_block=1, 
+            parallelism=1, 
+            scheduler_options='\n#SBATCH --exclusive\n#SBATCH --partition=cpu_small\n', 
+            walltime='00:20:00', 
+            worker_init='module load R/4.1.0_gnu\nmodule unload python/2.7\nmodule load python/3.8.2\nmodule load raxml/8.2_openmpi-2.0_gnu\nmodule load java/jdk-12\nmodule load iqtree/2.1.1\nmodule load bucky/1.4.4\nmodule load mrbayes/3.2.7a-OpenMPI-4.0.4\nsource /scratch/app/modulos/julia-1.5.1.sh\n\n\nexport PYTHONPATH=$PYTHONPATH:/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions\n'
+        ), 
+        storage_access=None, 
+        worker_debug=False, 
+        worker_logdir_root=None, 
+        worker_port_range=(54000, 55000), 
+        worker_ports=None, 
+        working_dir=None
+    ), HighThroughputExecutor(
+        address='sdumont13', 
+        address_probe_timeout=None, 
+        cores_per_worker=1, 
+        heartbeat_period=30, 
+        heartbeat_threshold=120, 
+        interchange_port_range=(55000, 56000), 
+        label='phylogenetic_network', 
+        launch_cmd='process_worker_pool.py   -a sdumont13 -p 0 -c 1 -m None --poll 10 --task_port=54948 --result_port=54101 --logdir=/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions/runinfo/000/phylogenetic_network --block_id={block_id} --hb_period=30  --hb_threshold=120 ', 
+        managed=True, 
+        max_workers=inf, 
+        mem_per_worker=None, 
+        poll_period=10, 
+        prefetch_capacity=0, 
+        provider=SlurmProvider(
+            'cpu_small',
+            channel=LocalChannel(
+                envs={}, 
+                script_dir='/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions/runinfo/000/submit_scripts', 
+                userhome='/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions'
+            ), 
+            cmd_timeout=120, 
+            cores_per_node=24, 
+            exclusive=True, 
+            init_blocks=1, 
+            launcher=SrunLauncher(overrides='-c 24'), 
+            max_blocks=1, 
+            mem_per_node=None, 
+            min_blocks=0, 
+            move_files=False, 
+            nodes_per_block=1, 
+            parallelism=1, 
+            scheduler_options='\n#SBATCH --exclusive\n#SBATCH --partition=cpu_small\n', 
+            walltime='00:10:00', 
+            worker_init='module load R/4.1.0_gnu\nmodule unload python/2.7\nmodule load python/3.8.2\nmodule load raxml/8.2_openmpi-2.0_gnu\nmodule load java/jdk-12\nmodule load iqtree/2.1.1\nmodule load bucky/1.4.4\nmodule load mrbayes/3.2.7a-OpenMPI-4.0.4\nsource /scratch/app/modulos/julia-1.5.1.sh\n\n\nexport PYTHONPATH=$PYTHONPATH:/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions\n'
+        ), 
+        storage_access=None, 
+        worker_debug=False, 
+        worker_logdir_root=None, 
+        worker_port_range=(54000, 55000), 
+        worker_ports=None, 
+        working_dir=None
+    )], 
+    initialize_logging=True, 
+    max_idletime=120.0, 
+    monitoring=None, 
+    retries=2, 
+    run_dir='runinfo', 
+    strategy=None, 
+    usage_tracking=False
+)
+Traceback (most recent call last):
+  File "/scratch/app/python/3.8.2-gcc-7.4-gnu/lib/python3.8/site-packages/parsl/dataflow/dflow.py", line 478, in launch_task
+    executor = self.executors[executor_label]
+KeyError: 'single_partition'
+2022-12-13 11:18:42.352 parsl.dataflow.dflow:414 [DEBUG]  Got an exception launching task
+Traceback (most recent call last):
+  File "/scratch/app/python/3.8.2-gcc-7.4-gnu/lib/python3.8/site-packages/parsl/dataflow/dflow.py", line 478, in launch_task
+    executor = self.executors[executor_label]
+KeyError: 'single_partition'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/scratch/app/python/3.8.2-gcc-7.4-gnu/lib/python3.8/site-packages/parsl/dataflow/dflow.py", line 404, in launch_if_ready
+    exec_fu = self.launch_task(
+  File "/scratch/app/python/3.8.2-gcc-7.4-gnu/lib/python3.8/site-packages/parsl/dataflow/dflow.py", line 481, in launch_task
+    raise ValueError("Task {} requested invalid executor {}".format(task_id, executor_label))
+ValueError: Task 0 requested invalid executor single_partition
+2022-12-13 11:18:42.353 parsl.dataflow.dflow:266 [DEBUG]  Task 0 failed
+2022-12-13 11:18:42.353 parsl.dataflow.dflow:276 [INFO]  Task 0 marked for retry
+2022-12-13 11:18:42.353 parsl.dataflow.memoization:196 [DEBUG]  Task 0 will not be memoized
+2022-12-13 11:18:42.359 parsl.dataflow.dflow:480 [ERROR]  Task 0 requested invalid executor single_partition: config is
+Config(
+    app_cache=True, 
+    checkpoint_files=None, 
+    checkpoint_mode=None, 
+    checkpoint_period=None, 
+    data_management_max_threads=10, 
+    executors=[HighThroughputExecutor(
+        address='sdumont13', 
+        address_probe_timeout=None, 
+        cores_per_worker=1, 
+        heartbeat_period=30, 
+        heartbeat_threshold=120, 
+        interchange_port_range=(55000, 56000), 
+        label='single_thread', 
+        launch_cmd='process_worker_pool.py   -a sdumont13 -p 0 -c 1 -m None --poll 10 --task_port=54403 --result_port=54430 --logdir=/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions/runinfo/000/single_thread --block_id={block_id} --hb_period=30  --hb_threshold=120 ', 
+        managed=True, 
+        max_workers=inf, 
+        mem_per_worker=None, 
+        poll_period=10, 
+        prefetch_capacity=0, 
+        provider=SlurmProvider(
+            'cpu_dev',
+            channel=LocalChannel(
+                envs={}, 
+                script_dir='/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions/runinfo/000/submit_scripts', 
+                userhome='/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions'
+            ), 
+            cmd_timeout=120, 
+            cores_per_node=24, 
+            exclusive=True, 
+            init_blocks=1, 
+            launcher=SrunLauncher(overrides='-c 24'), 
+            max_blocks=1, 
+            mem_per_node=None, 
+            min_blocks=0, 
+            move_files=False, 
+            nodes_per_block=1, 
+            parallelism=1, 
+            scheduler_options='\n#SBATCH --exclusive\n#SBATCH --partition=cpu_dev\n', 
+            walltime='00:20:00', 
+            worker_init='module load R/4.1.0_gnu\nmodule unload python/2.7\nmodule load python/3.8.2\nmodule load raxml/8.2_openmpi-2.0_gnu\nmodule load java/jdk-12\nmodule load iqtree/2.1.1\nmodule load bucky/1.4.4\nmodule load mrbayes/3.2.7a-OpenMPI-4.0.4\nsource /scratch/app/modulos/julia-1.5.1.sh\n\n\nexport PYTHONPATH=$PYTHONPATH:/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions\n'
+        ), 
+        storage_access=None, 
+        worker_debug=False, 
+        worker_logdir_root=None, 
+        worker_port_range=(54000, 55000), 
+        worker_ports=None, 
+        working_dir=None
+    ), HighThroughputExecutor(
+        address='sdumont13', 
+        address_probe_timeout=None, 
+        cores_per_worker=1, 
+        heartbeat_period=30, 
+        heartbeat_threshold=120, 
+        interchange_port_range=(55000, 56000), 
+        label='tree_and_statistics', 
+        launch_cmd='process_worker_pool.py   -a sdumont13 -p 0 -c 1 -m None --poll 10 --task_port=54149 --result_port=54228 --logdir=/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions/runinfo/000/tree_and_statistics --block_id={block_id} --hb_period=30  --hb_threshold=120 ', 
+        managed=True, 
+        max_workers=inf, 
+        mem_per_worker=None, 
+        poll_period=10, 
+        prefetch_capacity=0, 
+        provider=SlurmProvider(
+            'cpu_small',
+            channel=LocalChannel(
+                envs={}, 
+                script_dir='/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions/runinfo/000/submit_scripts', 
+                userhome='/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions'
+            ), 
+            cmd_timeout=120, 
+            cores_per_node=24, 
+            exclusive=True, 
+            init_blocks=1, 
+            launcher=SrunLauncher(overrides='-c 24'), 
+            max_blocks=1, 
+            mem_per_node=None, 
+            min_blocks=0, 
+            move_files=False, 
+            nodes_per_block=1, 
+            parallelism=1, 
+            scheduler_options='\n#SBATCH --exclusive\n#SBATCH --partition=cpu_small\n', 
+            walltime='00:20:00', 
+            worker_init='module load R/4.1.0_gnu\nmodule unload python/2.7\nmodule load python/3.8.2\nmodule load raxml/8.2_openmpi-2.0_gnu\nmodule load java/jdk-12\nmodule load iqtree/2.1.1\nmodule load bucky/1.4.4\nmodule load mrbayes/3.2.7a-OpenMPI-4.0.4\nsource /scratch/app/modulos/julia-1.5.1.sh\n\n\nexport PYTHONPATH=$PYTHONPATH:/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions\n'
+        ), 
+        storage_access=None, 
+        worker_debug=False, 
+        worker_logdir_root=None, 
+        worker_port_range=(54000, 55000), 
+        worker_ports=None, 
+        working_dir=None
+    ), HighThroughputExecutor(
+        address='sdumont13', 
+        address_probe_timeout=None, 
+        cores_per_worker=1, 
+        heartbeat_period=30, 
+        heartbeat_threshold=120, 
+        interchange_port_range=(55000, 56000), 
+        label='phylogenetic_network', 
+        launch_cmd='process_worker_pool.py   -a sdumont13 -p 0 -c 1 -m None --poll 10 --task_port=54948 --result_port=54101 --logdir=/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions/runinfo/000/phylogenetic_network --block_id={block_id} --hb_period=30  --hb_threshold=120 ', 
+        managed=True, 
+        max_workers=inf, 
+        mem_per_worker=None, 
+        poll_period=10, 
+        prefetch_capacity=0, 
+        provider=SlurmProvider(
+            'cpu_small',
+            channel=LocalChannel(
+                envs={}, 
+                script_dir='/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions/runinfo/000/submit_scripts', 
+                userhome='/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions'
+            ), 
+            cmd_timeout=120, 
+            cores_per_node=24, 
+            exclusive=True, 
+            init_blocks=1, 
+            launcher=SrunLauncher(overrides='-c 24'), 
+            max_blocks=1, 
+            mem_per_node=None, 
+            min_blocks=0, 
+            move_files=False, 
+            nodes_per_block=1, 
+            parallelism=1, 
+            scheduler_options='\n#SBATCH --exclusive\n#SBATCH --partition=cpu_small\n', 
+            walltime='00:10:00', 
+            worker_init='module load R/4.1.0_gnu\nmodule unload python/2.7\nmodule load python/3.8.2\nmodule load raxml/8.2_openmpi-2.0_gnu\nmodule load java/jdk-12\nmodule load iqtree/2.1.1\nmodule load bucky/1.4.4\nmodule load mrbayes/3.2.7a-OpenMPI-4.0.4\nsource /scratch/app/modulos/julia-1.5.1.sh\n\n\nexport PYTHONPATH=$PYTHONPATH:/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions\n'
+        ), 
+        storage_access=None, 
+        worker_debug=False, 
+        worker_logdir_root=None, 
+        worker_port_range=(54000, 55000), 
+        worker_ports=None, 
+        working_dir=None
+    )], 
+    initialize_logging=True, 
+    max_idletime=120.0, 
+    monitoring=None, 
+    retries=2, 
+    run_dir='runinfo', 
+    strategy=None, 
+    usage_tracking=False
+)
+Traceback (most recent call last):
+  File "/scratch/app/python/3.8.2-gcc-7.4-gnu/lib/python3.8/site-packages/parsl/dataflow/dflow.py", line 478, in launch_task
+    executor = self.executors[executor_label]
+KeyError: 'single_partition'
+2022-12-13 11:18:42.361 parsl.dataflow.dflow:414 [DEBUG]  Got an exception launching task
+Traceback (most recent call last):
+  File "/scratch/app/python/3.8.2-gcc-7.4-gnu/lib/python3.8/site-packages/parsl/dataflow/dflow.py", line 478, in launch_task
+    executor = self.executors[executor_label]
+KeyError: 'single_partition'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/scratch/app/python/3.8.2-gcc-7.4-gnu/lib/python3.8/site-packages/parsl/dataflow/dflow.py", line 404, in launch_if_ready
+    exec_fu = self.launch_task(
+  File "/scratch/app/python/3.8.2-gcc-7.4-gnu/lib/python3.8/site-packages/parsl/dataflow/dflow.py", line 481, in launch_task
+    raise ValueError("Task {} requested invalid executor {}".format(task_id, executor_label))
+ValueError: Task 0 requested invalid executor single_partition
+2022-12-13 11:18:42.362 parsl.dataflow.dflow:266 [DEBUG]  Task 0 failed
+2022-12-13 11:18:42.362 parsl.dataflow.dflow:279 [ERROR]  Task 0 failed after 2 retry attempts
+Traceback (most recent call last):
+  File "/scratch/app/python/3.8.2-gcc-7.4-gnu/lib/python3.8/site-packages/parsl/dataflow/dflow.py", line 478, in launch_task
+    executor = self.executors[executor_label]
+KeyError: 'single_partition'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/scratch/app/python/3.8.2-gcc-7.4-gnu/lib/python3.8/site-packages/parsl/dataflow/dflow.py", line 261, in handle_exec_update
+    res = future.result()
+  File "/scratch/app/python/3.8.2-gcc-7.4-gnu/lib/python3.8/concurrent/futures/_base.py", line 432, in result
+    return self.__get_result()
+  File "/scratch/app/python/3.8.2-gcc-7.4-gnu/lib/python3.8/concurrent/futures/_base.py", line 388, in __get_result
+    raise self._exception
+  File "/scratch/app/python/3.8.2-gcc-7.4-gnu/lib/python3.8/site-packages/parsl/dataflow/dflow.py", line 404, in launch_if_ready
+    exec_fu = self.launch_task(
+  File "/scratch/app/python/3.8.2-gcc-7.4-gnu/lib/python3.8/site-packages/parsl/dataflow/dflow.py", line 481, in launch_task
+    raise ValueError("Task {} requested invalid executor {}".format(task_id, executor_label))
+ValueError: Task 0 requested invalid executor single_partition
+2022-12-13 11:18:42.389 concurrent.futures:410 [ERROR]  exception calling callback for <Future at 0x7f0925eab460 state=finished raised ValueError>
+Traceback (most recent call last):
+  File "/scratch/app/python/3.8.2-gcc-7.4-gnu/lib/python3.8/concurrent/futures/_base.py", line 408, in add_done_callback
+    fn(self)
+  File "/scratch/app/python/3.8.2-gcc-7.4-gnu/lib/python3.8/site-packages/parsl/dataflow/dflow.py", line 306, in handle_exec_update
+    with self.tasks[task_id]['app_fu']._update_lock:
+KeyError: 0
+2022-12-13 11:18:42.389 concurrent.futures:410 [ERROR]  exception calling callback for <Future at 0x7f0925eab490 state=finished raised ValueError>
+Traceback (most recent call last):
+  File "/scratch/app/python/3.8.2-gcc-7.4-gnu/lib/python3.8/concurrent/futures/_base.py", line 408, in add_done_callback
+    fn(self)
+  File "/scratch/app/python/3.8.2-gcc-7.4-gnu/lib/python3.8/site-packages/parsl/dataflow/dflow.py", line 306, in handle_exec_update
+    with self.tasks[task_id]['app_fu']._update_lock:
+KeyError: 0
+2022-12-13 11:18:42.390 parsl.dataflow.dflow:533 [DEBUG]  Adding output dependencies
+2022-12-13 11:18:42.390 parsl.dataflow.dflow:772 [INFO]  Task 1 submitted for App create_folders, not waiting on any dependency
+2022-12-13 11:18:42.390 parsl.dataflow.dflow:780 [DEBUG]  Task 1 set to pending state with AppFuture: <AppFuture super=<AppFuture at 0x7f0925eab970 state=pending>>
+2022-12-13 11:18:42.390 parsl.dataflow.memoization:196 [DEBUG]  Task 1 will not be memoized
+2022-12-13 11:18:42.391 parsl.executors.high_throughput.executor:546 [DEBUG]  Pushing function <function create_folders at 0x7f085b597f70> to queue with args ("{'dir': '/scratch/pcmrnbio2/rafael.terra/WF_parsl/data/Denv_1_outgroup', 'tree_method': 'RAXML', 'ne...", "BioConfig(env_path='/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions/config/parsl.env',...")
+2022-12-13 11:18:42.392 parsl.dataflow.dflow:500 [INFO]  Task 1 launched on executor single_thread
+2022-12-13 11:18:46.923 parsl.dataflow.task_status_poller:62 [DEBUG]  Polling
+2022-12-13 11:18:46.923 parsl.dataflow.task_status_poller:26 [DEBUG]  Polling single_thread
+2022-12-13 11:18:46.924 parsl.providers.slurm.slurm:136 [DEBUG]  Executing sqeueue
+2022-12-13 11:18:46.963 parsl.providers.slurm.slurm:138 [DEBUG]  sqeueue returned
+2022-12-13 11:18:46.964 parsl.providers.slurm.slurm:151 [DEBUG]  Updating job 10727731 with slurm status R to parsl status 2
+2022-12-13 11:18:46.964 parsl.dataflow.task_status_poller:26 [DEBUG]  Polling tree_and_statistics
+2022-12-13 11:18:46.964 parsl.providers.slurm.slurm:136 [DEBUG]  Executing sqeueue
+2022-12-13 11:18:46.985 parsl.providers.slurm.slurm:138 [DEBUG]  sqeueue returned
+2022-12-13 11:18:46.986 parsl.providers.slurm.slurm:151 [DEBUG]  Updating job 10727732 with slurm status PD to parsl status 1
+2022-12-13 11:18:46.986 parsl.dataflow.task_status_poller:26 [DEBUG]  Polling phylogenetic_network
+2022-12-13 11:18:46.986 parsl.providers.slurm.slurm:136 [DEBUG]  Executing sqeueue
+2022-12-13 11:18:47.007 parsl.providers.slurm.slurm:138 [DEBUG]  sqeueue returned
+2022-12-13 11:18:47.008 parsl.providers.slurm.slurm:151 [DEBUG]  Updating job 10727733 with slurm status PD to parsl status 1
+2022-12-13 11:18:51.923 parsl.dataflow.task_status_poller:62 [DEBUG]  Polling
+2022-12-13 11:18:56.924 parsl.dataflow.task_status_poller:62 [DEBUG]  Polling
+2022-12-13 11:19:01.924 parsl.dataflow.task_status_poller:62 [DEBUG]  Polling
+2022-12-13 11:19:06.924 parsl.dataflow.task_status_poller:62 [DEBUG]  Polling
+2022-12-13 11:19:11.924 parsl.dataflow.task_status_poller:62 [DEBUG]  Polling
+2022-12-13 11:19:16.924 parsl.dataflow.task_status_poller:62 [DEBUG]  Polling
+2022-12-13 11:19:21.924 parsl.dataflow.task_status_poller:62 [DEBUG]  Polling
+2022-12-13 11:19:26.925 parsl.dataflow.task_status_poller:62 [DEBUG]  Polling
+2022-12-13 11:19:31.925 parsl.dataflow.task_status_poller:62 [DEBUG]  Polling
+2022-12-13 11:19:36.459 parsl.dataflow.dflow:289 [INFO]  Task 1 completed
+2022-12-13 11:19:36.925 parsl.dataflow.task_status_poller:62 [DEBUG]  Polling
+2022-12-13 11:19:41.925 parsl.dataflow.task_status_poller:62 [DEBUG]  Polling
+2022-12-13 11:19:46.925 parsl.dataflow.task_status_poller:62 [DEBUG]  Polling
+2022-12-13 11:19:46.926 parsl.dataflow.task_status_poller:26 [DEBUG]  Polling single_thread
+2022-12-13 11:19:46.926 parsl.providers.slurm.slurm:136 [DEBUG]  Executing sqeueue
+2022-12-13 11:19:46.950 parsl.providers.slurm.slurm:138 [DEBUG]  sqeueue returned
+2022-12-13 11:19:46.951 parsl.providers.slurm.slurm:151 [DEBUG]  Updating job 10727731 with slurm status R to parsl status 2
+2022-12-13 11:19:46.951 parsl.dataflow.task_status_poller:26 [DEBUG]  Polling tree_and_statistics
+2022-12-13 11:19:46.951 parsl.providers.slurm.slurm:136 [DEBUG]  Executing sqeueue
+2022-12-13 11:19:46.972 parsl.providers.slurm.slurm:138 [DEBUG]  sqeueue returned
+2022-12-13 11:19:46.973 parsl.providers.slurm.slurm:151 [DEBUG]  Updating job 10727732 with slurm status R to parsl status 2
+2022-12-13 11:19:46.973 parsl.dataflow.task_status_poller:26 [DEBUG]  Polling phylogenetic_network
+2022-12-13 11:19:46.973 parsl.providers.slurm.slurm:136 [DEBUG]  Executing sqeueue
+2022-12-13 11:19:46.994 parsl.providers.slurm.slurm:138 [DEBUG]  sqeueue returned
+2022-12-13 11:19:46.995 parsl.providers.slurm.slurm:151 [DEBUG]  Updating job 10727733 with slurm status R to parsl status 2
+2022-12-13 11:19:51.925 parsl.dataflow.task_status_poller:62 [DEBUG]  Polling
+2022-12-13 11:19:52.462 parsl.dataflow.dflow:913 [INFO]  DFK cleanup initiated
+2022-12-13 11:19:52.463 parsl.dataflow.dflow:816 [INFO]  Summary of tasks in DFK:
+2022-12-13 11:19:52.463 parsl.dataflow.dflow:829 [INFO]  Tasks in state States.done: 1
+2022-12-13 11:19:52.463 parsl.dataflow.dflow:829 [INFO]  Tasks in state States.failed: 1
+2022-12-13 11:19:52.463 parsl.dataflow.dflow:835 [INFO]  End of summary
+2022-12-13 11:19:52.463 parsl.dataflow.dflow:937 [INFO]  Terminating flow_control and strategy threads
+2022-12-13 11:19:52.465 parsl.executors.high_throughput.executor:510 [DEBUG]  [HOLD_BLOCK]: Sending hold to manager: 5837bfab6868
+2022-12-13 11:19:52.467 parsl.executors.high_throughput.executor:479 [DEBUG]  Sent hold request to worker: 5837bfab6868
+2022-12-13 11:19:52.491 parsl.executors.high_throughput.executor:642 [INFO]  Attempting HighThroughputExecutor shutdown
+2022-12-13 11:19:52.491 parsl.executors.high_throughput.executor:644 [INFO]  Finished HighThroughputExecutor shutdown attempt
+2022-12-13 11:19:52.493 parsl.executors.high_throughput.executor:510 [DEBUG]  [HOLD_BLOCK]: Sending hold to manager: d58f4f7c5dab
+2022-12-13 11:19:52.494 parsl.executors.high_throughput.executor:479 [DEBUG]  Sent hold request to worker: d58f4f7c5dab
+2022-12-13 11:19:52.518 parsl.executors.high_throughput.executor:642 [INFO]  Attempting HighThroughputExecutor shutdown
+2022-12-13 11:19:52.518 parsl.executors.high_throughput.executor:644 [INFO]  Finished HighThroughputExecutor shutdown attempt
+2022-12-13 11:19:52.519 parsl.executors.high_throughput.executor:510 [DEBUG]  [HOLD_BLOCK]: Sending hold to manager: 289d901f59bb
+2022-12-13 11:19:52.521 parsl.executors.high_throughput.executor:479 [DEBUG]  Sent hold request to worker: 289d901f59bb
+2022-12-13 11:19:52.542 parsl.executors.high_throughput.executor:642 [INFO]  Attempting HighThroughputExecutor shutdown
+2022-12-13 11:19:52.543 parsl.executors.high_throughput.executor:644 [INFO]  Finished HighThroughputExecutor shutdown attempt
+2022-12-13 11:19:52.543 parsl.executors.threads:105 [DEBUG]  Done with executor shutdown
+2022-12-13 11:19:52.543 parsl.dataflow.dflow:960 [INFO]  DFK cleanup complete
