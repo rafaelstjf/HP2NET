@@ -592,8 +592,6 @@ def mbsum(basedir: dict,
     # select all the mrbayes .t files of the gene alignment file
     trees = glob.glob(os.path.join(mrbayes_folder, gene_name + '*.t'))
     params = f"{(' ').join(trees)} -n {trim} -o {os.path.join(mbsum_folder, gene_name + '.sum')}"
-    if seed is not None:
-        pass
     return f"{config.mbsum} {params}"
 
 

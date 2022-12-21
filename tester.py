@@ -15,9 +15,11 @@ def test_raxml(bio_config):
         "mapping":""
     }
     seed = 123
+    old_files = glob.glob(os.path.join(os.getcwd(), "tests/raxml/*.output"))
+    os.system(f"rm {old_files}")
     input_file = os.path.join(os.getcwd(), "tests/raxml/input.phy")
-    baseline_file = os.path.join(os.getcwd(), "tests/raxml/baseline.tre")
-    out_file = os.path.join(os.getcwd(), "tests/raxml/besttree.tre")
+    baseline_file = os.path.join(os.getcwd(), "tests/raxml/RAxML_bestTree.baseline")
+    out_file = os.path.join(os.getcwd(), "tests/raxml/RAxML_bestTree.output")
     ret_tree = apps.raxml(basedir, bio_config, input_file=input_file, seed=seed)
     try:
         ret_tree.result()
@@ -38,8 +40,8 @@ def test_iqtree(bio_config):
     }
     seed = 123
     input_file = os.path.join(os.getcwd(), "tests/iqtree/input.phy")
-    baseline_file = os.path.join(os.getcwd(), "tests/iqtree/baseline.tre")
-    out_file = os.path.join(os.getcwd(), "tests/iqtree/besttree.tre")
+    baseline_file = os.path.join(os.getcwd(), "tests/iqtree/baseline.treefile")
+    out_file = os.path.join(os.getcwd(), "tests/iqtree/input.treefile")
     ret_tree = apps.iqtree(basedir, bio_config, input_file=input_file, seed=seed)
     try:
         ret_tree.result()
@@ -72,6 +74,76 @@ def test_astral(bio_config):
     except Exception as e:
         print("\t...Failed!")
 
+def test_mbsum(bio_config):
+    print("Testing MBSUM...")
+    basedir = {
+        "dir":os.getcwd(),
+        "tree_method":"MRBAYES",
+        "network_method":"MPL",
+        "mapping":""
+    }
+    input_file = os.path.join(os.getcwd(), "tests/mrbayes/input.nex.run1.t")
+    baseline_file = os.path.join(os.getcwd(), "tests/mbsum/baseline.sum")
+    out_file = os.path.join(os.getcwd(), "tests/mbsum/input.nex.sum")
+    ret_tree = apps.quartet_maxcut(basedir, bio_config, inputs=input_file)
+    try:
+        ret_tree.result()
+        if(filecmp.cmp(baseline_file, out_file)):
+            print("\t...Passed!")
+        else:
+            print("\t...Failed!")
+    except Exception as e:
+        print("\t...Failed!")
+
+def test_bucky(bio_config):
+    pass
+def test_mrbayes(bio_config):
+    print("Testing MrBayes...")
+    basedir = {
+        "dir":os.getcwd(),
+        "tree_method":"MRBAYES",
+        "network_method":"MPL",
+        "mapping":""
+    }
+    input_file = os.path.join(os.getcwd(), "tests/mrbayes/input.nex")
+    baseline_file = os.path.join(os.getcwd(), "tests/mrbayes/baseline.nex.run1.t")
+    out_file = os.path.join(os.getcwd(), "tests/mrbayes/input.nex.run1.t")
+    ret_tree = apps.quartet_maxcut(basedir, bio_config, inputs=input_file)
+    try:
+        ret_tree.result()
+        if(filecmp.cmp(baseline_file, out_file)):
+            print("\t...Passed!")
+        else:
+            print("\t...Failed!")
+    except Exception as e:
+        print("\t...Failed!")
+
+def test_phylonet(bio_config):
+    pass
+def test_snaq(bio_config):
+    pass
+def test_quartetmaxcut(bio_config):
+    print("Testing Quartet Maxcut...")
+    basedir = {
+        "dir":os.getcwd(),
+        "tree_method":"RAXML",
+        "network_method":"MPL",
+        "mapping":""
+    }
+    input_file = os.path.join(os.getcwd(), "tests/qmc/tests.txt")
+    baseline_file = os.path.join(os.getcwd(), "tests/qmc/baseline.tre")
+    out_file = os.path.join(os.getcwd(), "tests/qmc/tests.tre")
+    ret_tree = apps.quartet_maxcut(basedir, bio_config, inputs=input_file)
+    try:
+        ret_tree.result()
+        if(filecmp.cmp(baseline_file, out_file)):
+            print("\t...Passed!")
+        else:
+            print("\t...Failed!")
+    except Exception as e:
+        print("\t...Failed!")
+
+
 def main(config_file='default.ini', workload_file = None):
     logging.info('Starting the Testing module')
     if workload_file is not None:
@@ -84,20 +156,18 @@ def main(config_file='default.ini', workload_file = None):
     test_raxml()
     test_iqtree()
     test_astral()
-    return
+    test_bucky()
+    test_quartetmaxcut()
+    test_mbsum()
+    test_mrbayes()
+    test_phylonet()
+    test_snaq()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Process the configuration file.')
     parser.add_argument('--cf', help='Settings file', required=False, type=str)
-    parser.add_argument('--wf', help='Workload file', required=False, type=str)
     args = parser.parse_args()
     if args.cf is not None:
-        if args.wf is not None:
-            main(config_file=args.cf, workload_file=args.wf)
-        else:
-            main(config_file=args.cf)
+        main(config_file=args.cf)
     else:
-        if args.wf is not None:
-            main(workload_file=args.wf)
-        else:
-            main()
+        main()
