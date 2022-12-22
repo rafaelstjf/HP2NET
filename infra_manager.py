@@ -34,7 +34,6 @@ from parsl.launchers import SrunLauncher, SingleNodeLauncher
 from parsl.addresses import address_by_interface, address_by_hostname
 from parsl.executors import HighThroughputExecutor, WorkQueueExecutor
 from parsl.providers import LocalProvider, SlurmProvider
-from datetime import datetime
 from bioconfig import BioConfig
 
 # PARSL CONFIGURATION
@@ -47,13 +46,9 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
 
     config: BioConfig    - Workflow configuration
     """
-    name = config.workflow_name
     interval = 30
     monitor = config.workflow_monitor
-    now = datetime.now()
-    date_time = now.strftime("%d-%m-%Y_%H-%M-%S")
-    parsl.set_stream_logger(level=logging.ERROR)
-    parsl.set_file_logger(f'{name}_script_{date_time}.output', level=logging.DEBUG)
+    
 
     logging.info('Configuring Parsl Workflow Infrastructure')
 
@@ -151,6 +146,7 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
             resource_monitoring_interval=interval,
         ) if monitor else None
         return parsl.config.Config(
+            retries = 2,
             executors=[
                 HighThroughputExecutor(
                     label='single_thread',

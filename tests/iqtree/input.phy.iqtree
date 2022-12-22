@@ -1,6 +1,6 @@
-IQ-TREE 2.2.0 COVID-edition built Jun  1 2022
+IQ-TREE 2.2.0 COVID-edition built Mar 25 2022
 
-Input file name: input.phy
+Input file name: /scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp_3_partitions/tests/iqtree/input.phy
 Type of analysis: tree reconstruction + non-parametric bootstrap (1000 replicates)
 Random seed number: 123
 
@@ -94,7 +94,7 @@ Numbers in parentheses are  standard bootstrap support (%)
 
 Tree in newick format:
 
-(6:0.0667775558,5:0.0560131062,((1:0.0040129728,2:0.0000011038)100:0.0310286989,(3:0.0038768050,4:0.0062452192)100:0.0372853522)98:0.0196845205);
+(6:0.0667775557,5:0.0560131062,((1:0.0040129728,2:0.0000011038)100:0.0310286989,(3:0.0038768050,4:0.0062452192)100:0.0372853522)98:0.0196845204);
 
 CONSENSUS TREE
 --------------
@@ -107,7 +107,7 @@ Branches with support >0.000000% are kept (extended consensus)
 Branch lengths are optimized by maximum likelihood on original alignment
 Numbers in parentheses are bootstrap supports (%)
 
-+----------------------------------------------------------6
++-----------------------------------------------------------6
 |
 +-------------------------------------------------5
 |
@@ -122,12 +122,12 @@ Numbers in parentheses are bootstrap supports (%)
 
 Consensus tree in newick format: 
 
-(6:0.0667740393,5:0.0560119421,((1:0.0040111781,2:0.0000029548)100:0.0310249563,(3:0.0038774091,4:0.0062424636)100:0.0372755651)98:0.0196984330);
+(6:0.0667740392,5:0.0560119420,((1:0.0040111780,2:0.0000029548)100:0.0310249562,(3:0.0038774091,4:0.0062424636)100:0.0372755651)98:0.0196984330);
 
 TIME STAMP
 ----------
 
-Date and time: Wed Dec 21 11:05:23 2022
-Total CPU time used: 1.765625 seconds (0h:0m:1s)
-Total wall-clock time used: 1.5623146 seconds (0h:0m:1s)
+Date and time: Wed Dec 21 23:24:44 2022
+Total CPU time used: 0.221653 seconds (0h:0m:0s)
+Total wall-clock time used: 0.2837150209 seconds (0h:0m:0s)
 

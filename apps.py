@@ -1067,7 +1067,8 @@ def iqtree(basedir: dict,
             inputs=[],
             next_pipe: Any = None,
             stderr=parsl.AUTO_LOGNAME,
-            stdout=parsl.AUTO_LOGNAME):
+            stdout=parsl.AUTO_LOGNAME,
+            seed= None):
     """Runs IQ-TREE's executable using as input a sequence alignment in phylip format
 
     Parameters:
@@ -1087,6 +1088,8 @@ def iqtree(basedir: dict,
     logging.info(f'IQ-TREE with {work_dir}')
     iqtree_dir = os.path.join(work_dir, config.iqtree_dir)
     flags = f"-T AUTO -ntmax {config.iqtree_threads} -b {config.bootstrap} -m {config.iqtree_model}  -s {input_file} --keep-ident -redo"
+    if seed is not None:
+        flags+=f" -seed {seed}"
     # Return to Parsl to be executed on the workflow
     return f"cd {iqtree_dir}; {config.iqtree} {flags}"
 
