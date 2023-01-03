@@ -9,9 +9,10 @@ import tkinter
 import tkinter.messagebox
 import tkinter.filedialog
 from datetime import datetime
+
 TIME_PATTERN = '%Y-%m-%d %H:%M:%S.%f'
-WIDTH = 800
-HEIGHT = 600
+WIDTH = 1280
+HEIGHT = 720
 # initiate pygame font
 pygame.font.init()
 
@@ -80,7 +81,7 @@ def draw_rectangles(screen, tasks, task_times, t0, tf):
     if len(tasks.keys()) > (HEIGHT/2):  # that means at least 2 pixels per rec
         rect_size = (HEIGHT/(0.6*len(tasks.keys())))
     else:
-        rect_size = (HEIGHT/len(tasks.keys()))
+        rect_size = (HEIGHT/(len(tasks.keys())*1.1))
     rect_list = list()
     name_list = list()
     for task in tasks_sorted:
@@ -108,28 +109,7 @@ def parse_tasks(runinfo_dir):
     for task in tasks_files:
         task_array = os.path.basename(task).split('_')
         task_name = (task_array[len(task_array) - 1]).split('.')[0]
-        if task_name == 'raxml':
-            tasks[task_array[1]] = 'raxml'
-        elif task_name == 'snaq':
-            tasks[task_array[1]] = 'snaq'
-        elif task_name == 'iqtree':
-            tasks[task_array[1]] = 'iqtree'
-        elif task_name == 'mrbayes':
-            tasks[task_array[1]] = 'mrbayes'
-        elif task_name == 'bucky':
-            tasks[task_array[1]] = 'bucky'
-        elif task_name == 'mbsum':
-            tasks[task_array[1]] = 'mbsum'
-        elif task_name == 'maxcut':
-            tasks[task_array[1]] = 'maxcut'
-        elif task_name == 'phylonet':
-            tasks[task_array[1]] = 'phylonet'
-        elif task_name == 'plot':
-            tasks[task_array[1]] = 'plot'
-        elif task_name == 'astral':
-            tasks[task_array[1]] = 'astral'
-        else:
-            tasks[task_array[1]] = 'other'
+        tasks[task_array[1]] = task_name
     return tasks
 
 
@@ -161,6 +141,54 @@ def parse_times(runinfo_dir, tasks):
             task_times[task] = (launch, complete)
     return task_times
 
+def print_tasks_time(tasks, tasks_time):
+    sorted_tasks = sorted(tasks.keys())
+    for task in sorted_tasks:
+        print(f"#########################################")
+        print(f"      Task ID: {task} -> {tasks[task]}")
+        print(f"Launched: {tasks_time[task][0]}")
+        print(f"Completed: {tasks_time[task][1]}")
+        print(f"Elapsed time: {get_timestamp_dif(tasks_time[task][0],tasks_time[task][1])}")
+
+def get_time_per_app(tasks, tasks_time, dir_):
+    beg, end = get_times(dir_)
+    time_per_task = dict()
+    for task in sorted(tasks.keys()):
+        task_name = tasks[task]
+        task_id = int(task)
+        if task_name in time_per_task:
+            task_beg, task_end = time_per_task[task_name]
+            new_task_beg, new_task_end = tasks_time[task_id]
+            if(task_beg > new_task_beg):
+                if(task_end < new_task_end):
+                    time_per_task[task_name] = (new_task_beg, new_task_end)
+                else:
+                    time_per_task[task_name] = (new_task_beg, task_end)
+            else:
+                if(task_end < new_task_end):
+                    time_per_task[task_name] = (task_beg, task_end)
+        else:
+            time_per_task[task_name] = tasks_time[task_id]
+    print("Time wasted in each app")
+    for task in time_per_task.keys():
+        task_beg, task_end = time_per_task[task_name]
+        total_time = get_timestamp_dif(task_beg, task_end)
+        print(f"App {task} took {total_time} second(s).")
+
+def get_time_proccessing_per_app(tasks, tasks_time, dir_):
+    beg, end = get_times(dir_)
+    time_per_task = dict()
+    for task in sorted(tasks.keys()):
+        task_name = tasks[task]
+        task_id = int(task)
+        if task_name in time_per_task:
+            new_task_beg, new_task_end = tasks_time[task_id]
+            time_per_task[task_name] += get_timestamp_dif(new_task_beg, new_task_end)
+        else:
+            time_per_task[task_name] = tasks_time[task_id]
+    print("Processing time per app")
+    for task in time_per_task.keys():
+        print(f"App {task} took {time_per_task[task_name]} second(s).")
 
 def get_times(dir_):
     log = os.path.join(dir_, 'parsl.log')
@@ -202,6 +230,7 @@ def main(dir_):
     pygame.display.set_caption(os.path.basename(dir_))
     tasks = parse_tasks(dir_)
     tasks_time = parse_times(dir_, tasks)
+    print_tasks_time(tasks, tasks_time)
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     screen.fill(background_colour)
     beg = 0
