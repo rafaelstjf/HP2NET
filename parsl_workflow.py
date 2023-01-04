@@ -183,14 +183,21 @@ def prepare_to_run(config):
         r.append(apps.create_folders(basedir, config,folders=folder_list))
     wait_for_all(r)
         
-def main(config_file='default.ini', workload_file = None):
+def main(**kwargs):
     logging.info('Starting the Workflow Orchestration')
-    if workload_file is not None:
-        cf = bioconfig.ConfigFactory(config_file, custom_workload = workload_file)
+    if kwargs["config_file"] is not None:
+        config_file = kwargs["config_file"]
+    else:
+        config_file='default.ini'
+    if kwargs["workload_file"] is not None:
+        cf = bioconfig.ConfigFactory(config_file, custom_workload = kwargs["workload_file"])
     else:
         cf = bioconfig.ConfigFactory(config_file)
     bio_config = cf.build_config()
-    dkf_config = workflow_config(bio_config)
+    if kwargs["max_workers"] is not None:
+        dkf_config = workflow_config(bio_config, kwargs["max_workers"])
+    else:
+        dkf_config = workflow_config(bio_config)
     dkf = parsl.load(dkf_config)
     results = list()
     prepare_to_run(bio_config)
@@ -227,16 +234,8 @@ def main(config_file='default.ini', workload_file = None):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Process the configuration file.')
-    parser.add_argument('--cf', help='Settings file', required=False, type=str)
-    parser.add_argument('--wf', help='Workload file', required=False, type=str)
+    parser.add_argument('--cf', help='Settings file', required=False, type=str, default=None)
+    parser.add_argument('--wf', help='Workload file', required=False, type=str, default=None)
+    parser.add_argument('--mw', help = "Max workers", required=False, type=int, default=None)
     args = parser.parse_args()
-    if args.cf is not None:
-        if args.wf is not None:
-            main(config_file=args.cf, workload_file=args.wf)
-        else:
-            main(config_file=args.cf)
-    else:
-        if args.wf is not None:
-            main(workload_file=args.wf)
-        else:
-            main()
+    main(config_file=args.cf, workload_file=args.wf, max_workers = args.mw)
