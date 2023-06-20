@@ -192,7 +192,7 @@ class ConfigFactory:
         workflow_name = "HP2NETW"
         workflow_monitor = cf["WORKFLOW"].getboolean("Monitor")
         workflow_walltime = cf["WORKFLOW"]["Walltime"]
-        workflow_core = int(cf["WORKFLOW"]["PartCore"]) - 1 #hardcoded to ensure a free core to parsl 
+        workflow_core = int(cf["WORKFLOW"]["PartCore"]) #hardcoded to ensure a free core to parsl 
         workflow_node = int(cf["WORKFLOW"]["PartNode"])
         #RAXML
         raxml = cf['RAXML']['RaxmlExecutable']

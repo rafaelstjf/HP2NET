@@ -40,7 +40,7 @@ from datetime import datetime
 from bioconfig import BioConfig
 from typing import Any
 # PARSL CONFIGURATION
-def workflow_config(config: BioConfig, ) -> parsl.config.Config:
+def workflow_config(config: BioConfig, max_workers = None) -> parsl.config.Config:
     """ Configures and loads Parsl's Workflow configuration
 
     Parameters:
@@ -54,28 +54,64 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
     date_time = now.strftime("%d-%m-%Y_%H-%M-%S")
     parsl.set_stream_logger(level=logging.ERROR)
     parsl.set_file_logger(f'{name}_script_{date_time}.output', level=logging.DEBUG)
-
+    if max_workers is not None:
+        curr_workers = max_workers
+    else:
+        curr_workers = config.workflow_core
     logging.info('Configuring Parsl Workflow Infrastructure')
 
     # Read where datasets are...
     env_str = config.environ
 
     logging.info(f'Task Environment {env_str}')
-    mon_hub = parsl.monitoring.monitoring.MonitoringHub(
+    
+    if config.execution_provider == "Slurm":
+        mon_hub = parsl.monitoring.monitoring.MonitoringHub(
         workflow_name=name,
         hub_address=address_by_hostname(),
         resource_monitoring_enabled=True,
         monitoring_debug=False,
         resource_monitoring_interval=interval,
-    ) if monitor else None
-    return parsl.config.Config(
+        ) if monitor else None
+        return parsl.config.Config(
+            executors=[
+                HighThroughputExecutor(
+                    label=f'single_partition',
+                    # Optional: The network interface on node 0 which compute nodes can communicate with.
+                    address=address_by_hostname(),
+                    cores_per_worker=1,
+                    max_workers=curr_workers,
+                    worker_debug=False,
+                    provider=LocalProvider(
+                        nodes_per_block=1,
+                        channel=LocalChannel(script_dir = config.script_dir),
+                        parallelism=1,
+                        init_blocks=config.workflow_node,
+                        max_blocks=config.workflow_node,
+                        worker_init=env_str,
+                        launcher=SrunLauncher(overrides=f'-c {config.workflow_core}')
+                    ),
+                ),
+            ],
+            monitoring=mon_hub,
+            strategy=None,
+        )
+    else:
+        mon_hub = parsl.monitoring.monitoring.MonitoringHub(
+        workflow_name=name,
+        hub_address="127.0.0.1",
+        resource_monitoring_enabled=True,
+        monitoring_debug=False,
+        resource_monitoring_interval=interval,
+        ) if monitor else None
+        return parsl.config.Config(
         executors=[
             HighThroughputExecutor(
                 label=f'single_partition',
                 # Optional: The network interface on node 0 which compute nodes can communicate with.
-                address=address_by_hostname(),
+                address="127.0.0.1",
                 cores_per_worker=1,
-                max_workers=config.workflow_core,
+                max_workers=curr_workers,
                 worker_debug=False,
                 provider=LocalProvider(
                     nodes_per_block=1,
@@ -84,7 +120,6 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
                     init_blocks=config.workflow_node,
                     max_blocks=config.workflow_node,
                     worker_init=env_str,
-                    launcher=SrunLauncher(overrides=f'-c {config.workflow_core}')
                 ),
             ),
         ],

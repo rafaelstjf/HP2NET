@@ -148,3 +148,9 @@ Input_Workflow
 # config files
 *.config
 *.config.ssd
+
+
+#other
+
+apps
+example_data
