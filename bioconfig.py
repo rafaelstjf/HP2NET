@@ -66,18 +66,9 @@ class BioConfig:
     workflow_name:      str
     workflow_path:      str
     workflow_monitor:   bool
-    workflow_part_f:    str
-    workflow_part_t:    str
-    workflow_part_l:    str
-    workflow_wall_t_f:  str
-    workflow_wall_t_t:  str
-    workflow_wall_t_l:  str
-    workflow_core_f:    int
-    workflow_core_t:    int
-    workflow_core_l:    int
-    workflow_node_f:    int
-    workflow_node_t:    int
-    workflow_node_l:    int
+    workflow_walltime:  str
+    workflow_core:    int
+    workflow_node:    int
     raxml:              str
     raxml_dir:          str
     raxml_output:       str
@@ -200,18 +191,9 @@ class ConfigFactory:
         #WORKFLOW
         workflow_name = "HP2NETW"
         workflow_monitor = cf["WORKFLOW"].getboolean("Monitor")
-        workflow_part_f = cf["WORKFLOW"]["PartitionFast"]
-        workflow_part_t = cf["WORKFLOW"]["PartitionThread"]
-        workflow_part_l = cf["WORKFLOW"]["PartitionLong"]
-        workflow_wall_t_f = cf["WORKFLOW"]["WalltimeFast"]
-        workflow_wall_t_t = cf["WORKFLOW"]["WalltimeThread"]
-        workflow_wall_t_l = cf["WORKFLOW"]["WalltimeLong"]
-        workflow_core_f = int(cf["WORKFLOW"]["PartCoreFast"])
-        workflow_core_t = int(cf["WORKFLOW"]["PartCoreThread"])
-        workflow_core_l = int(cf["WORKFLOW"]["PartCoreLong"])
-        workflow_node_f = int(cf["WORKFLOW"]["PartNodeFast"])
-        workflow_node_t = int(cf["WORKFLOW"]["PartNodeThread"])
-        workflow_node_l = int(cf["WORKFLOW"]["PartNodeLong"])
+        workflow_walltime = cf["WORKFLOW"]["Walltime"]
+        workflow_core = int(cf["WORKFLOW"]["PartCore"]) #hardcoded to ensure a free core to parsl 
+        workflow_node = int(cf["WORKFLOW"]["PartNode"])
         #RAXML
         raxml = cf['RAXML']['RaxmlExecutable']
         raxml_dir = 'raxml'
@@ -271,69 +253,60 @@ class ConfigFactory:
         #PLOT SCRIPT
         plot_script = os.path.join(script_dir, "plot.jl")
         self.bioconfig = BioConfig(script_dir=script_dir,
-                                    execution_provider=execution_provider,
-                                    plot_networks=plot_networks,
-                                    network_method=network_method,
-                                    tree_method=tree_method,
-                                    bootstrap=bootstrap,
-                                    workload=workload,
-                                    env_path=env_path,
-                                    environ=environ,
-                                    workflow_monitor=workflow_monitor,
-                                    workflow_name=workflow_name,
-                                    workflow_path=workflow_path,
-                                    workflow_part_f = workflow_part_f,
-                                    workflow_part_t = workflow_part_t,
-                                    workflow_part_l = workflow_part_l,
-                                    workflow_wall_t_f = workflow_wall_t_f,
-                                    workflow_wall_t_t = workflow_wall_t_t,
-                                    workflow_wall_t_l = workflow_wall_t_l,
-                                    workflow_core_f = workflow_core_f,
-                                    workflow_core_t = workflow_core_t,
-                                    workflow_core_l = workflow_core_l,
-                                    workflow_node_f = workflow_node_f,
-                                    workflow_node_t = workflow_node_t,
-                                    workflow_node_l = workflow_node_l,
-                                    raxml=raxml,
-                                    raxml_dir=raxml_dir,
-                                    raxml_output=raxml_output,
-                                    raxml_rooted_output=raxml_rooted_output,
-                                    raxml_threads=raxml_threads,
-                                    raxml_model=raxml_model,
-                                    iqtree=iqtree,
-                                    iqtree_dir=iqtree_dir,
-                                    iqtree_model=iqtree_model,
-                                    iqtree_threads=iqtree_threads,
-                                    iqtree_output=iqtree_output,
-                                    iqtree_rooted_output=iqtree_rooted_output,
-                                    astral_exec_dir=astral_exec_dir,
-                                    astral_jar=astral_jar,
-                                    astral=astral,
-                                    astral_dir=astral_dir,
-                                    astral_output=astral_output,
-                                    snaq=snaq,
-                                    snaq_threads=snaq_threads,
-                                    snaq_hmax=snaq_hmax,
-                                    snaq_runs=snaq_runs,
-                                    snaq_dir=snaq_dir,
-                                    mrbayes=mrbayes,
-                                    mrbayes_parameters=mrbayes_parameters,
-                                    mrbayes_dir=mrbayes_dir,
-                                    bucky=bucky,
-                                    bucky_dir=bucky_dir,
-                                    mbsum=mbsum,
-                                    mbsum_dir=mbsum_dir,
-                                    quartet_maxcut=quartet_maxcut,
-                                    quartet_maxcut_exec_dir=quartet_maxcut_exec_dir,
-                                    quartet_maxcut_dir=quartet_maxcut_dir,
-                                    phylonet=phylonet,
-                                    phylonet_exec_dir=phylonet_exec_dir,
-                                    phylonet_jar=phylonet_jar,
-                                    phylonet_threads=phylonet_threads,
-                                    phylonet_hmax=phylonet_hmax,
-                                    phylonet_input=phylonet_input,
-                                    phylonet_dir=phylonet_dir,
-                                    phylonet_runs=phylonet_runs,
-                                    plot_script=plot_script
+                                   execution_provider=execution_provider,
+                                   plot_networks=plot_networks,
+                                   network_method=network_method,
+                                   tree_method=tree_method,
+                                   bootstrap=bootstrap,
+                                   workload=workload,
+                                   env_path=env_path,
+                                   environ=environ,
+                                   workflow_monitor=workflow_monitor,
+                                   workflow_name=workflow_name,
+                                   workflow_path=workflow_path,
+                                   workflow_walltime=workflow_walltime,
+                                   workflow_core=workflow_core,
+                                   workflow_node=workflow_node,
+                                   raxml=raxml,
+                                   raxml_dir=raxml_dir,
+                                   raxml_output=raxml_output,
+                                   raxml_rooted_output=raxml_rooted_output,
+                                   raxml_threads=raxml_threads,
+                                   raxml_model=raxml_model,
+                                   iqtree=iqtree,
+                                   iqtree_dir=iqtree_dir,
+                                   iqtree_model=iqtree_model,
+                                   iqtree_threads=iqtree_threads,
+                                   iqtree_output=iqtree_output,
+                                   iqtree_rooted_output=iqtree_rooted_output,
+                                   astral_exec_dir=astral_exec_dir,
+                                   astral_jar=astral_jar,
+                                   astral=astral,
+                                   astral_dir=astral_dir,
+                                   astral_output=astral_output,
+                                   snaq=snaq,
+                                   snaq_threads=snaq_threads,
+                                   snaq_hmax=snaq_hmax,
+                                   snaq_runs=snaq_runs,
+                                   snaq_dir=snaq_dir,
+                                   mrbayes=mrbayes,
+                                   mrbayes_parameters=mrbayes_parameters,
+                                   mrbayes_dir=mrbayes_dir,
+                                   bucky=bucky,
+                                   bucky_dir=bucky_dir,
+                                   mbsum=mbsum,
+                                   mbsum_dir=mbsum_dir,
+                                   quartet_maxcut=quartet_maxcut,
+                                   quartet_maxcut_exec_dir=quartet_maxcut_exec_dir,
+                                   quartet_maxcut_dir=quartet_maxcut_dir,
+                                   phylonet=phylonet,
+                                   phylonet_exec_dir=phylonet_exec_dir,
+                                   phylonet_jar=phylonet_jar,
+                                   phylonet_threads=phylonet_threads,
+                                   phylonet_hmax=phylonet_hmax,
+                                   phylonet_input=phylonet_input,
+                                   phylonet_dir=phylonet_dir,
+                                   phylonet_runs=phylonet_runs,
+                                   plot_script=plot_script
                                    )
         return self.bioconfig

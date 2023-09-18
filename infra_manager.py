@@ -28,18 +28,19 @@ __email__ = "d.carvalho@ieee.org"
 __status__ = "Research"
 
 
-import parsl, logging, math
+import parsl
+import logging
+import math
 from parsl.channels import LocalChannel
 from parsl.launchers import SrunLauncher, SingleNodeLauncher
 from parsl.addresses import address_by_interface, address_by_hostname
 from parsl.executors import HighThroughputExecutor, WorkQueueExecutor
 from parsl.providers import LocalProvider, SlurmProvider
+from datetime import datetime
 from bioconfig import BioConfig
-
+from typing import Any
 # PARSL CONFIGURATION
-
-
-def workflow_config(config: BioConfig, ) -> parsl.config.Config:
+def workflow_config(config: BioConfig, max_workers = None) -> parsl.config.Config:
     """ Configures and loads Parsl's Workflow configuration
 
     Parameters:
@@ -48,159 +49,84 @@ def workflow_config(config: BioConfig, ) -> parsl.config.Config:
     """
     interval = 30
     monitor = config.workflow_monitor
-    
-
+    now = datetime.now()
+    date_time = now.strftime("%d-%m-%Y_%H-%M-%S")
+    parsl.set_stream_logger(level=logging.ERROR)
+    parsl.set_file_logger(f'{name}_script_{date_time}.output', level=logging.DEBUG)
+    if max_workers is not None:
+        curr_workers = max_workers
+    else:
+        curr_workers = config.workflow_core
     logging.info('Configuring Parsl Workflow Infrastructure')
 
     # Read where datasets are...
     env_str = config.environ
 
     logging.info(f'Task Environment {env_str}')
-    if config.execution_provider == 'SlurmProvider':
+    
+    if config.execution_provider == "Slurm":
         mon_hub = parsl.monitoring.monitoring.MonitoringHub(
-            workflow_name=name,
-            hub_address=address_by_hostname(),
-            resource_monitoring_enabled=True,
-            monitoring_debug=False,
-            resource_monitoring_interval=interval,
+        workflow_name=name,
+        hub_address=address_by_hostname(),
+        resource_monitoring_enabled=True,
+        monitoring_debug=False,
+        resource_monitoring_interval=interval,
         ) if monitor else None
         return parsl.config.Config(
             retries = 2,
             executors=[
                 HighThroughputExecutor(
-                    label='single_thread',
+                    label=f'single_partition',
                     # Optional: The network interface on node 0 which compute nodes can communicate with.
-                    # address=address_by_interface('enp4s0f0' or 'ib0')
                     address=address_by_hostname(),
-                    worker_debug=False,
                     cores_per_worker=1,
-                    provider=SlurmProvider(
-                        partition=config.workflow_part_f,
-                        # scheduler_options='',
-                        parallelism=1,
-                        init_blocks=1,
-                        max_blocks=config.workflow_node_f,
-                        cores_per_node=config.workflow_core_f,
-                        nodes_per_block=1,
-                        cmd_timeout=120,
-                        worker_init=env_str,
-                        move_files=False,
-                        walltime=config.workflow_wall_t_f,
-                        launcher=SrunLauncher(overrides=f'-c {config.workflow_core_f}'),
-                    ),
-                ),
-                HighThroughputExecutor(
-                    label=f'tree_and_statistics',
-                    # Optional: The network interface on node 0 which compute nodes can communicate with.
-                    # address=address_by_interface('enp4s0f0' or 'ib0')
-                    address=address_by_hostname(),
-                    worker_debug=False,
-                    cores_per_worker = 1,
-                    provider=SlurmProvider(
-                        partition=config.workflow_part_t,
-                        # scheduler_options='',
-                        parallelism=1,
-                        init_blocks=1,
-                        max_blocks=config.workflow_node_t,
-                        cores_per_node=config.workflow_core_t,
-                        nodes_per_block=1,
-                        cmd_timeout=120,
-                        worker_init=env_str,
-                        move_files=False,
-                        walltime=config.workflow_wall_t_t,
-                        launcher=SrunLauncher(overrides=f'-c {config.workflow_core_t}'),
-                    ),
-                ),
-                HighThroughputExecutor(
-                    label=f'phylogenetic_network',
-                    # Optional: The network interface on node 0 which compute nodes can communicate with.
-                    # address=address_by_interface('enp4s0f0' or 'ib0')
-                    address=address_by_hostname(),
-                    worker_debug=False,
-                    cores_per_worker = 1,
-                    provider=SlurmProvider(
-                        partition=config.workflow_part_l,
-                        # scheduler_options='',
-                        parallelism=1,
-                        init_blocks=1,
-                        max_blocks=config.workflow_node_l,
-                        cores_per_node=config.workflow_core_l,
-                        nodes_per_block=1,
-                        cmd_timeout=120,
-                        worker_init=env_str,
-                        move_files=False,
-                        walltime=config.workflow_wall_t_l,
-                        launcher=SrunLauncher(overrides=f'-c {config.workflow_core_l}'),
-                    ),
-                ),
-            ],
-            monitoring=mon_hub,
-            strategy=None,
-        )
-    else: #localprovider
-        mon_hub = parsl.monitoring.monitoring.MonitoringHub(
-            workflow_name=name,
-            hub_address='127.0.01',
-            resource_monitoring_enabled=True,
-            monitoring_debug=False,
-            resource_monitoring_interval=interval,
-        ) if monitor else None
-        return parsl.config.Config(
-            retries = 2,
-            executors=[
-                HighThroughputExecutor(
-                    label='single_thread',
-                    # Optional: The network interface on node 0 which compute nodes can communicate with.
-                    # address=address_by_interface('enp4s0f0' or 'ib0')
-                    address='127.0.0.1',
-                    max_workers=config.workflow_core_f,
-                    cores_per_worker=1,
+                    max_workers=curr_workers,
                     worker_debug=False,
                     provider=LocalProvider(
-                        channel=LocalChannel(config.script_dir),
+                        nodes_per_block=1,
+                        channel=LocalChannel(script_dir = config.script_dir),
                         parallelism=1,
-                        init_blocks=1,
+                        init_blocks=config.workflow_node,
+                        max_blocks=config.workflow_node,
                         worker_init=env_str,
-                        max_blocks=1
-                    ),
-                ),
-                HighThroughputExecutor(
-                    label=f'tree_and_statistics',
-                    # Optional: The network interface on node 0 which compute nodes can communicate with.
-                    # address=address_by_interface('enp4s0f0' or 'ib0')
-                    address='127.0.0.1',
-                    max_workers=config.workflow_node_t,
-                    cores_per_worker=config.workflow_core_t,
-                    worker_debug=False,
-                    provider=LocalProvider(
-                        channel=LocalChannel(config.script_dir),
-                        parallelism=1,
-                        init_blocks=1,
-                        worker_init=env_str,
-                        max_blocks=1
-                    ),
-                ),
-                HighThroughputExecutor(
-                    label=f'phylogenetic_network',
-                    address= '127.0.0.1',
-                    # Optional: The network interface on node 0 which compute nodes can communicate with.
-                    # address=address_by_interface('enp4s0f0' or 'ib0')
-                    max_workers=config.workflow_node_l,
-                    cores_per_worker=config.workflow_core_l,
-                    worker_debug=False,
-                    provider=LocalProvider(
-                        channel=LocalChannel(config.script_dir),
-                        parallelism=1,
-                        init_blocks=1,
-                        worker_init=env_str,
-                        max_blocks=1
+                        launcher=SrunLauncher(overrides=f'-c {config.workflow_core}')
                     ),
                 ),
             ],
             monitoring = mon_hub,
             strategy=None,
         )
-
+    else:
+        mon_hub = parsl.monitoring.monitoring.MonitoringHub(
+        workflow_name=name,
+        hub_address="127.0.0.1",
+        resource_monitoring_enabled=True,
+        monitoring_debug=False,
+        resource_monitoring_interval=interval,
+        ) if monitor else None
+        return parsl.config.Config(
+        executors=[
+            HighThroughputExecutor(
+                label=f'single_partition',
+                # Optional: The network interface on node 0 which compute nodes can communicate with.
+                address="127.0.0.1",
+                cores_per_worker=1,
+                max_workers=curr_workers,
+                worker_debug=False,
+                provider=LocalProvider(
+                    nodes_per_block=1,
+                    channel=LocalChannel(script_dir = config.script_dir),
+                    parallelism=1,
+                    init_blocks=config.workflow_node,
+                    max_blocks=config.workflow_node,
+                    worker_init=env_str,
+                ),
+            ),
+        ],
+        monitoring=mon_hub,
+        strategy=None,
+    )
+        
 # SYNCHRONIZATION ROUTINES
 
 
@@ -238,20 +164,20 @@ def wait_for_all(list_of_futures: list, sleep_interval=10) -> None:
     return
 
 class CircularList:
-    def __init__(self, slots: int):
+    def __init__(self, slots: int) -> None:
         if not slots:
             raise ValueError
         self.list = [None for _ in range(slots)]
         self.index = 0
         self.max_index = len(self.list) - 1
 
-    def next(self):
+    def next(self) -> Any:
         if self.index == self.max_index:
             self.index = 0
         else:
             self.index += 1
         return self.list[self.index]
 
-    def current(self, value):
+    def current(self, value: Any) -> None:
         self.list[self.index] = value
         return

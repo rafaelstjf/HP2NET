@@ -139,3 +139,18 @@ config/local.env
 config/local.ini
 config/work_local.config
 Input_Workflow
+
+# stdout and stderr files
+*.out
+*.err
+*.output
+
+# config files
+*.config
+*.config.ssd
+
+
+#other
+
+apps
+example_data

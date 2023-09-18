@@ -1,6 +1,6 @@
 import parsl, apps, glob, bioconfig, os, logging, argparse, math
 from pandas.core import base
-from infra_manager import workflow_config, wait_for_all, CircularList
+from workflow import workflow_config, wait_for_all, CircularList
 
 cache = dict()
 #LOGGING SECTION
@@ -10,7 +10,7 @@ def raxml_snaq(bio_config, basedir):
     result = list()
     ret_tree = list()
     datalist = list()
-    pool = CircularList(math.floor(bio_config.workflow_core_t/int(bio_config.raxml_threads)))
+    pool = CircularList(math.floor(bio_config.workflow_core/int(bio_config.raxml_threads)))
     #append the input files
     dir_ = os.path.join(os.path.join(basedir['dir'], "input"), "phylip")
     datalist = glob.glob(os.path.join(dir_, '*.phy'))
@@ -28,7 +28,7 @@ def raxml_snaq(bio_config, basedir):
         ret_sad = cache[(basedir['dir'], 'raxml')]
     logging.info("Using the Maximum Pseudo Likelihood Method")
     ret_ast = apps.astral(basedir, bio_config, inputs=[ret_sad])
-    pool_phylo = CircularList(math.floor(bio_config.workflow_core_l/int(bio_config.snaq_threads)))
+    pool_phylo = CircularList(math.floor(bio_config.workflow_core/int(bio_config.snaq_threads)))
     for h in bio_config.snaq_hmax:
         ret_snq = apps.snaq(basedir, bio_config, h, inputs=[ret_ast], next_pipe=pool_phylo.next())
         pool_phylo.current(ret_snq)
@@ -39,7 +39,7 @@ def raxml_phylonet(bio_config, basedir):
     result = list()
     ret_tree = list()
     datalist = list()
-    pool = CircularList(math.floor(bio_config.workflow_core_t/int(bio_config.raxml_threads)))
+    pool = CircularList(math.floor(bio_config.workflow_core/int(bio_config.raxml_threads)))
     #append the input files
     dir_ = os.path.join(os.path.join(basedir['dir'], "input"), "phylip")
     datalist = glob.glob(os.path.join(dir_, '*.phy'))
@@ -58,7 +58,7 @@ def raxml_phylonet(bio_config, basedir):
     ret_rooted = apps.root_tree(basedir, bio_config, inputs=[ret_sad])
     logging.info("Using the Maximum Parsimony Method")
     out_dir = os.path.join(basedir['dir'], bio_config.phylonet_dir)
-    pool_phylo = CircularList(math.floor(bio_config.workflow_core_l/int(bio_config.phylonet_threads)))
+    pool_phylo = CircularList(math.floor(bio_config.workflow_core/int(bio_config.phylonet_threads)))
     for h in bio_config.phylonet_hmax:
         ret_spd = apps.setup_phylonet_data(basedir, bio_config, h, inputs=[ret_rooted])
         filename = os.path.join(out_dir, (basedir['tree_method'] + '_' + h +'_' + bio_config.phylonet_input))
@@ -71,7 +71,7 @@ def iqtree_snaq(bio_config, basedir):
     result = list()
     ret_tree = list()
     datalist = list()
-    pool = CircularList(math.floor(bio_config.workflow_core_t/int(bio_config.iqtree_threads)))
+    pool = CircularList(math.floor(bio_config.workflow_core/int(bio_config.iqtree_threads)))
     #append the input files
     dir_ = os.path.join(os.path.join(basedir['dir'], "input"), "phylip")
     datalist = glob.glob(os.path.join(dir_, '*.phy'))
@@ -89,7 +89,7 @@ def iqtree_snaq(bio_config, basedir):
         ret_sad = cache[(basedir['dir'], 'iqtree')]
     logging.info("Using the Maximum Pseudo Likelihood Method")
     ret_ast = apps.astral(basedir, bio_config, inputs=[ret_sad])
-    pool_phylo = CircularList(math.floor(bio_config.workflow_core_l/int(bio_config.snaq_threads)))
+    pool_phylo = CircularList(math.floor(bio_config.workflow_core/int(bio_config.snaq_threads)))
     for h in bio_config.snaq_hmax:
         ret_snq = apps.snaq(basedir, bio_config, h, inputs=[ret_ast], next_pipe=pool_phylo.next())
         pool_phylo.current(ret_snq)
@@ -100,7 +100,7 @@ def iqtree_phylonet(bio_config, basedir):
     result = list()
     ret_tree = list()
     datalist = list()
-    pool = CircularList(math.floor(bio_config.workflow_core_t/int(bio_config.iqtree_threads)))
+    pool = CircularList(math.floor(bio_config.workflow_core/int(bio_config.iqtree_threads)))
     #append the input files
     dir_ = os.path.join(os.path.join(basedir['dir'], "input"), "phylip")
     datalist = glob.glob(os.path.join(dir_, '*.phy'))
@@ -119,7 +119,7 @@ def iqtree_phylonet(bio_config, basedir):
     ret_rooted = apps.root_tree(basedir, bio_config, inputs=[ret_sad])
     logging.info("Using the Maximum Parsimony Method")
     out_dir = os.path.join(basedir['dir'], bio_config.phylonet_dir)
-    pool_phylo = CircularList(math.floor(bio_config.workflow_core_l/int(bio_config.phylonet_threads)))
+    pool_phylo = CircularList(math.floor(bio_config.workflow_core/int(bio_config.phylonet_threads)))
     for h in bio_config.phylonet_hmax:
         ret_spd = apps.setup_phylonet_data(basedir, bio_config, h, inputs=[ret_rooted])
         filename = os.path.join(out_dir, (basedir['tree_method'] + '_' + h +'_' + bio_config.phylonet_input))
@@ -151,7 +151,7 @@ def mrbayes_snaq(bio_config, basedir):
     ret_qmc = apps.quartet_maxcut(basedir, bio_config, inputs = [ret_pre_qmc])
     ret_tree.append(apps.setup_qmc_output(basedir, bio_config, inputs = [ret_qmc]))
     logging.info("Using the Maximum Pseudo Likelihood Method")
-    pool_phylo = CircularList(math.floor(bio_config.workflow_core_l/int(bio_config.snaq_threads)))
+    pool_phylo = CircularList(math.floor(bio_config.workflow_core/int(bio_config.snaq_threads)))
     for h in bio_config.snaq_hmax:
         ret_snq = apps.snaq(basedir, bio_config, h, inputs=ret_tree, next_pipe=pool_phylo.next())
         pool_phylo.current(ret_snq)
@@ -183,14 +183,21 @@ def prepare_to_run(config):
         r.append(apps.create_folders(basedir, config,folders=folder_list))
     wait_for_all(r)
         
-def main(config_file='default.ini', workload_file = None):
+def main(**kwargs):
     logging.info('Starting the Workflow Orchestration')
-    if workload_file is not None:
-        cf = bioconfig.ConfigFactory(config_file, custom_workload = workload_file)
+    if kwargs["config_file"] is not None:
+        config_file = kwargs["config_file"]
+    else:
+        config_file='default.ini'
+    if kwargs["workload_file"] is not None:
+        cf = bioconfig.ConfigFactory(config_file, custom_workload = kwargs["workload_file"])
     else:
         cf = bioconfig.ConfigFactory(config_file)
     bio_config = cf.build_config()
-    dkf_config = workflow_config(bio_config)
+    if kwargs["max_workers"] is not None:
+        dkf_config = workflow_config(bio_config, kwargs["max_workers"])
+    else:
+        dkf_config = workflow_config(bio_config)
     dkf = parsl.load(dkf_config)
     results = list()
     prepare_to_run(bio_config)
@@ -227,16 +234,8 @@ def main(config_file='default.ini', workload_file = None):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Process the configuration file.')
-    parser.add_argument('--cf', help='Settings file', required=False, type=str)
-    parser.add_argument('--wf', help='Workload file', required=False, type=str)
+    parser.add_argument('--cf', help='Settings file', required=False, type=str, default=None)
+    parser.add_argument('--wf', help='Workload file', required=False, type=str, default=None)
+    parser.add_argument('--mw', help = "Max workers", required=False, type=int, default=None)
     args = parser.parse_args()
-    if args.cf is not None:
-        if args.wf is not None:
-            main(config_file=args.cf, workload_file=args.wf)
-        else:
-            main(config_file=args.cf)
-    else:
-        if args.wf is not None:
-            main(workload_file=args.wf)
-        else:
-            main()
+    main(config_file=args.cf, workload_file=args.wf, max_workers = args.mw)
