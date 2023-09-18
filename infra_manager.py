@@ -47,7 +47,6 @@ def workflow_config(config: BioConfig, max_workers = None) -> parsl.config.Confi
 
     config: BioConfig    - Workflow configuration
     """
-    name = config.workflow_name
     interval = 30
     monitor = config.workflow_monitor
     now = datetime.now()
@@ -74,6 +73,7 @@ def workflow_config(config: BioConfig, max_workers = None) -> parsl.config.Confi
         resource_monitoring_interval=interval,
         ) if monitor else None
         return parsl.config.Config(
+            retries = 2,
             executors=[
                 HighThroughputExecutor(
                     label=f'single_partition',
@@ -93,7 +93,7 @@ def workflow_config(config: BioConfig, max_workers = None) -> parsl.config.Confi
                     ),
                 ),
             ],
-            monitoring=mon_hub,
+            monitoring = mon_hub,
             strategy=None,
         )
     else:

@@ -1,0 +1,78 @@
+Bayesian Untangling of Concordance Knots (applied to yeast and other organisms)
+BUCKy version 1.4.4, 22 June 2015
+Copyright (C) 2006-2015 by Bret Larget, Cecile Ane and Riley Larget
+
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+Program initiated at Fri Jul 29 05:47:28 2022
+
+
+Program invocation: bucky -a 1 -n 1000000 -cf 0 -o /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/bucky/3--4--1--2 -p /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/bucky/3--4--1--2-prune.txt /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen100.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen27.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen15.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen61.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen14.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen4.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen69.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen28.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen29.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen98.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen84.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen16.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen87.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen89.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen60.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen12.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen55.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen47.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen43.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen37.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen31.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen64.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen86.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen50.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen79.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen97.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen38.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen26.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen57.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen32.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen93.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen35.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen53.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen77.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen62.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen19.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen58.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen54.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen51.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen11.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen41.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen8.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen34.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen94.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen76.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen96.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen72.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen5.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen1.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen2.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen88.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen52.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen45.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen59.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen80.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen81.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen18.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen85.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen95.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen66.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen22.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen44.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen24.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen63.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen36.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen30.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen70.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen6.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen3.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen49.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen71.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen75.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen99.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen90.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen21.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen91.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen74.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen40.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen33.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen42.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen20.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen65.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen82.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen13.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen83.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen39.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen56.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen46.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen17.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen25.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen9.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen23.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen10.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen48.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen7.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen68.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen67.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen92.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen78.nex.sum /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/mbsum/1_seqgen73.nex.sum
+
+  Parameter              | Usage                    | Default Value | Value Used
+  ------------------------------------------------------------------------------
+  alpha                  | -a number                | 1             | 1
+  # of runs              | -k integer               | 2             | 2
+  # of MCMC updates      | -n integer               | 100000        | 1000000
+  # of chains            | -c integer               | 1             | 1
+  MCMCMC Rate            | -r integer               | 100           | 100
+  alpha multiplier       | -m number                | 10            | 10
+  subsample rate         | -s integer               | 1             | 1
+  output root file name  | -o name                  | run1          | /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/bucky/3--4--1--2
+  input file list file   | -i filename              |               | 
+  random seed 1          | -s1 integer              | 1234          | 1234
+  random seed 2          | -s2 integer              | 5678          | 5678
+  CF cutoff for display  | -cf number               | 0.05          | 0
+  create sample file     | --create-sample-file     | false         | false
+  create joint file      | --create-joint-file      | false         | false
+  create single file     | --create-single-file     | false         | false
+  use independence prior | --use-independence-prior | false         | false
+  calculate pairs        | --calculate-pairs        | false         | false
+  use update groups      | --use-update-groups      | true          | true
+  File with prune list   | -p pruneFile             |               | /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/bucky/3--4--1--2-prune.txt
+  skip genes             | -sg                      | false         | false
+  Space optimization     | --opt-space              | false         | false
+  no population tree?    | --no-population-tree     | false         | false
+  genomewide CF grid size| --genomewide-grid-size   | 1000          | 1000
+  ------------------------------------------------------------------------------
+
+Reading in summary files....
+0   10   20   30   40   50   60   70   80   90   100
++----+----+----+----+----+----+----+----+----+----+
+**************************************************
+Number of genes sequenced for each taxon:
+1    3 100   
+2    4 100   
+3    1 100   
+4    2 100   
+Read 100 genes with a total of 3 different sampled tree topologies
+Writing input file names to file /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/bucky/3--4--1--2.input....done.
+Sorting trees by average posterior probability....done.
+Initializing random number generator....done.
+Initializing gene information....done.
+Initializing splits counts (found 3 distinct splits)....done.
+Setting initial MCMC state....done.
+Initializing MCMCMC acceptance counters and pairwise counters....done.
+MCMC initiated at Fri Jul 29 05:47:28 2022
+
+
+Beginning burn-in with 100000 updates (10% extra of desired updates)...
+0   10   20   30   40   50   60   70   80   90   100
++----+----+----+----+----+----+----+----+----+----+
+***************************************************
+ ....done.
+Initializing summary tables...done.
+Beginning 1000000 MCMC updates...
+0   10   20   30   40   50   60   70   80   90   100
++----+----+----+----+----+----+----+----+----+----+
+***************************************************
+ ....done.
+Writing cluster summary to file /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/bucky/3--4--1--2.cluster....done.
+Writing concordance factors to /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/bucky/3--4--1--2.concordance....done.
+Average SD of mean sample-wide CF: 5.56022e-05
+Writing single and joint gene posteriors to /scratch/pcmrnbio2/rafael.terra/WF_parsl/data/baseline.gamma0.3_n100/bucky/3--4--1--2.gene....done.
+Program ended at Fri Jul 29 05:47:33 2022
+
+
+Elapsed time: 5 seconds.
