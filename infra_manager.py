@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" Workflow.py. Parsl Configuration Functions (@) 2021
+""" infra_manager.py. Parsl Configuration Functions (@) 2021
 
 This module encapsulates all Parsl configuration stuff in order to provide a
 cluster configuration based in number of nodes and cores per node.
@@ -50,6 +50,7 @@ def workflow_config(config: BioConfig, max_workers = None) -> parsl.config.Confi
     interval = 30
     monitor = config.workflow_monitor
     now = datetime.now()
+    name = config.workflow_name
     date_time = now.strftime("%d-%m-%Y_%H-%M-%S")
     parsl.set_stream_logger(level=logging.ERROR)
     parsl.set_file_logger(f'{name}_script_{date_time}.output', level=logging.DEBUG)
