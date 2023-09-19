@@ -1,6 +1,6 @@
 import parsl, apps, glob, bioconfig, os, logging, argparse, math
 from pandas.core import base
-from workflow import workflow_config, wait_for_all, CircularList
+from infra_manager import workflow_config, wait_for_all, CircularList
 
 cache = dict()
 #LOGGING SECTION
