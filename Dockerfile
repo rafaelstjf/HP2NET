@@ -9,7 +9,8 @@ ENV TZ=Etc/UTC
 
 # Install essential packages
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
+    apt-get install -y \
+        software-properties-common \
         git \
         build-essential \
         wget \
@@ -26,6 +27,13 @@ RUN apt-get update && \
     apt-get autoremove -y && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
+
+# Install Python 3.11
+RUN wget https://www.python.org/ftp/python/3.11.1/Python-3.11.1.tar.xz && \
+    tar -xf Python-3.11.1.tar.xz && \
+    cd Python-3.11.1 && \
+    ./configure --enable-optimizations && \
+    make altinstall
 
 # Install Julia
 RUN wget --no-check-certificate https://julialang-s3.julialang.org/bin/linux/x64/1.9/julia-1.9.3-linux-x86_64.tar.gz && \
@@ -48,6 +56,7 @@ RUN git clone https://github.com/smirarab/ASTRAL.git && \
     chmod a+x make.sh && \
     ./make.sh && \
     cd Astral && \
+    mv astral*.jar Astral.jar && \
     cp *.jar /usr/local/bin && \
     cp lib/* /usr/local/bin/lib
 
@@ -65,8 +74,9 @@ RUN wget https://github.com/NakhlehLab/PhyloNet/releases/latest/download/PhyloNe
 RUN rm -rf ASTRAL iqtree bucky /var/lib/apt/lists/*
 
 # Install Python packages
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir parsl[monitoring] biopython pandas
+RUN python3.11 -m pip3 install  --upgrade pip && \
+    python3.11 -m pip install -r requirements.txt
 
+RUN julia -e 'using Pkg; Pkg.add(["PhyloNetworks", "RCall", "PhyloPlots"])'
 # Set the default command
-CMD ["python3", "parsl_workflow.py"]
+ENTRYPOINT ["python3.11", "parsl_workflow.py"]

@@ -192,8 +192,12 @@ class ConfigFactory:
         workflow_name = "HP2NETW"
         workflow_monitor = cf["WORKFLOW"].getboolean("Monitor")
         workflow_walltime = cf["WORKFLOW"]["Walltime"]
-        workflow_core = int(cf["WORKFLOW"]["PartCore"]) #hardcoded to ensure a free core to parsl 
-        workflow_node = int(cf["WORKFLOW"]["PartNode"])
+        if execution_provider == "Slurm":
+            workflow_core = int(cf["WORKFLOW"]["PartCore"]) #hardcoded to ensure a free core to parsl 
+            workflow_node = int(cf["WORKFLOW"]["PartNode"])
+        else:
+            workflow_core = int(cf["WORKFLOW"]["MaxCore"]) #hardcoded to ensure a free core to parsl 
+            workflow_node = int(cf["WORKFLOW"]["CoresPerWorker"])
         #RAXML
         raxml = cf['RAXML']['RaxmlExecutable']
         raxml_dir = 'raxml'

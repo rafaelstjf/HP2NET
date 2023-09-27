@@ -1,0 +1,4 @@
+pandas
+biopython
+parsl
+parsl[monitoring]
