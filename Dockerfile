@@ -70,6 +70,6 @@ RUN rm -rf ASTRAL iqtree bucky /var/lib/apt/lists/*
 RUN python3 -m pip install  --upgrade pip && \
     python3 -m pip install -r requirements.txt
 
-RUN julia -e 'using Pkg; Pkg.add(["PhyloNetworks", "RCall", "PhyloPlots"])'
+RUN julia -e 'using Pkg; Pkg.add(["PhyloNetworks", "RCall", "PhyloPlots", "CSV"])'
 # Set the default command
 ENTRYPOINT ["python3", "parsl_workflow.py"]

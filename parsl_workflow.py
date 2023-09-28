@@ -241,7 +241,7 @@ def main(**kwargs):
     else:
         cf = bioconfig.ConfigFactory(config_file)
     bio_config = cf.build_config()
-    dkf_config = workflow_config(bio_config, kwargs)
+    dkf_config = workflow_config(bio_config, **kwargs)
     dkf = parsl.load(dkf_config)
     results = list()
     prepare_to_run(bio_config)
@@ -290,7 +290,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-r", "--runinfo", help="Folder to store the Parsl logs", required=False, type=str, default=None)
     parser.add_argument(
-        '--m', "--maxworkers", help="Max workers", required=False, type=int, default=None)
+        '-m', "--maxworkers", help="Max workers", required=False, type=int, default=None)
 
     args = parser.parse_args()
 
