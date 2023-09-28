@@ -65,7 +65,7 @@ def workflow_config(config: BioConfig, max_workers = None) -> parsl.config.Confi
 
     logging.info(f'Task Environment {env_str}')
     
-    if config.execution_provider == "Slurm":
+    if config.execution_provider == "SLURM":
         mon_hub = parsl.monitoring.monitoring.MonitoringHub(
         workflow_name=name,
         hub_address=address_by_hostname(),
@@ -111,7 +111,7 @@ def workflow_config(config: BioConfig, max_workers = None) -> parsl.config.Confi
                 label=f'single_partition',
                 # Optional: The network interface on node 0 which compute nodes can communicate with.
                 address="127.0.0.1",
-                cores_per_worker=1,
+                cores_per_worker=config.workflow_node,
                 max_workers=curr_workers,
                 worker_debug=False,
                 provider=LocalProvider(
