@@ -1,7 +1,7 @@
 # Dockerfile for installation of HP2Net framework. All the lines related to quartet maxcut are commented due to the software
 # being unavailable
 FROM python:3.9.18-slim-bullseye
-
+LABEL version="1.0" maintainer="Rafael Terra <rafaelstjf@gmail.com>"
 WORKDIR /app
 COPY . /app/
 ENV DEBIAN_FRONTEND=noninteractive 
