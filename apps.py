@@ -23,8 +23,8 @@ __copyright__ = "Copyright 2021, The Biocomp Informal Collaboration (CEFET/RJ an
 __credits__ = ["Diego Carvalho", "Carla Osthoff", "Kary Ocaña", "Rafael Terra"]
 __license__ = "GPL"
 __version__ = "1.0.1"
-__maintainer__ = "Diego Carvalho"
-__email__ = "d.carvalho@ieee.org"
+__maintainer__ = "Rafael Terra"
+__email__ = "rafaelst@posgrad.lncc.br"
 __status__ = "Research"
 
 
@@ -64,33 +64,60 @@ def setup_phylip_data(basedir: dict, config: BioConfig,
     import os, glob, tarfile, logging, tarfile, shutil
     from Bio import AlignIO
     from pathlib import Path
-    from appsexception import FolderDeletionError, PhylipConversion
+    from appsexception import AlignmentConversion
 
     logging.info(f'Converting Nexus files to Phylip on {basedir["dir"]}')
     input_dir = os.path.join(basedir['dir'], 'input')
+    sequence_dir = os.path.join(input_dir, 'sequence')
+    input_format = 0
+    # First the sequences are extracted
+    Path(sequence_dir).mkdir(exist_ok=True)
+    if os.path.exists(sequence_dir):
+        tar_file = basedir['sequences']
+        tar = tarfile.open(tar_file, "r:gz")
+        tar.extractall(path=sequence_dir)
+    # Now one file is opened to check its format
+    sequences = glob.glob(os.path.join(sequence_dir, '*'))
+    if len(sequences) == 0:
+        raise AlignmentConversion(input_phylip_dir)
+    with open(sequences[0], 'r') as s_file:
+        line = s_file.readline()
+        if "#NEXUS" in line:
+            input_format = 0 # nexus
+        elif ">" in line:
+            input_format = 1 # fasta
+        else:
+            input_format = 2 # other .i.e. phylip
+
     input_nexus_dir = os.path.join(input_dir, 'nexus')
+    input_phylip_dir = os.path.join(input_dir, 'phylip')
+    input_fasta_dir = os.path.join(input_dir, 'fasta')
     # So, some work must be done. Build the Nexus directory
     if not os.path.isdir(input_nexus_dir):
         Path(input_nexus_dir).mkdir(exist_ok=True)
-        tar_file = basedir['sequences']
-        tar = tarfile.open(tar_file, "r:gz")
-        tar.extractall(path=input_nexus_dir)
+    if not os.path.isdir(input_phylip_dir):
+        Path(input_phylip_dir).mkdir(exist_ok=True)
+    if not os.path.isdir(input_fasta_dir):
+        Path(input_fasta_dir).mkdir(exist_ok=True)
     # Now, use the function to convert nexus to phylip.
-    input_phylip_dir = os.path.join(input_dir, "phylip")
-    if os.path.exists(input_phylip_dir):
-        try:
-            shutil.rmtree(input_phylip_dir, ignore_errors=True)
-        except Exception:
-            #it's important to raise this exception because iqtree creates files in this folder
-            raise FolderDeletionError(input_phylip_dir)
-    Path(input_phylip_dir).mkdir(exist_ok=True)
-    files = glob.glob(os.path.join(input_nexus_dir,'*.nex'))
+    files = glob.glob(os.path.join(sequence_dir,'*'))
     try:
         for f in files:
             out_name = os.path.basename(f).split('.')[0]
-            AlignIO.convert(f, "nexus", os.path.join(input_phylip_dir, f'{out_name}.phy'), "phylip-sequential")
+            if input_format == 0:
+                AlignIO.convert(f, "nexus", os.path.join(input_phylip_dir, f'{out_name}.phy'), "phylip-sequential")
+                AlignIO.convert(f, "nexus", os.path.join(input_phylip_dir, f'{out_name}.fasta'), "fasta")
+                shutil.copyfile(f, input_nexus_dir)
+            if input_format == 1:
+                AlignIO.convert(f, "fasta", os.path.join(input_phylip_dir, f'{out_name}.phy'), "phylip-sequential")
+                AlignIO.convert(f, "fasta", os.path.join(input_nexus_dir, f'{out_name}.nex'), "nexus")
+                shutil.copyfile(f, input_fasta_dir)
+            if input_format == 2:
+                AlignIO.convert(f, "phylip-sequential", os.path.join(input_nexus_dir, f'{out_name}.nex'), "nexus")
+                AlignIO.convert(f, "phylip-sequential", os.path.join(input_fasta_dir, f'{out_name}.fasta'), "fasta")
+                shutil.copyfile(f, input_phylip_dir)
     except Exception:
-        raise PhylipConversion(input_phylip_dir)
+        raise AlignmentConversion(input_phylip_dir)
     return
 
 

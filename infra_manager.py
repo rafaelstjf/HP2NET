@@ -23,8 +23,8 @@ __copyright__ = "Copyright 2021, The Biocomp Informal Collaboration (CEFET/RJ an
 __credits__ = ["Diego Carvalho", "Carla Osthoff", "Kary Ocaña", "Rafael Terra"]
 __license__ = "GPL"
 __version__ = "1.0.1"
-__maintainer__ = "Diego Carvalho"
-__email__ = "d.carvalho@ieee.org"
+__maintainer__ = "Rafael Terra"
+__email__ = "rafaelst@posgrad.lncc.br"
 __status__ = "Research"
 
 
