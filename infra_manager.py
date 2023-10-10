@@ -30,7 +30,6 @@ __status__ = "Research"
 
 import parsl
 import logging
-import math
 from parsl.channels import LocalChannel
 from parsl.launchers import SrunLauncher, SingleNodeLauncher
 from parsl.addresses import address_by_interface, address_by_hostname
@@ -39,6 +38,7 @@ from parsl.providers import LocalProvider, SlurmProvider
 from datetime import datetime
 from bioconfig import BioConfig
 from typing import Any
+import sys
 # PARSL CONFIGURATION
 
 
@@ -54,9 +54,9 @@ def workflow_config(config: BioConfig, **kwargs) -> parsl.config.Config:
     now = datetime.now()
     name = config.workflow_name
     date_time = now.strftime("%d-%m-%Y_%H-%M-%S")
-    parsl.set_stream_logger(level=logging.ERROR)
+    parsl.set_stream_logger(level=logging.INFO, stream=sys.stdout)
     parsl.set_file_logger(
-        f'{name}_script_{date_time}.output', level=logging.DEBUG)
+        f'{name}_script_{date_time}.output', level=logging.ERROR)
     if kwargs.get("max_workers") is not None:
         curr_workers = kwargs["max_workers"]
     else:
