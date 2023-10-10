@@ -29,9 +29,9 @@ In view of the complexity in modeling network experiments, the present work intr
 
 ### Setting up the workflow
 
-The workflow uses a file to get all the needed parameters. For default it loads the file *default.ini* in the config folder, but you can explicitly load other files using the argument ``--cf name_of_the_file``, *e.g.* ``--cf config/test.ini``.
+The workflow uses a file to get all the needed parameters. For default it loads the file *default.ini* in the config folder, but you can explicitly load other files using the argument ``-s name_of_the_file``, *e.g.* ``-s config/test.ini``.
 
-* Edit *parl.env* with the environment variables and add your folder to ``PYTHONPATH``.
+* Edit *parl.env* with the environment variables you may need, such as modules loadeds in SLURM
 * Edit *work.config* with the directories of your phylogeny studies (the workflow receives as input a set of homologous gene alignments of species in the nexus format).
 * Edit *default.ini* with the path for each of the needed softwares and the parameters of the execution provider.
 
@@ -58,28 +58,28 @@ BootStrap       = 1000
 6. ``Bootstrap`` is the parameter used in all the software that use bootstrap (RAxML, IQTREE and ASTRAL)
 
 * Workflow execution settings
+ 
+  When using SLURM, these are the needed parameters:
+  ```ini
+  [WORKFLOW]
+  Monitor			= False
+  PartCore	= 24
+  PartNode	= 1
+  Walltime	= 00:20:00
+  ```
 
-```ini
-[WORKFLOW]
-Monitor			= False
-PartitionFast	= sequana_cpu
-PartCoreFast	= 48
-PartNodeFast	= 1
-PartitionThread = sequana_cpu
-PartCoreThread	= 48
-PartNodeThread	= 4
-PartitionLong	= sequana_cpu_long
-PartCoreLong	= 48
-PartNodeLong	= 1
-WalltimeFast	= 00:30:00
-WalltimeThread	= 00:30:00
-WalltimeLong	= 02:00:00
-```
+  1. ``Monitor`` is a parameter to use parsl's monitor module in HPC environment. It can be *true* or *false*. If you want to use it, it's necessary to set it as *true* and manually change the address in ``workflow.py``
+  2. If you are using it in a HPC environment (using SLURM), the workflow is going to submit in a job. ``PartCore`` is the number of cores of the node; ``PartNode`` is the number of nodes of the partition; and the ``Walltime`` parameter is the maximum amount of time the job will be able to run.
 
-1. ``Monitor`` is a parameter to use parsl's monitor module in HPC environment. It can be *true* or *false*. If you want to use it, it's necessary to set it as *true* and manually change the address in ``workflow.py``
-2. If you are using it in a HPC environment, the workflow is going to submit three different jobs, with three different behaviours. ``PartitionFast`` is used for single threaded tasks, ``PartitionThread`` is for multi threaded software like RAxML and ``PartitionLong``is for PhyloNetworks and PhyloNet.
-   1. If you are using it locally, the ``PartCore`` values are the number of threads that each class of software is going to use. The ``PartNode`` is the number of workers for each partition (the fast partition doesn't account for this behavior. It uses *PartCoreFast*, because each worker has only one thread).
-   2. ``Walltime`` parameters are used only in the HPC environment.
+  However, if the the desired execution method is the LocalProvider, _i.e._ the execution is being performed in your own machine, only these parameters are necessary:
+
+  ```ini
+  [WORKFLOW]
+  Monitor			= False
+  MaxCore	= 6
+  CoresPerWorker	= 1
+
+  ```
 
 * RAxML settings
 
@@ -103,16 +103,16 @@ WalltimeLong	= 02:00:00
 
   ```ini
   [ASTRAL]
-  AstralExecDir 	= /scratch/pcmrnbio2/app/softwares/astral/5.7.1
-  AstralJar 		= astral.5.7.1.jar
+  AstralExecDir 	= /opt/astral/5.7.1
+  AstralJar 		= astral.jar
   ```
 
 * PhyloNet settings
 
   ```ini
   [PHYLONET]
-  PhyloNetExecDir 	= /scratch/pcmrnbio2/softwares/phylonet/
-  PhyloNetJar 		= PhyloNet_3.8.2.jar
+  PhyloNetExecDir 	= /opt/phylonet/3.8.2/
+  PhyloNetJar 		= PhyloNet.jar
   PhyloNetThreads     = 6
   PhyloNetHMax        = 3
   PhyloNetRuns        = 5
@@ -147,7 +147,7 @@ WalltimeLong	= 02:00:00
 
   ```ini
   QUARTETMAXCUT]
-  QmcExecDir       = /scratch/pcmrnbio2/app/softwares/quartet/
+  QmcExecDir       = /opt/quartet/
   QmcExecutable    = find-cut-Linux-64
   ```
 
@@ -156,20 +156,20 @@ WalltimeLong	= 02:00:00
 For default the workload file is ``work.config`` in the *config* folder. The file contains the absolute paths of the experiment's folders.
 
 ```
-/scratch/pcmrnbio2/rafael.terra/WF_parsl/data/Denv_1
+/home/rafael.terra/Biocomp/data/Denv_1
 ```
 
-You can comment folders using the # character in the beginning of the path. *e. g.* ``#/scratch/pcmrnbio2/rafael.terra/WF_parsl/data/Denv_1``. That way the workflow won't read this path.
+You can comment folders using the # character in the beginning of the path. *e. g.* ``#/home/rafael.terra/Biocomp/data/Denv_1``. That way the framework won't read this path.
 
 You can also run a specific flow for a path using ``@TreeMethod|NetworkMethod`` in the end of a path. Where *TreeMethod* can be RAXML, IQTREE or MRBAYES and *NetworkMethod* can be MPL or MP (case sensitive). The supported flows are: ``RAXML|MPL``, ``RAXML|MP``, ``IQTREE|MPL``, ``IQTREE|MP`` and ``MRBAYES|MPL``. For example:
 
 ```
-/scratch/pcmrnbio2/rafael.terra/WF_parsl/data/Denv_1@RAXML|MPL
+/home/rafael.terra/Biocomp/data/Denv_1@RAXML|MPL
 ```
 
 #### Environment file
 
-The environment file contains all the environment variables (like module files used in Slurm) used during the workflow execution, including the Python Path. It's very important to set the workflow's absolute path in the Python Path present in this file. Example:
+The environment file contains all the environment variables (like module files used in SLURM) used during the framework execution. Example:
 
 ```sh
 module load python/3.8.2
@@ -179,12 +179,11 @@ module load iqtree/2.1.1
 module load bucky/1.4.4
 module load mrbayes/3.2.7a-OpenMPI-4.0.4
 source /scratch/app/modulos/julia-1.5.1.sh
-export PYTHONPATH=$PYTHONPATH:/scratch/pcmrnbio2/rafael.terra/WF_parsl/biocomp
 ```
 
 #### Experiment folder
 
-Each experiment folder needs to have a *input folder* containing a *.tar.gz* compressed file and a *.json* with the following content. **The workflow considers that there is only one file of each extension in the input folder**.
+Each experiment folder needs to have a *input folder* containing a *.tar.gz* compressed file and a *.json* with the following content. **The framework considers that there is only one file of each extension in the input folder**.
 
 ```json
 {
@@ -195,13 +194,33 @@ Each experiment folder needs to have a *input folder* containing a *.tar.gz* com
 
 Where ``Mapping`` is a direct mapping of the taxon, when there are multiple alleles per species, in the format ``species1:taxon1,taxon2; species2: taxon3, taxon4``and ``Outgroup`` is the taxon used to root the network. The Mapping parameter is optional (although it has to be in the json file without value), but the outgroup is obligatory. It's important to say that the flow *MRBAYES|MPL* doesn't support multiple alleles per species.
 
-## Running the workflow
+## Running the framework
 
-After setting up the workflow, just run ``python3 parsl_workflow.py`` in a login machine. Parsl will be responsible to submit the job of the tasks in the HPC environment.
+* In a local machine:
 
-The workflow is under heavy development. If you notice any bug, please create an issue here on GitHub.
+  After setting up the framework, just run ``python3 parsl_workflow.py``.
+  
+* In a SLURM environment:
 
----
+  Create an submition script that inside contains: ``python3 parsl_workflow.py``.
+
+  ```sh
+  #!/bin/bash
+  #SBATCH --time=15:00:00
+  #SBATCH -e slurm-%j.err
+  #SBATCH -o slurm-%j.out
+  module load python/3.9.6
+  cd /path/to/biocomp
+  python3 parsl_workflow.py
+  ```
+
+The framework is under heavy development. If you notice any bug, please create an issue here on GitHub.
+
+### DOCKER
+
+The framework is also available to be used in Docker. To do that, run ``Docker build -t hp2net .`` in the project's root folder. Then just run it using ``docker run hp2net -w your_workload_file``
+
+
 ## If you use it, please cite
 
 Terra, R., Coelho, M., Cruz, L., Garcia-Zapata, M., Gadelha, L., Osthoff, C., ... & Ocana, K. (2021, July). Gerência e Análises de Workflows aplicados a Redes Filogenéticas de Genomas de Dengue no Brasil. In *Anais do XV Brazilian e-Science Workshop* (pp. 49-56). SBC.
