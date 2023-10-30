@@ -260,7 +260,8 @@ def setup_tree_output(basedir: dict,
             files += glob.glob(os.path.join(phylip_dir, '*.ckp.gz'))
             files += glob.glob(os.path.join(phylip_dir, '*.bionj'))
             #files += glob.glob(os.path.join(phylip_dir, '*.reduced'))
-            files += glob.glob(os.path.join(phylip_dir, '*.boottrees'))
+            #files += glob.glob(os.path.join(phylip_dir, '*.boottrees'))
+            files += glob.glob(os.path.join(phylip_dir, '*.ufboot'))
             for f in files:
                 new_f = os.path.join(iqtree_dir, os.path.basename(f))
                 os.replace(f, new_f)
@@ -341,7 +342,7 @@ def setup_tree_output(basedir: dict,
                     tar.add(f, arcname=os.path.basename(f))
                 for f in files:
                     os.remove(f)
-            files = glob.glob(os.path.join(iqtree_dir,'*.boottrees'))
+            files = glob.glob(os.path.join(iqtree_dir,'*.ufboot'))
             for f in files:
                 os.rename(f, os.path.join(bootstrap_dir, os.path.basename(f)))
         except:
@@ -1128,7 +1129,7 @@ def iqtree(basedir: dict,
     outgroup = basedir['outgroup']
     logging.info(f'IQ-TREE with {work_dir}')
     iqtree_dir = os.path.join(work_dir, config.iqtree_dir)
-    flags = f"-T AUTO -ntmax {config.iqtree_threads} -b {config.bootstrap} -m {config.iqtree_model}  -s {input_file} --keep-ident -redo"
+    flags = f"-T AUTO -ntmax {config.iqtree_threads} -B {config.bootstrap} --boot-trees -m {config.iqtree_model}  -s {input_file} --keep-ident -redo -quiet"
     # Return to Parsl to be executed on the workflow
     return f"cd {iqtree_dir}; {config.iqtree} {flags}"
 
