@@ -185,7 +185,9 @@ def mrbayes_snaq(bio_config, basedir):
                          input_file=input_file, inputs=[ret_mb]))
     ret_pre_bucky = apps.setup_bucky_data(
         basedir, bio_config, inputs=ret_mbsum)
-    prune_trees = apps.prepare_prunetrees(basedir, bio_config, inputs=ret_pre_bucky).result()
+    wait_for_all([ret_pre_bucky])
+    bucky_folder = os.path.join(basedir['dir'], "bucky")
+    prune_trees = glob.glob(os.path.join(bucky_folder, "*.txt"))
     ret_bucky = list()
     for prune_tree in prune_trees:
         ret_bucky.append(apps.bucky(basedir, bio_config,
