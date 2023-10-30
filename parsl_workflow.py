@@ -13,7 +13,7 @@ cache = dict()
 logging.basicConfig(level=logging.DEBUG)
 
 
-@parsl.join_app
+
 def raxml_snaq(bio_config, basedir):
     result = list()
     ret_tree = list()
@@ -47,7 +47,7 @@ def raxml_snaq(bio_config, basedir):
         result.append(ret_snq)
     return result
 
-@parsl.join_app
+
 def raxml_phylonet(bio_config, basedir):
     result = list()
     ret_tree = list()
@@ -86,7 +86,7 @@ def raxml_phylonet(bio_config, basedir):
         result.append(ret_phylonet)
     return result
 
-@parsl.join_app
+
 def iqtree_snaq(bio_config, basedir):
     result = list()
     ret_tree = list()
@@ -120,7 +120,7 @@ def iqtree_snaq(bio_config, basedir):
         result.append(ret_snq)
     return result
 
-@parsl.join_app
+
 def iqtree_phylonet(bio_config, basedir):
     result = list()
     ret_tree = list()
@@ -159,7 +159,7 @@ def iqtree_phylonet(bio_config, basedir):
         result.append(ret_phylonet)
     return result
 
-@parsl.join_app
+
 def mrbayes_snaq(bio_config, basedir):
     result = list()
     ret_tree = list()
