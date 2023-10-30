@@ -270,7 +270,7 @@ def setup_tree_output(basedir: dict,
             trees = ""
             for f in files:
                 gen_tree = open(f, 'r')
-                trees += gen_tree.readline() + '\n'
+                trees += gen_tree.readline()
                 gen_tree.close()
             iq_input.write(trees)
             iq_input.close()
