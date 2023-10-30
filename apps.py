@@ -513,7 +513,7 @@ def snaq(basedir: dict,
         astral_tree = os.path.join(work_dir, os.path.join(config.astral_dir, config.raxml_dir))
         astral_tree = os.path.join(astral_tree, config.astral_output)
         if len(mapping) > 0:
-            return f'julia {snaq_exec} {tree_method} {raxml_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs} {mapping}'
+            return f'julia {snaq_exec} {tree_method} {raxml_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs} \'{mapping}\''
         else:
             return f'julia {snaq_exec} {tree_method} {raxml_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs}'
     elif tree_method == "IQTREE":
@@ -521,7 +521,7 @@ def snaq(basedir: dict,
         astral_tree = os.path.join(work_dir, os.path.join(config.astral_dir,config.iqtree_dir))
         astral_tree = os.path.join(astral_tree, config.astral_output)
         if len(mapping) > 0:
-            return f'julia {snaq_exec} {tree_method} {iqtree_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs} {mapping}'
+            return f'julia {snaq_exec} {tree_method} {iqtree_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs} \'{mapping}\''
         else:
             return f'julia {snaq_exec} {tree_method} {iqtree_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs}'
     elif tree_method == "MRBAYES":
@@ -533,6 +533,18 @@ def snaq(basedir: dict,
         return f'julia {snaq_exec} {tree_method} {bucky_table} {qmc_output} {output_folder} {num_threads} {hmax} {runs}'
     else:
         return
+
+@parsl.python_app(executors=['single_partition'])
+def prepare_prunetrees(basedir: dict,
+                       config: BioConfig,
+                       input_file: str,
+                       inputs=[],
+                       stderr=parsl.AUTO_LOGNAME,
+                       stdout=parsl.AUTO_LOGNAME):
+    import os, glob
+    bucky_folder = os.path.join(basedir['dir'], "bucky")
+    prune_trees = glob.glob(os.path.join(bucky_folder, "*.txt"))
+    return prune_trees
 
 # Mr.Bayes bash app
 
@@ -1011,7 +1023,7 @@ def setup_phylonet_data(basedir: dict,
         Stdout and Stderr are defaulted to parsl.AUTO_LOGNAME, so the log will be automatically 
         named according to task id and saved under task_logs in the run directory.
     """
-    import os, logging
+    import os, logging, re
     work_dir = basedir['dir']
     tree_method = basedir['tree_method']
     network_method = basedir['network_method']
@@ -1048,6 +1060,7 @@ def setup_phylonet_data(basedir: dict,
     if(len(mapping) == 0):
         buffer+="geneTree" + str(tree_index) +') ' + hmax + " -pl " + config.phylonet_threads + " -x " + config.phylonet_runs + " " + output_network + ';\nEND;'
     else:
+        mapping = re.sub(" ", "_", mapping)
         buffer+="geneTree" + str(tree_index) +') ' + hmax + " -pl " + config.phylonet_threads + " -a <" + mapping +"> -x " + config.phylonet_runs + " " + output_network + ';\nEND;'
 
     #---

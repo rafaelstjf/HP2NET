@@ -8,12 +8,12 @@ import argparse
 import math
 from pandas.core import base
 from infra_manager import workflow_config, wait_for_all, CircularList
-
 cache = dict()
 # LOGGING SECTION
 logging.basicConfig(level=logging.DEBUG)
 
 
+@parsl.join_app
 def raxml_snaq(bio_config, basedir):
     result = list()
     ret_tree = list()
@@ -47,7 +47,7 @@ def raxml_snaq(bio_config, basedir):
         result.append(ret_snq)
     return result
 
-
+@parsl.join_app
 def raxml_phylonet(bio_config, basedir):
     result = list()
     ret_tree = list()
@@ -86,7 +86,7 @@ def raxml_phylonet(bio_config, basedir):
         result.append(ret_phylonet)
     return result
 
-
+@parsl.join_app
 def iqtree_snaq(bio_config, basedir):
     result = list()
     ret_tree = list()
@@ -120,7 +120,7 @@ def iqtree_snaq(bio_config, basedir):
         result.append(ret_snq)
     return result
 
-
+@parsl.join_app
 def iqtree_phylonet(bio_config, basedir):
     result = list()
     ret_tree = list()
@@ -159,7 +159,7 @@ def iqtree_phylonet(bio_config, basedir):
         result.append(ret_phylonet)
     return result
 
-
+@parsl.join_app
 def mrbayes_snaq(bio_config, basedir):
     result = list()
     ret_tree = list()
@@ -175,9 +175,7 @@ def mrbayes_snaq(bio_config, basedir):
                          input_file=input_file, inputs=[ret_mb]))
     ret_pre_bucky = apps.setup_bucky_data(
         basedir, bio_config, inputs=ret_mbsum)
-    wait_for_all([ret_pre_bucky])
-    bucky_folder = os.path.join(basedir['dir'], "bucky")
-    prune_trees = glob.glob(os.path.join(bucky_folder, "*.txt"))
+    prune_trees = apps.prepare_prunetrees(basedir, bio_config, inputs=ret_pre_bucky).result()
     ret_bucky = list()
     for prune_tree in prune_trees:
         ret_bucky.append(apps.bucky(basedir, bio_config,
