@@ -218,7 +218,7 @@ The framework is under heavy development. If you notice any bug, please create a
 
 ### DOCKER
 
-The framework is also available to be used in Docker. To do that, run ``Docker build -t hp2net .`` in the project's root folder. Then just run it using ``docker run hp2net -w your_workload_file``
+The framework is also available to be used in Docker. To do that, run ``docker build -t hp2net .`` in the project's root folder. Then just run it using ``docker run hp2net -w your_workload_file``
 
 
 ## If you use it, please cite
