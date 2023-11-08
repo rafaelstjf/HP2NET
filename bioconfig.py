@@ -29,8 +29,8 @@ __copyright__ = "Copyright 2021, The Biocomp Informal Collaboration (CEFET/RJ an
 __credits__ = ["Diego Carvalho", "Carla Osthoff", "Kary Ocaña", "Rafael Terra"]
 __license__ = "GPL"
 __version__ = "1.0.2"
-__maintainer__ = "Diego Carvalho"
-__email__ = "d.carvalho@ieee.org"
+__maintainer__ = "Rafael Terra"
+__email__ = "rafaelst@posgrad.lncc.br"
 __status__ = "Research"
 
 
@@ -184,16 +184,21 @@ class ConfigFactory:
                         raise TarMissingData(dir_['dir'])
                     workload.append(dir_)
         bootstrap = cf['GENERAL']['BootStrap']
-        execution_provider = cf['GENERAL']['ExecutionProvider']
+        execution_provider = cf['GENERAL']['ExecutionProvider'].upper()
         plot_networks = cf["WORKFLOW"].getboolean("Plot")
 
         #SYSTEM
         #WORKFLOW
-        workflow_name = "HP2NETW"
+        workflow_name = "HP2NET"
         workflow_monitor = cf["WORKFLOW"].getboolean("Monitor")
-        workflow_walltime = cf["WORKFLOW"]["Walltime"]
-        workflow_core = int(cf["WORKFLOW"]["PartCore"]) #hardcoded to ensure a free core to parsl 
-        workflow_node = int(cf["WORKFLOW"]["PartNode"])
+        if execution_provider == "SLURM":
+            workflow_walltime = cf["WORKFLOW"]["Walltime"]
+            workflow_core = int(cf["WORKFLOW"]["PartCore"]) #hardcoded to ensure a free core to parsl 
+            workflow_node = int(cf["WORKFLOW"]["PartNode"])
+        else:
+            workflow_walltime = None
+            workflow_core = int(cf["WORKFLOW"]["MaxCore"]) #hardcoded to ensure a free core to parsl 
+            workflow_node = int(cf["WORKFLOW"]["CoresPerWorker"])
         #RAXML
         raxml = cf['RAXML']['RaxmlExecutable']
         raxml_dir = 'raxml'

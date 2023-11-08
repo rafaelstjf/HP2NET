@@ -8,14 +8,13 @@ def test_raxml(bio_config, logger1 = None):
         "dir":os.path.join(os.getcwd(), "tests"),
         "tree_method":"RAXML",
         "network_method":"MPL",
-          "mapping":"",
-        "outgroup": "",
+        "mapping":"",
         "outgroup": ""
     }
     seed = 123
     old_files = glob.glob(os.path.join(os.getcwd(), "tests/raxml/*.input"))
     for f in old_files:
-        os.system(f"rm {f}")
+        os.remove(f)
     input_file = os.path.join(os.getcwd(), "tests/raxml/input.phy")
     baseline_file = os.path.join(os.getcwd(), "tests/raxml/RAxML_bestTree.baseline")
     out_file = os.path.join(os.getcwd(), "tests/raxml/RAxML_bestTree.input")

@@ -12,7 +12,7 @@ using Distributed: length
 #arg[8] = outgroup
 
 println("Starting PhyloNetworks...")
-if length(ARGS) < 8
+if length(ARGS) < 7
     println("Missing arguments!")
 else
     println("Tree method: ", ARGS[1])
@@ -48,6 +48,7 @@ if ARGS[1] == "RAXML" || ARGS[1] == "IQTREE"
                 merge!(taxon_map, Dict(allele=>sp[1]))
             end
         end
+        println(taxon_map)
         q, t = countquartetsintrees(genetrees, taxon_map)
         df_sp = writeTableCF(q, t)
         println(df_sp)
