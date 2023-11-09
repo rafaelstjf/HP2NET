@@ -41,7 +41,7 @@ The workflow uses a file to get all the needed parameters. For default it loads 
 
 ```ini
 [GENERAL]
-ExecutionProvider = SlurmProvider
+ExecutionProvider = SLURM
 ScriptDir 		= ./scripts
 Environ			= config/parsl.env
 Workload		= config/work.config
@@ -50,7 +50,7 @@ TreeMethod      = RAXML
 BootStrap       = 1000
 ```
 
-1. The workflow can be executed in a HPC environment using the Slurm resource manager using the parameter ``ExecutionProvider`` equals to ``SlurmProvider`` or locally with ``LocalProvider``. 
+1. The workflow can be executed in a HPC environment using the Slurm resource manager using the parameter ``ExecutionProvider`` equals to ``SLURM`` or locally with ``LOCAL``. 
 2. The path of the scripts folder is assigned  in ``ScriptDir``. It's recommended to use the absolute path to avoid errors.
 3. The ``Environ`` parameter contains the path of the file used to set environment variables. More details can be seen below.
 4. In ``Workload`` is the path of the experiments that will be performed.
