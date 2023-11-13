@@ -234,7 +234,7 @@ The framework is also available to be used in Docker. It can be built from sourc
 
 Adapt the default settings file ``config/default.ini`` according to your machine, setting the number of threads and bootstrap. After that, run ``docker build -t hp2net .`` in the project's root folder.
 
-### Downloading it from Dockerhub
+#### Downloading it from Dockerhub
 
 The docker image can also be downloaded from [Docker hub](https://hub.docker.com/repository/docker/rafaelstjf/hp2net/general). To do that, just run the command ``docker pull rafaelstjf/hp2net:main``
 
