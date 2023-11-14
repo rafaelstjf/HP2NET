@@ -622,10 +622,10 @@ def mbsum(basedir: dict,
     mbsum_folder = os.path.join(work_dir, config.mbsum_dir)
     mrbayes_folder = os.path.join(work_dir, config.mrbayes_dir)
     # get the mrbayes parameters
-    par_0 = re.sub("mcmcp ", "", config.mrbayes_parameters)
+    par_0 = str(config.mrbayes_parameters).split("mcmcp",1)[1]
     par = par_0.split(' ')
     par_dir = {}
-    for p in par:
+    for p.strip() in par:
         p_split = p.split('=')
         par_dir[p_split[0]] = float(p_split[1])
     trim = (((par_dir['ngen']/par_dir['samplefreq']) *
