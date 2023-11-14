@@ -625,9 +625,10 @@ def mbsum(basedir: dict,
     par_0 = str(config.mrbayes_parameters).split("mcmcp",1)[1]
     par = par_0.split(' ')
     par_dir = {}
-    for p.strip() in par:
+    for p in par:
         p_split = p.split('=')
-        par_dir[p_split[0]] = float(p_split[1])
+        if len(p_split) > 1:
+            par_dir[p_split[0]] = float(p_split[1])
     trim = (((par_dir['ngen']/par_dir['samplefreq']) *
             par_dir['nruns']*par_dir['burninfrac'])/par_dir['nruns']) + 1
     # select all the mrbayes .t files of the gene alignment file

@@ -134,7 +134,7 @@ BootStrap       = 1000
   ```ini
   [MRBAYES]
   MBExecutable	= mb
-  MBParameters	= mcmcp ngen=100000 burninfrac=.25 samplefreq=50 printfreq=10000 diagnfreq=10000 nruns=2 nchains=2 temp=0.40 swapfreq=10
+  MBParameters	= set usebeagle=no beagledevice=cpu beagleprecision=double; mcmcp ngen=100000 burninfrac=.25 samplefreq=50 printfreq=10000 diagnfreq=10000 nruns=2 nchains=2 temp=0.40 swapfreq=10
   ```
 
 * Bucky settings

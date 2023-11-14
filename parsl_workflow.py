@@ -182,7 +182,7 @@ def mrbayes_snaq(bio_config, basedir):
         ret_mb = apps.mrbayes(basedir, bio_config,
                               input_file=input_file, inputs=[])
         ret_mbsum.append(apps.mbsum(basedir, bio_config,
-                         input_file=input_file, inputs=ret_mb))
+                         input_file=input_file, inputs=[ret_mb]))
     ret_pre_bucky = apps.setup_bucky_data(
         basedir, bio_config, inputs=ret_mbsum)
     wait_for_all([ret_pre_bucky])
