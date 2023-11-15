@@ -63,6 +63,9 @@ RUN wget https://github.com/iqtree/iqtree2/releases/download/v2.1.3/iqtree-2.1.3
 RUN wget https://github.com/NakhlehLab/PhyloNet/releases/latest/download/PhyloNet.jar && \
     cp PhyloNet.jar /usr/local/bin
 
+# Install Quartet Maxcut
+RUN mv /app/tools/find-cut-Linux-64 /usr/local/bin && \
+    chmod a+x /usr/local/bin/find-cut-Linux-64
 # Clean up
 RUN rm -rf ASTRAL iqtree bucky /var/lib/apt/lists/*
 

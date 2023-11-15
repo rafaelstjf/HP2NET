@@ -1,4 +1,4 @@
-# Workflow for construction of phylogenetic networks on High Performance Computing (HPC) environment
+# Framework for construction of phylogenetic networks on High Performance Computing (HPC) environment
 
 ## Introduction
 
@@ -27,13 +27,15 @@ In view of the complexity in modeling network experiments, the present work intr
 
 ## How to use
 
-### Setting up the workflow
+### Setting up the framework
 
-The workflow uses a file to get all the needed parameters. For default it loads the file *default.ini* in the config folder, but you can explicitly load other files using the argument ``-s name_of_the_file``, *e.g.* ``-s config/test.ini``.
+The framework uses a file to get all the needed parameters. For default it loads the file *default.ini* in the config folder, but you can explicitly load other files using the argument ``-s name_of_the_file``, *e.g.* ``-s config/test.ini``.
 
 * Edit *parl.env* with the environment variables you may need, such as modules loadeds in SLURM
-* Edit *work.config* with the directories of your phylogeny studies (the workflow receives as input a set of homologous gene alignments of species in the nexus format).
+* Edit *work.config* with the directories of your phylogeny studies (the framework receives as input a set of homologous gene alignments of species in the nexus format).
 * Edit *default.ini* with the path for each of the needed softwares and the parameters of the execution provider.
+
+For default, the execution logs are created in the ``runinfo`` folder. To change it you can use the `-r folder_path` parameter.
 
 #### Contents of the configuration file
 
@@ -41,7 +43,7 @@ The workflow uses a file to get all the needed parameters. For default it loads 
 
 ```ini
 [GENERAL]
-ExecutionProvider = SlurmProvider
+ExecutionProvider = SLURM
 ScriptDir 		= ./scripts
 Environ			= config/parsl.env
 Workload		= config/work.config
@@ -50,7 +52,7 @@ TreeMethod      = RAXML
 BootStrap       = 1000
 ```
 
-1. The workflow can be executed in a HPC environment using the Slurm resource manager using the parameter ``ExecutionProvider`` equals to ``SlurmProvider`` or locally with ``LocalProvider``. 
+1. The framework can be executed in a HPC environment using the Slurm resource manager using the parameter ``ExecutionProvider`` equals to ``SLURM`` or locally with ``LOCAL``. 
 2. The path of the scripts folder is assigned  in ``ScriptDir``. It's recommended to use the absolute path to avoid errors.
 3. The ``Environ`` parameter contains the path of the file used to set environment variables. More details can be seen below.
 4. In ``Workload`` is the path of the experiments that will be performed.
@@ -68,8 +70,8 @@ BootStrap       = 1000
   Walltime	= 00:20:00
   ```
 
-  1. ``Monitor`` is a parameter to use parsl's monitor module in HPC environment. It can be *true* or *false*. If you want to use it, it's necessary to set it as *true* and manually change the address in ``workflow.py``
-  2. If you are using it in a HPC environment (using SLURM), the workflow is going to submit in a job. ``PartCore`` is the number of cores of the node; ``PartNode`` is the number of nodes of the partition; and the ``Walltime`` parameter is the maximum amount of time the job will be able to run.
+  1. ``Monitor`` is a parameter to use parsl's monitor module in HPC environment. It can be *true* or *false*. If you want to use it, it's necessary to set it as *true* and manually change the address in ``infra_manager.py``
+  2. If you are using it in a HPC environment (using SLURM), the framework is going to submit in a job. ``PartCore`` is the number of cores of the node; ``PartNode`` is the number of nodes of the partition; and the ``Walltime`` parameter is the maximum amount of time the job will be able to run.
 
   However, if the the desired execution method is the LocalProvider, _i.e._ the execution is being performed in your own machine, only these parameters are necessary:
 
@@ -132,7 +134,7 @@ BootStrap       = 1000
   ```ini
   [MRBAYES]
   MBExecutable	= mb
-  MBParameters	= mcmcp ngen=100000 burninfrac=.25 samplefreq=50 printfreq=10000 diagnfreq=10000 nruns=2 nchains=2 temp=0.40 swapfreq=10
+  MBParameters	= set usebeagle=no beagledevice=cpu beagleprecision=double; mcmcp ngen=100000 burninfrac=.25 samplefreq=50 printfreq=10000 diagnfreq=10000 nruns=2 nchains=2 temp=0.40 swapfreq=10
   ```
 
 * Bucky settings
@@ -192,7 +194,15 @@ Each experiment folder needs to have a *input folder* containing a *.tar.gz* com
 }
 ```
 
-Where ``Mapping`` is a direct mapping of the taxon, when there are multiple alleles per species, in the format ``species1:taxon1,taxon2; species2: taxon3, taxon4``and ``Outgroup`` is the taxon used to root the network. The Mapping parameter is optional (although it has to be in the json file without value), but the outgroup is obligatory. It's important to say that the flow *MRBAYES|MPL* doesn't support multiple alleles per species.
+Where ``Mapping`` is a direct mapping of the taxon, when there are multiple alleles per species, in the format ``species1:taxon1,taxon2;species2:taxon3,taxon4`` *(white spaces are not supported)* and ``Outgroup`` is the taxon used to root the network. The Mapping parameter is optional (although it has to be in the json file without value), but the outgroup is obligatory. It's important to say that the flow *MRBAYES|MPL* doesn't support multiple alleles per species. Example:
+
+```json
+{
+  "Mapping": "dengue_virus_type_2:FJ850082,FJ850088,JX669479,JX669482,JX669488,KP188569;dengue_virus_type_3:FJ850079,FJ850094,JN697379,JX669494;dengue_virus_type_1:FJ850073,FJ850084,FJ850093,JX669465,JX669466,JX669475,KP188545,KP188547;dengue_virus_type_4:JN559740,JQ513337,JQ513341,JQ513343,JQ513344,JQ513345,KP188563,KP188564;Zika_virus:MH882543", 
+  "Outgroup": "MH882543"
+}
+```
+
 
 ## Running the framework
 
@@ -216,10 +226,55 @@ Where ``Mapping`` is a direct mapping of the taxon, when there are multiple alle
 
 The framework is under heavy development. If you notice any bug, please create an issue here on GitHub.
 
-### DOCKER
+### Running in a DOCKER container
 
-The framework is also available to be used in Docker. To do that, run ``docker build -t hp2net .`` in the project's root folder. Then just run it using ``docker run hp2net -w your_workload_file``
+The framework is also available to be used in Docker. It can be built from source or pushed from DockerHub.
 
+#### Building it from the source code
+
+Adapt the default settings file ``config/default.ini`` according to your machine, setting the number of threads and bootstrap. After that, run ``docker build -t hp2net .`` in the project's root folder.
+
+#### Downloading it from Dockerhub
+
+The docker image can also be downloaded from [Docker hub](https://hub.docker.com/repository/docker/rafaelstjf/hp2net/general). To do that, just run the command ``docker pull rafaelstjf/hp2net:main``
+
+#### Running
+
+The first step to run the framework is to setup your dataset. To test if the framework is running without problems in your machine, you can use the [example datasets](example_data).
+
+![Alt text](docs/example_data.png)
+
+Extracting the ``example_data.zip`` file, a new folder called ``with_outgroup`` is created. This folder contain four datasets of DENV sequences.
+
+The next step is the creation of the settings and workload files. For the settings file, download the [default.ini](config/default.ini) from this repository and change it to you liking (the path of all software are already configured to run on docker). The workload file is a text file containing the absolute path of the datasets, followed by the desired pipeline, as shown before in this document. Here for example purposes, the ``input.txt`` file was created.
+
+![Alt text](docs/example_files.png)
+
+With all the files prepared, the framework can be executed from the ``example_data`` folder as following:
+
+``docker run --rm -v $PWD:$PWD rafaelstjf/hp2net:main -s $PWD/default.ini -w $PWD/input.txt``
+
+**Important:** the docker doesn't save your logs, for that add the parameter: ``-r $PWD/name_of_your_log_folder``.
+
+---
+If you are running it on **Santos Dumont Supercomputer**, both downloading and execution of the docker container need to be performed from a submission script and executed using ``sg docker -c "sbatch script.sh"``. The snippet below shows an example of submission script.
+
+```sh
+#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=24
+#SBATCH -p cpu_small
+#SBATCH -J Hp2NET
+#SBATCH --exclusive
+#SBATCH --time=02:00:00
+#SBATCH -e slurm-%j.err
+#SBATCH -o slurm-%j.out
+
+DIR='/scratch/pcmrnbio2/rafael.terra/WF_parsl/example_data'
+docker  pull rafaelstjf/hp2net:main
+
+docker run --rm -v $DIR:$DIR rafaelstjf/hp2net:main -s ${DIR}/sdumont.ini -w ${DIR}/entrada.txt -r ${DIR}/logs
+```
 
 ## If you use it, please cite
 
