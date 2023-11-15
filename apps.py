@@ -61,7 +61,7 @@ def setup_phylip_data(basedir: dict, config: BioConfig,
         Stdout and Stderr are defaulted to parsl.AUTO_LOGNAME, so the log will be automatically 
         named according to task id and saved under task_logs in the run directory.
     """
-    import os, glob, tarfile, logging, tarfile, shutil
+    import os, glob, tarfile, logging, tarfile, shutil, re
     from Bio import AlignIO
     from pathlib import Path
     from appsexception import AlignmentConversion
@@ -86,7 +86,7 @@ def setup_phylip_data(basedir: dict, config: BioConfig,
             input_format = 0 # nexus
         elif ">" in line:
             input_format = 1 # fasta
-        else:
+        elif len(re.findall(r'\d+\s\d+', line)) > 0:
             input_format = 2 # other .i.e. phylip
 
     input_nexus_dir = os.path.join(input_dir, 'nexus')
@@ -117,7 +117,7 @@ def setup_phylip_data(basedir: dict, config: BioConfig,
                 AlignIO.convert(f, "phylip-sequential", os.path.join(input_fasta_dir, f'{out_name}.fasta'), "fasta", molecule_type = "DNA")
                 shutil.copyfile(f, os.path.join(input_phylip_dir, os.path.basename(f)))
     except Exception as e:
-        raise AlignmentConversion(input_phylip_dir)
+        raise AlignmentConversion(basedir=basedir['dir'])
     return
 
 
