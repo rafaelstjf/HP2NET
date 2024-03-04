@@ -23,8 +23,8 @@ __copyright__ = "Copyright 2021, The Biocomp Informal Collaboration (CEFET/RJ an
 __credits__ = ["Diego Carvalho", "Carla Osthoff", "Kary Ocaña", "Rafael Terra"]
 __license__ = "GPL"
 __version__ = "1.0.1"
-__maintainer__ = "Diego Carvalho"
-__email__ = "d.carvalho@ieee.org"
+__maintainer__ = "Rafael Terra"
+__email__ = "rafaelst@posgrad.lncc.br"
 __status__ = "Research"
 
 
@@ -39,7 +39,7 @@ from typing import Any
 
 
 # setup_phylip_data bash app
-@parsl.python_app(executors=['single_thread'])
+@parsl.python_app(executors=['PartitionFast'])
 def setup_phylip_data(basedir: dict, config: BioConfig,
                       stderr=parsl.AUTO_LOGNAME,
                       stdout=parsl.AUTO_LOGNAME):
@@ -61,41 +61,68 @@ def setup_phylip_data(basedir: dict, config: BioConfig,
         Stdout and Stderr are defaulted to parsl.AUTO_LOGNAME, so the log will be automatically 
         named according to task id and saved under task_logs in the run directory.
     """
-    import os, glob, tarfile, logging, tarfile, shutil
+    import os, glob, tarfile, logging, tarfile, shutil, re
     from Bio import AlignIO
     from pathlib import Path
-    from appsexception import FolderDeletionError, PhylipConversion
+    from appsexception import AlignmentConversion
 
     logging.info(f'Converting Nexus files to Phylip on {basedir["dir"]}')
     input_dir = os.path.join(basedir['dir'], 'input')
+    sequence_dir = os.path.join(input_dir, 'sequence')
+    input_format = 0
+    # First the sequences are extracted
+    Path(sequence_dir).mkdir(exist_ok=True)
+    if os.path.exists(sequence_dir):
+        tar_file = basedir['sequences']
+        tar = tarfile.open(tar_file, "r:gz")
+        tar.extractall(path=sequence_dir)
+    # Now one file is opened to check its format
+    sequences = glob.glob(os.path.join(sequence_dir, '*'))
+    if len(sequences) == 0:
+        raise AlignmentConversion(input_phylip_dir)
+    with open(sequences[0], 'r') as s_file:
+        line = s_file.readline()
+        if "#NEXUS" in line:
+            input_format = 0 # nexus
+        elif ">" in line:
+            input_format = 1 # fasta
+        elif len(re.findall(r'\d+\s\d+', line)) > 0:
+            input_format = 2 # other .i.e. phylip
+
     input_nexus_dir = os.path.join(input_dir, 'nexus')
+    input_phylip_dir = os.path.join(input_dir, 'phylip')
+    input_fasta_dir = os.path.join(input_dir, 'fasta')
     # So, some work must be done. Build the Nexus directory
     if not os.path.isdir(input_nexus_dir):
         Path(input_nexus_dir).mkdir(exist_ok=True)
-        tar_file = basedir['sequences']
-        tar = tarfile.open(tar_file, "r:gz")
-        tar.extractall(path=input_nexus_dir)
+    if not os.path.isdir(input_phylip_dir):
+        Path(input_phylip_dir).mkdir(exist_ok=True)
+    if not os.path.isdir(input_fasta_dir):
+        Path(input_fasta_dir).mkdir(exist_ok=True)
     # Now, use the function to convert nexus to phylip.
-    input_phylip_dir = os.path.join(input_dir, "phylip")
-    if os.path.exists(input_phylip_dir):
-        try:
-            shutil.rmtree(input_phylip_dir, ignore_errors=True)
-        except Exception:
-            #it's important to raise this exception because iqtree creates files in this folder
-            raise FolderDeletionError(input_phylip_dir)
-    Path(input_phylip_dir).mkdir(exist_ok=True)
-    files = glob.glob(os.path.join(input_nexus_dir,'*.nex'))
+    files = glob.glob(os.path.join(sequence_dir,'*'))
     try:
         for f in files:
             out_name = os.path.basename(f).split('.')[0]
-            AlignIO.convert(f, "nexus", os.path.join(input_phylip_dir, f'{out_name}.phy'), "phylip-sequential")
-    except Exception:
-        raise PhylipConversion(input_phylip_dir)
+            if input_format == 0:
+                AlignIO.convert(f, "nexus", os.path.join(input_phylip_dir, f'{out_name}.phy'), "phylip-sequential", molecule_type = "DNA")
+                AlignIO.convert(f, "nexus", os.path.join(input_fasta_dir, f'{out_name}.fasta'), "fasta", molecule_type = "DNA")
+                shutil.copyfile(f, os.path.join(input_nexus_dir, os.path.basename(f)))
+            if input_format == 1:
+                AlignIO.convert(f, "fasta", os.path.join(input_phylip_dir, f'{out_name}.phy'), "phylip-sequential", molecule_type = "DNA")
+                AlignIO.convert(f, "fasta", os.path.join(input_nexus_dir, f'{out_name}.nex'), "nexus", molecule_type = "DNA")
+                shutil.copyfile(f, os.path.join(input_fasta_dir, os.path.basename(f)))
+            if input_format == 2:
+                AlignIO.convert(f, "phylip-sequential", os.path.join(input_nexus_dir, f'{out_name}.nex'), "nexus", molecule_type = "DNA")
+                AlignIO.convert(f, "phylip-sequential", os.path.join(input_fasta_dir, f'{out_name}.fasta'), "fasta", molecule_type = "DNA")
+                shutil.copyfile(f, os.path.join(input_phylip_dir, os.path.basename(f)))
+    except Exception as e:
+        raise AlignmentConversion(basedir=basedir['dir'])
     return
 
 
 # raxml bash app
-@parsl.bash_app(executors=['tree_and_statistics'])
+@parsl.bash_app(executors=['PartitionThread'])
 def raxml(basedir: dict, 
           config: BioConfig,
           input_file: str,
@@ -133,13 +160,12 @@ def raxml(basedir: dict,
         p = random.randint(1, 10000)
         x = random.randint(1, 10000)
     params = f"-T {num_threads} -p {p} -x {x} -f a -m {config.raxml_model} -N {config.bootstrap}"
-        
     output_file = os.path.splitext(os.path.basename(input_file))[0]
     # Return to Parsl to be executed on the workflow
     return f"cd {raxml_dir}; {raxml_exec} {params} -s {input_file} -n {output_file}"
 
 
-@parsl.python_app(executors=['single_thread'])
+@parsl.python_app(executors=['PartitionFast'])
 def setup_tree_output(basedir: dict,
                       config: BioConfig,
                       inputs=[],
@@ -234,7 +260,8 @@ def setup_tree_output(basedir: dict,
             files += glob.glob(os.path.join(phylip_dir, '*.ckp.gz'))
             files += glob.glob(os.path.join(phylip_dir, '*.bionj'))
             #files += glob.glob(os.path.join(phylip_dir, '*.reduced'))
-            files += glob.glob(os.path.join(phylip_dir, '*.boottrees'))
+            #files += glob.glob(os.path.join(phylip_dir, '*.boottrees'))
+            files += glob.glob(os.path.join(phylip_dir, '*.ufboot'))
             for f in files:
                 new_f = os.path.join(iqtree_dir, os.path.basename(f))
                 os.replace(f, new_f)
@@ -243,7 +270,7 @@ def setup_tree_output(basedir: dict,
             trees = ""
             for f in files:
                 gen_tree = open(f, 'r')
-                trees += gen_tree.readline() + '\n'
+                trees += gen_tree.readline()
                 gen_tree.close()
             iq_input.write(trees)
             iq_input.close()
@@ -315,14 +342,14 @@ def setup_tree_output(basedir: dict,
                     tar.add(f, arcname=os.path.basename(f))
                 for f in files:
                     os.remove(f)
-            files = glob.glob(os.path.join(iqtree_dir,'*.boottrees'))
+            files = glob.glob(os.path.join(iqtree_dir,'*.ufboot'))
             for f in files:
                 os.rename(f, os.path.join(bootstrap_dir, os.path.basename(f)))
         except:
             raise FileCreationError(iqtree_dir)
     return
 
-@parsl.python_app(executors=['single_thread'])
+@parsl.python_app(executors=['PartitionFast'])
 def root_tree(basedir: dict,
               config: BioConfig,
               inputs=[],
@@ -374,7 +401,7 @@ def root_tree(basedir: dict,
             pass
     return
         
-@parsl.bash_app(executors=['single_thread'])
+@parsl.bash_app(executors=['PartitionThread'])
 def astral(basedir: dict,
            config: BioConfig,
            inputs=[],
@@ -442,12 +469,11 @@ def astral(basedir: dict,
             for specie in species:
                 map_.write(specie.strip() + '\n')
             map_.close()
-            params+=f' -a {map_filename}'
-    if seed is not None:
-        params+=f' -s {seed}'
-    return f'{exec_astral} {params}'
+        return f'{exec_astral} -i {tree_output} -b {bs_file} -r {config.bootstrap} -a {map_filename} -o {astral_output}'
+    else:
+        return f'{exec_astral} -i {tree_output} -b {bs_file} -r {config.bootstrap} -o {astral_output}'
 
-@parsl.bash_app(executors=['phylogenetic_network'])
+@parsl.bash_app(executors=['PartitionLong'])
 def snaq(basedir: dict,
         config: BioConfig,
         hmax: str,
@@ -483,33 +509,48 @@ def snaq(basedir: dict,
     num_threads = config.snaq_threads
     output_folder = os.path.join(work_dir, config.snaq_dir)
     runs = config.snaq_runs
-    params = ""
     if tree_method == "RAXML":
         raxml_tree = os.path.join(os.path.join(work_dir, config.raxml_dir), config.raxml_output)
         astral_tree = os.path.join(work_dir, os.path.join(config.astral_dir, config.raxml_dir))
         astral_tree = os.path.join(astral_tree, config.astral_output)
-        params = f"{tree_method} {raxml_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs}"
+        if len(mapping) > 0:
+            return f'julia {snaq_exec} {tree_method} {raxml_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs} \'{mapping}\''
+        else:
+            return f'julia {snaq_exec} {tree_method} {raxml_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs}'
     elif tree_method == "IQTREE":
         iqtree_tree = os.path.join(os.path.join(work_dir, config.iqtree_dir), config.iqtree_output)
         astral_tree = os.path.join(work_dir, os.path.join(config.astral_dir,config.iqtree_dir))
         astral_tree = os.path.join(astral_tree, config.astral_output)
-        params = f"{tree_method} {iqtree_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs}"
+        if len(mapping) > 0:
+            return f'julia {snaq_exec} {tree_method} {iqtree_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs} \'{mapping}\''
+        else:
+            return f'julia {snaq_exec} {tree_method} {iqtree_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs}'
     elif tree_method == "MRBAYES":
         dir_name = os.path.basename(work_dir)
         qmc_output = os.path.join(os.path.join(work_dir, config.quartet_maxcut_dir), f'{dir_name}.tre')
         bucky_folder = os.path.join(work_dir, config.bucky_dir)
         bucky_table = os.path.join(bucky_folder, f"{dir_name}.csv")
         #mrbayes flow doesn't support mapping
-        params = f"{tree_method} {bucky_table} {qmc_output} {output_folder} {num_threads} {hmax} {runs}"
-    if tree_method != "MRBAYES" and len(mapping) > 0:
-        params+= f" {mapping}"
-    if seed is not None:
-        params += f" {seed}"
-    return f'julia {snaq_exec} {params}'
+        return f'julia {snaq_exec} {tree_method} {bucky_table} {qmc_output} {output_folder} {num_threads} {hmax} {runs}'
+    else:
+        return
+
+@parsl.python_app(executors=['PartitionFast'])
+def prepare_prunetrees(basedir: dict,
+                       config: BioConfig,
+                       input_file: str,
+                       inputs=[],
+                       stderr=parsl.AUTO_LOGNAME,
+                       stdout=parsl.AUTO_LOGNAME):
+    import os, glob
+    bucky_folder = os.path.join(basedir['dir'], "bucky")
+    prune_trees = glob.glob(os.path.join(bucky_folder, "*.txt"))
+    return prune_trees
+
 # Mr.Bayes bash app
 
 
-@parsl.bash_app(executors=['single_thread'])
+@parsl.bash_app(executors=['PartitionThread'])
 def mrbayes(basedir: dict,
             config: BioConfig,
             input_file: str,
@@ -551,7 +592,7 @@ def mrbayes(basedir: dict,
 # mbsum bash app
 
 
-@parsl.bash_app(executors=['single_thread'])
+@parsl.bash_app(executors=['PartitionThread'])
 def mbsum(basedir: dict,
           config: BioConfig,
           input_file: str,
@@ -581,12 +622,13 @@ def mbsum(basedir: dict,
     mbsum_folder = os.path.join(work_dir, config.mbsum_dir)
     mrbayes_folder = os.path.join(work_dir, config.mrbayes_dir)
     # get the mrbayes parameters
-    par_0 = re.sub("mcmcp ", "", config.mrbayes_parameters)
+    par_0 = str(config.mrbayes_parameters).split("mcmcp",1)[1]
     par = par_0.split(' ')
     par_dir = {}
     for p in par:
         p_split = p.split('=')
-        par_dir[p_split[0]] = float(p_split[1])
+        if len(p_split) > 1:
+            par_dir[p_split[0]] = float(p_split[1])
     trim = (((par_dir['ngen']/par_dir['samplefreq']) *
             par_dir['nruns']*par_dir['burninfrac'])/par_dir['nruns']) + 1
     # select all the mrbayes .t files of the gene alignment file
@@ -595,7 +637,7 @@ def mbsum(basedir: dict,
     return f"{config.mbsum} {params}"
 
 
-@parsl.python_app(executors=['single_thread'])
+@parsl.python_app(executors=['PartitionFast'])
 def setup_bucky_data(basedir: dict,
                      config: BioConfig,
                      inputs=[],
@@ -666,7 +708,7 @@ def setup_bucky_data(basedir: dict,
     return
 
 
-@parsl.bash_app(executors=['single_thread'])
+@parsl.bash_app(executors=['PartitionThread'])
 def bucky(basedir: dict,
           config: BioConfig,
           prune_file: str,
@@ -705,7 +747,7 @@ def bucky(basedir: dict,
     return f"{config.bucky} {params}"
 
 
-@parsl.python_app(executors=['single_thread'])
+@parsl.python_app(executors=['PartitionFast'])
 def setup_bucky_output(basedir: dict,
                        config: BioConfig,
                        inputs=[],
@@ -798,7 +840,7 @@ def setup_bucky_output(basedir: dict,
     return
 
 
-@parsl.python_app(executors=['single_thread'])
+@parsl.python_app(executors=['PartitionFast'])
 def setup_qmc_data(basedir: dict,
                    config: BioConfig,
                    inputs=[],
@@ -880,7 +922,7 @@ def setup_qmc_data(basedir: dict,
     return
 
 
-@parsl.bash_app(executors=['single_thread'])
+@parsl.bash_app(executors=['PartitionThread'])
 def quartet_maxcut(basedir: dict,
                    config: BioConfig,
                    inputs=[],
@@ -911,7 +953,7 @@ def quartet_maxcut(basedir: dict,
     return f'{exec_qmc} qrtt={qmc_input} otre={qmc_output}'
 
 
-@parsl.python_app(executors=['single_thread'])
+@parsl.python_app(executors=['PartitionFast'])
 def setup_qmc_output(basedir: dict,
                      config: BioConfig,
                      inputs=[],
@@ -962,7 +1004,7 @@ def setup_qmc_output(basedir: dict,
     return
 
 
-@parsl.python_app(executors=['single_thread'])
+@parsl.python_app(executors=['PartitionFast'])
 def setup_phylonet_data(basedir: dict,
                         config: BioConfig,
                         hmax: str,
@@ -983,7 +1025,7 @@ def setup_phylonet_data(basedir: dict,
         Stdout and Stderr are defaulted to parsl.AUTO_LOGNAME, so the log will be automatically 
         named according to task id and saved under task_logs in the run directory.
     """
-    import os, logging
+    import os, logging, re
     work_dir = basedir['dir']
     tree_method = basedir['tree_method']
     network_method = basedir['network_method']
@@ -1020,6 +1062,7 @@ def setup_phylonet_data(basedir: dict,
     if(len(mapping) == 0):
         buffer+="geneTree" + str(tree_index) +') ' + hmax + " -pl " + config.phylonet_threads + " -x " + config.phylonet_runs + " " + output_network + ';\nEND;'
     else:
+        mapping = re.sub(" ", "_", mapping)
         buffer+="geneTree" + str(tree_index) +') ' + hmax + " -pl " + config.phylonet_threads + " -a <" + mapping +"> -x " + config.phylonet_runs + " " + output_network + ';\nEND;'
 
     #---
@@ -1028,7 +1071,7 @@ def setup_phylonet_data(basedir: dict,
     return
 
 
-@parsl.bash_app(executors=['phylogenetic_network'])
+@parsl.bash_app(executors=['PartitionLong'])
 def phylonet(basedir: dict,
             config: BioConfig,
             input_file: str,
@@ -1060,7 +1103,7 @@ def phylonet(basedir: dict,
     return f'cd {output_dir};{exec_phylonet} {input_file}'
 
 
-@parsl.bash_app(executors=['tree_and_statistics'])
+@parsl.bash_app(executors=['PartitionThread'])
 def iqtree(basedir: dict,
             config: BioConfig,
             input_file: str,
@@ -1087,14 +1130,12 @@ def iqtree(basedir: dict,
     outgroup = basedir['outgroup']
     logging.info(f'IQ-TREE with {work_dir}')
     iqtree_dir = os.path.join(work_dir, config.iqtree_dir)
-    flags = f"-T AUTO -ntmax {config.iqtree_threads} -b {config.bootstrap} -m {config.iqtree_model}  -s {input_file} --keep-ident -redo"
-    if seed is not None:
-        flags+=f" -seed {seed}"
+    flags = f"-T AUTO -ntmax {config.iqtree_threads} -B {config.bootstrap} --boot-trees -m {config.iqtree_model}  -s {input_file} --keep-ident -redo -quiet"
     # Return to Parsl to be executed on the workflow
     return f"cd {iqtree_dir}; {config.iqtree} {flags}"
 
 
-@parsl.python_app(executors=['single_thread'])
+@parsl.python_app(executors=['PartitionFast'])
 def create_folders(basedir: dict,
                    config: BioConfig,
                    folders=[],
@@ -1123,7 +1164,7 @@ def create_folders(basedir: dict,
             FolderCreationError(full_path)
     return
 
-@parsl.bash_app(executors=['single_thread'])
+@parsl.bash_app(executors=['PartitionFast'])
 def plot_networks(config: BioConfig,
                     inputs=[],
                     outputs=[],
