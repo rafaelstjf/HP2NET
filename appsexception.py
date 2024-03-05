@@ -26,8 +26,8 @@ __copyright__ = "Copyright 2021, The Biocomp Informal Collaboration (CEFET/RJ an
 __credits__ = ["Diego Carvalho", "Carla Osthoff", "Kary Ocaña", "Rafael Terra"]
 __license__ = "GPL"
 __version__ = "1.0.1"
-__maintainer__ = "Diego Carvalho"
-__email__ = "d.carvalho@ieee.org"
+__maintainer__ = "Rafael Terra"
+__email__ = "rafaelst@posgrad.lncc.br"
 __status__ = "Research"
 
 
@@ -35,7 +35,7 @@ __status__ = "Research"
 # Parsl Bash and Python Applications Exceptions
 #
 
-class PhylipConversion(Exception):
+class AlignmentConversion(Exception):
     """Exception raised for errors in the setup_phylip_data Parsl's bash application.
 
     Attributes:
@@ -43,7 +43,7 @@ class PhylipConversion(Exception):
         message -- explanation of the error
     """
 
-    def __init__(self, basedir, message="Unable to convert the NEXUS files to PHYLIP."):
+    def __init__(self, basedir, message="Unable to convert the alignments."):
         self.basedir = basedir
         self.message = message
         super().__init__(self.message)

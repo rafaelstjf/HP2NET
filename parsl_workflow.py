@@ -333,5 +333,4 @@ if __name__ == "__main__":
         "-r", "--runinfo", help="Folder to store the Parsl logs", required=False, type=str, default=None)
     args = parser.parse_args()
 
-    main(config_file=args.settings, workload_file=args.workload,
-        max_workers=args.maxworkers, runinfo=args.runinfo)
+    main(config_file=args.settings, workload_file=args.workload, runinfo=args.runinfo)

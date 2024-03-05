@@ -66,7 +66,6 @@ def workflow_config(config: BioConfig, **kwargs) -> parsl.config.Config:
 
     # Read where datasets are...
     env_str = config.environ
-
     logging.info(f'Task Environment {env_str}')
     mon_hub = parsl.monitoring.monitoring.MonitoringHub(
         workflow_name=name,
@@ -76,6 +75,7 @@ def workflow_config(config: BioConfig, **kwargs) -> parsl.config.Config:
         resource_monitoring_interval=interval,
     ) if monitor else None
     return parsl.config.Config(
+        run_dir = run_dir,
         retries = 2,
         executors=[
             HighThroughputExecutor(
@@ -96,7 +96,6 @@ def workflow_config(config: BioConfig, **kwargs) -> parsl.config.Config:
                     cmd_timeout=120,
                     worker_init=env_str,
                     move_files=False,
-                    run_dir=run_dir,
                     walltime=config.workflow_wall_t_f,
                     launcher=SrunLauncher(overrides=f'-c {config.workflow_core_f}'),
                 ),
@@ -119,7 +118,6 @@ def workflow_config(config: BioConfig, **kwargs) -> parsl.config.Config:
                     cmd_timeout=120,
                     worker_init=env_str,
                     move_files=False,
-                    run_dir=run_dir,
                     walltime=config.workflow_wall_t_t,
                     launcher=SrunLauncher(overrides=f'-c {config.workflow_core_t}'),
                 ),
@@ -140,7 +138,6 @@ def workflow_config(config: BioConfig, **kwargs) -> parsl.config.Config:
                     cores_per_node=config.workflow_core_l,
                     nodes_per_block=1,
                     cmd_timeout=120,
-                    run_dir=run_dir,
                     worker_init=env_str,
                     move_files=False,
                     walltime=config.workflow_wall_t_l,
