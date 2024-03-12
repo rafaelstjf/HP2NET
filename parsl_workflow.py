@@ -17,11 +17,12 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 def raxml_snaq(bio_config, basedir):
+    max_workers = bio_config.workflow_core*bio_config.workflow_node
     result = list()
     ret_tree = list()
     datalist = list()
     pool = CircularList(math.floor(
-        bio_config.workflow_core/int(bio_config.raxml_threads)))
+        max_workers/int(bio_config.raxml_threads)))
     # append the input files
     dir_ = os.path.join(os.path.join(basedir['dir'], "input"), "phylip")
     datalist = glob.glob(os.path.join(dir_, '*.phy'))
@@ -43,7 +44,7 @@ def raxml_snaq(bio_config, basedir):
     logging.info("Using the Maximum Pseudo Likelihood Method")
     ret_ast = apps.astral(basedir, bio_config, inputs=[ret_sad])
     pool_phylo = CircularList(math.floor(
-        bio_config.workflow_core/int(bio_config.snaq_threads)))
+        max_workers/int(bio_config.snaq_threads)))
     for h in bio_config.snaq_hmax:
         ret_snq = apps.snaq(basedir, bio_config, h, inputs=[
                             ret_ast], next_pipe=pool_phylo.next())
@@ -56,8 +57,9 @@ def raxml_phylonet(bio_config, basedir):
     result = list()
     ret_tree = list()
     datalist = list()
+    max_workers = bio_config.workflow_core*bio_config.workflow_node
     pool = CircularList(math.floor(
-        bio_config.workflow_core/int(bio_config.raxml_threads)))
+        max_workers/int(bio_config.raxml_threads)))
     # append the input files
     dir_ = os.path.join(os.path.join(basedir['dir'], "input"), "phylip")
     datalist = glob.glob(os.path.join(dir_, '*.phy'))
@@ -80,7 +82,7 @@ def raxml_phylonet(bio_config, basedir):
     logging.info("Using the Maximum Parsimony Method")
     out_dir = os.path.join(basedir['dir'], bio_config.phylonet_dir)
     pool_phylo = CircularList(math.floor(
-        bio_config.workflow_core/int(bio_config.phylonet_threads)))
+        max_workers/int(bio_config.phylonet_threads)))
     for h in bio_config.phylonet_hmax:
         ret_spd = apps.setup_phylonet_data(
             basedir, bio_config, h, inputs=[ret_rooted])
@@ -94,11 +96,12 @@ def raxml_phylonet(bio_config, basedir):
 
 
 def iqtree_snaq(bio_config, basedir):
+    max_workers = bio_config.workflow_core*bio_config.workflow_node
     result = list()
     ret_tree = list()
     datalist = list()
     pool = CircularList(math.floor(
-        bio_config.workflow_core/int(bio_config.iqtree_threads)))
+        max_workers/int(bio_config.iqtree_threads)))
     # append the input files
     dir_ = os.path.join(os.path.join(basedir['dir'], "input"), "phylip")
     datalist = glob.glob(os.path.join(dir_, '*.phy'))
@@ -120,7 +123,7 @@ def iqtree_snaq(bio_config, basedir):
     logging.info("Using the Maximum Pseudo Likelihood Method")
     ret_ast = apps.astral(basedir, bio_config, inputs=[ret_sad])
     pool_phylo = CircularList(math.floor(
-        bio_config.workflow_core/int(bio_config.snaq_threads)))
+        max_workers/int(bio_config.snaq_threads)))
     for h in bio_config.snaq_hmax:
         ret_snq = apps.snaq(basedir, bio_config, h, inputs=[
                             ret_ast], next_pipe=pool_phylo.next())
@@ -133,8 +136,8 @@ def iqtree_phylonet(bio_config, basedir):
     result = list()
     ret_tree = list()
     datalist = list()
-    pool = CircularList(math.floor(
-        bio_config.workflow_core/int(bio_config.iqtree_threads)))
+    max_workers = bio_config.workflow_core*bio_config.workflow_node
+    pool = CircularList(math.floor(max_workers/int(bio_config.iqtree_threads)))
     # append the input files
     dir_ = os.path.join(os.path.join(basedir['dir'], "input"), "phylip")
     datalist = glob.glob(os.path.join(dir_, '*.phy'))
@@ -142,7 +145,7 @@ def iqtree_phylonet(bio_config, basedir):
         #create trees
         for input_file in datalist:
             ret = apps.iqtree(basedir, bio_config,
-                              input_file=input_file, next_pipe=pool.next())
+                            input_file=input_file, next_pipe=pool.next())
             pool.current(ret)
             ret_tree.append(ret)
         ret_sad = apps.setup_tree_output(basedir, bio_config, inputs=ret_tree)
@@ -152,12 +155,17 @@ def iqtree_phylonet(bio_config, basedir):
         logging.info('Using cached iqtree')
         ret_sad = cache[(basedir['dir'], 'iqtree')]
     else:
+        for input_file in datalist:
+            ret = apps.iqtree(basedir, bio_config,
+                            input_file=input_file, next_pipe=pool.next())
+            pool.current(ret)
+            ret_tree.append(ret)
         ret_sad = apps.setup_tree_output(basedir, bio_config, inputs=ret_tree)
     ret_rooted = apps.root_tree(basedir, bio_config, inputs=[ret_sad])
     logging.info("Using the Maximum Parsimony Method")
     out_dir = os.path.join(basedir['dir'], bio_config.phylonet_dir)
     pool_phylo = CircularList(math.floor(
-        bio_config.workflow_core/int(bio_config.phylonet_threads)))
+        max_workers/int(bio_config.phylonet_threads)))
     for h in bio_config.phylonet_hmax:
         ret_spd = apps.setup_phylonet_data(
             basedir, bio_config, h, inputs=[ret_rooted])
@@ -171,6 +179,7 @@ def iqtree_phylonet(bio_config, basedir):
 
 
 def mrbayes_snaq(bio_config, basedir):
+    max_workers = bio_config.workflow_core*bio_config.workflow_node
     result = list()
     ret_tree = list()
     datalist = list()
@@ -201,7 +210,7 @@ def mrbayes_snaq(bio_config, basedir):
         basedir, bio_config, inputs=[ret_qmc]))
     logging.info("Using the Maximum Pseudo Likelihood Method")
     pool_phylo = CircularList(math.floor(
-        bio_config.workflow_core/int(bio_config.snaq_threads)))
+        max_workers/int(bio_config.snaq_threads)))
     for h in bio_config.snaq_hmax:
         ret_snq = apps.snaq(basedir, bio_config, h,
                             inputs=ret_tree, next_pipe=pool_phylo.next())
@@ -210,6 +219,7 @@ def mrbayes_snaq(bio_config, basedir):
     return result
 """
 def mrbayes_snaq(bio_config, basedir):
+    max_workers = bio_config.workflow_core*bio_config.workflow_node
     result = list()
     ret_tree = list()
     datalist = list()
@@ -235,7 +245,7 @@ def mrbayes_snaq(bio_config, basedir):
     ret_qmc = apps.quartet_maxcut(basedir, bio_config, inputs = [ret_pre_qmc])
     ret_tree.append(apps.setup_qmc_output(basedir, bio_config, inputs = [ret_qmc]))
     logging.info("Using the Maximum Pseudo Likelihood Method")
-    pool_phylo = CircularList(math.floor(bio_config.workflow_core/int(bio_config.snaq_threads)))
+    pool_phylo = CircularList(math.floor(max_workers/int(bio_config.snaq_threads)))
     for h in bio_config.snaq_hmax:
         ret_snq = apps.snaq(basedir, bio_config, h, inputs=ret_tree, next_pipe=pool_phylo.next())
         pool_phylo.current(ret_snq)

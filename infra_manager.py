@@ -88,16 +88,16 @@ def workflow_config(config: BioConfig, **kwargs) -> parsl.config.Config:
                     label=f'single_partition',
                     # Optional: The network interface on node 0 which compute nodes can communicate with.
                     address=address_by_hostname(),
+                    max_workers=curr_workers,
                     cores_per_worker=1,
-                    max_workers=curr_workers*config.workflow_node,
                     worker_debug=False,
                     provider=LocalProvider(
                         nodes_per_block=1,
-                        workers_per_node = curr_workers,
                         channel=LocalChannel(script_dir=config.script_dir),
                         parallelism=1,
-                        init_blocks=1,
+                        init_blocks=config.workflow_node,
                         max_blocks=config.workflow_node,
+                        min_blocks = config.workflow_node,
                         worker_init=env_str,
                         launcher=SrunLauncher(
                             overrides=f'-c {config.workflow_core}')
