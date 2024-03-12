@@ -106,7 +106,7 @@ def setup_phylip_data(basedir: dict, config: BioConfig,
             out_name = os.path.basename(f).split('.')[0]
             if input_format == 0:
                 AlignIO.convert(f, "nexus", os.path.join(input_phylip_dir, f'{out_name}.phy'), "phylip-sequential", molecule_type = "DNA")
-                AlignIO.convert(f, "nexus", os.path.join(input_phylip_dir, f'{out_name}.fasta'), "fasta", molecule_type = "DNA")
+                AlignIO.convert(f, "nexus", os.path.join(input_fasta_dir, f'{out_name}.fasta'), "fasta", molecule_type = "DNA")
                 shutil.copyfile(f, os.path.join(input_nexus_dir, os.path.basename(f)))
             if input_format == 1:
                 AlignIO.convert(f, "fasta", os.path.join(input_phylip_dir, f'{out_name}.phy'), "phylip-sequential", molecule_type = "DNA")
