@@ -37,8 +37,6 @@ from parsl.executors import HighThroughputExecutor, WorkQueueExecutor
 from parsl.providers import LocalProvider, SlurmProvider
 from datetime import datetime
 from bioconfig import BioConfig
-from typing import Any
-import sys
 # PARSL CONFIGURATION
 
 
@@ -49,14 +47,16 @@ def workflow_config(config: BioConfig, **kwargs) -> parsl.config.Config:
 
     config: BioConfig    - Workflow configuration
     """
+    logger = logging.getLogger()
     interval = 30
     monitor = config.workflow_monitor
     now = datetime.now()
     name = config.workflow_name
     date_time = now.strftime("%d-%m-%Y_%H-%M-%S")
-    parsl.set_stream_logger(level=logging.INFO, stream=sys.stdout)
+    #parsl.set_stream_logger(level=logging.INFO, stream=sys.stdout)
     parsl.set_file_logger(
-        f'{name}_script_{date_time}.output', level=logging.ERROR)
+        f'{name}_script_{date_time}.output', level=logging.INFO)
+
     if kwargs.get("max_workers") is not None:
         curr_workers = kwargs["max_workers"]
     else:
@@ -118,6 +118,7 @@ def workflow_config(config: BioConfig, **kwargs) -> parsl.config.Config:
         return parsl.config.Config(
             run_dir=run_dir,
             retries=2,
+            app_cache=False,
             executors=[
                 HighThroughputExecutor(
                     label=f'single_partition',
@@ -175,23 +176,3 @@ def wait_for_all(list_of_futures: list, sleep_interval=10) -> None:
         r.result()
 
     return
-
-
-class CircularList:
-    def __init__(self, slots: int) -> None:
-        if not slots:
-            raise ValueError
-        self.list = [None for _ in range(slots)]
-        self.index = 0
-        self.max_index = len(self.list) - 1
-
-    def next(self) -> Any:
-        if self.index == self.max_index:
-            self.index = 0
-        else:
-            self.index += 1
-        return self.list[self.index]
-
-    def current(self, value: Any) -> None:
-        self.list[self.index] = value
-        return
