@@ -97,7 +97,7 @@ BootStrap       = 1000
   ```ini
   [IQTREE]
   IqTreeExecutable = iqtree2
-  IqTreeEvolutionaryModel = TIM2+I+G 
+  IqTreeEvolutionaryModel = TIM2+I+G # if setted as AUTO, iqtree will try to find the best fitting model and create the trees
   IqTreeThreads = 6
   ```
 
