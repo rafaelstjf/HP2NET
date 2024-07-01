@@ -1,40 +1,40 @@
 import parsl, apps, bioconfig, logging, argparse
 from infra_manager import workflow_config, wait_for_all
 from utils import CircularList
-from raxml_phylonet import raxml_phylonet
-from raxml_snaq import raxml_snaq
-from iqtree_phylonet import iqtree_phylonet
 from iqtree_snaq import iqtree_snaq
-from mrbayes_snaq import mrbayes_snaq
-
 
 @parsl.python_app
 def raxml_snaq_app(bio_config, basedir, prep, inputs = [], stderr=parsl.AUTO_LOGNAME,
                       stdout=parsl.AUTO_LOGNAME):
+    from raxml_snaq import raxml_snaq
     r = raxml_snaq(bio_config, basedir, prep)
     return 
 
 @parsl.python_app
 def raxml_phylonet_app(bio_config, basedir, prep, inputs = [], stderr=parsl.AUTO_LOGNAME,
                       stdout=parsl.AUTO_LOGNAME):
+    from raxml_phylonet import raxml_phylonet
     r = raxml_phylonet(bio_config, basedir, prep)
     return r
 
 @parsl.python_app
 def iqtree_snaq_app(bio_config, basedir, prep, inputs = [], stderr=parsl.AUTO_LOGNAME,
                       stdout=parsl.AUTO_LOGNAME):
+    
     r = iqtree_snaq(bio_config, basedir, prep)
     return r
 
 @parsl.python_app
 def iqtree_phylonet_app(bio_config, basedir, prep, inputs = [], stderr=parsl.AUTO_LOGNAME,
                       stdout=parsl.AUTO_LOGNAME):
+    from iqtree_phylonet import iqtree_phylonet
     r = iqtree_phylonet(bio_config, basedir, prep)
     return r
 
 @parsl.python_app
 def mrbayes_snaq_app(bio_config, basedir, prep, inputs = [], stderr=parsl.AUTO_LOGNAME,
                       stdout=parsl.AUTO_LOGNAME):
+    from mrbayes_snaq import mrbayes_snaq
     r = mrbayes_snaq(bio_config, basedir, prep)
     return r
 
