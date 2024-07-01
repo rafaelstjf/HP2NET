@@ -11,27 +11,32 @@ from mrbayes_snaq import mrbayes_snaq
 @parsl.python_app
 def raxml_snaq_app(bio_config, basedir, prep, inputs = [], stderr=parsl.AUTO_LOGNAME,
                       stdout=parsl.AUTO_LOGNAME):
-    return raxml_snaq(bio_config, basedir, prep)
+    r = raxml_snaq(bio_config, basedir, prep)
+    return 
 
 @parsl.python_app
 def raxml_phylonet_app(bio_config, basedir, prep, inputs = [], stderr=parsl.AUTO_LOGNAME,
                       stdout=parsl.AUTO_LOGNAME):
-    return raxml_phylonet(bio_config, basedir, prep)
+    r = raxml_phylonet(bio_config, basedir, prep)
+    return r
 
 @parsl.python_app
 def iqtree_snaq_app(bio_config, basedir, prep, inputs = [], stderr=parsl.AUTO_LOGNAME,
                       stdout=parsl.AUTO_LOGNAME):
-    return iqtree_snaq(bio_config, basedir, prep)
+    r = iqtree_snaq(bio_config, basedir, prep)
+    return r
 
 @parsl.python_app
 def iqtree_phylonet_app(bio_config, basedir, prep, inputs = [], stderr=parsl.AUTO_LOGNAME,
                       stdout=parsl.AUTO_LOGNAME):
-    return iqtree_phylonet(bio_config, basedir, prep)
+    r = iqtree_phylonet(bio_config, basedir, prep)
+    return r
 
 @parsl.python_app
 def mrbayes_snaq_app(bio_config, basedir, prep, inputs = [], stderr=parsl.AUTO_LOGNAME,
                       stdout=parsl.AUTO_LOGNAME):
-    return mrbayes_snaq(bio_config, basedir, prep)
+    r = mrbayes_snaq(bio_config, basedir, prep)
+    return r
 
 
 
@@ -106,7 +111,7 @@ def main(**kwargs):
             logging.error(
                 f'Invalid network method: {bio_config.network_method}')
         if r is not None:
-            results.extend(r)
+            results.append(r)
             # wait_for_all(r)
     if bio_config.plot_networks == True:
         plot = apps.plot_networks(bio_config, inputs=results)
