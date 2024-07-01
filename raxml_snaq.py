@@ -1,6 +1,6 @@
 import math, os, parsl, glob, logging
 import apps
-from infra_manager import workflow_config
+from infra_manager import workflow_config, wait_for_all
 import bioconfig
 from utils import *
 def raxml_snaq(bio_config, basedir, prepare_to_run):
@@ -32,4 +32,5 @@ def raxml_snaq(bio_config, basedir, prepare_to_run):
                             ret_ast], next_pipe=pool_phylo.next())
         pool_phylo.current(ret_snq)
         result.append(ret_snq)
-    return result
+    wait_for_all(result)
+    return True

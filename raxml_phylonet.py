@@ -1,6 +1,6 @@
 import math, os, parsl, glob, logging
 import apps
-from infra_manager import workflow_config
+from infra_manager import workflow_config, wait_for_all
 import bioconfig
 from utils import *
 def raxml_phylonet(bio_config, basedir, prepare_to_run):
@@ -37,4 +37,5 @@ def raxml_phylonet(bio_config, basedir, prepare_to_run):
                                      ret_spd], next_pipe=pool_phylo.next())
         pool_phylo.current(ret_phylonet)
         result.append(ret_phylonet)
-    return result
+    wait_for_all(result)
+    return True
