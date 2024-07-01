@@ -351,6 +351,7 @@ def setup_tree_output(basedir: dict,
             raise FileCreationError(iqtree_dir)
     return
 
+@app_reuse(cache=Cache(), args_to_ignore=["basedir", "config", "stderr", "stdout"])
 @parsl.python_app(executors=['single_partition'])
 def root_tree(basedir: dict,
               config: BioConfig,
@@ -1104,7 +1105,7 @@ def phylonet(basedir: dict,
     # Return to Parsl to be executed on the workflow
     return f'cd {output_dir};{exec_phylonet} {input_file}'
 
-
+@app_reuse(cache=Cache(), args_to_ignore=["basedir", "config", "stderr", "stdout"])
 @parsl.bash_app(executors=['single_partition'])
 def iqtree(basedir: dict,
             config: BioConfig,

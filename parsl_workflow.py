@@ -90,24 +90,13 @@ def iqtree_snaq(bio_config, basedir, prepare_to_run):
     # append the input files
     dir_ = os.path.join(os.path.join(basedir['dir'], "input"), "phylip")
     datalist = glob.glob(os.path.join(dir_, '*.phy'))
-    if reuse and (basedir['dir'], 'iqtree') in cache:
-        # Use cached raxml
-        logging.info('Using cached iqtree')
-        ret_sad = cache[(basedir['dir'], 'iqtree')]
-    else:
-        for input_file in datalist:
-            ret = apps.iqtree(basedir, bio_config,
-                              inputs=prepare_to_run,
-                              input_file=input_file, next_pipe=pool.next())
-            pool.current(ret)
-            ret_tree.append(ret)
-        
-        if reuse:
-            ret_sad = apps.setup_tree_output(basedir, bio_config, inputs=ret_tree)
-            cache[(basedir['dir'], 'iqtree')] = ret_sad
-            logging.info('Creating cache on iqtree')
-        else:
-            ret_sad = apps.setup_tree_output(basedir, bio_config, inputs=ret_tree)
+    for input_file in datalist:
+        ret = apps.iqtree(basedir, bio_config,
+                            inputs=prepare_to_run,
+                            input_file=input_file, next_pipe=pool.next())
+        pool.current(ret)
+        ret_tree.append(ret)
+    ret_sad = apps.setup_tree_output(basedir, bio_config, inputs=ret_tree)
     logging.info("Using the Maximum Pseudo Likelihood Method")
     ret_ast = apps.astral(basedir, bio_config, inputs=[ret_sad])
     pool_phylo = CircularList(math.floor(
@@ -128,23 +117,12 @@ def iqtree_phylonet(bio_config, basedir, prepare_to_run):
     # append the input files
     dir_ = os.path.join(os.path.join(basedir['dir'], "input"), "phylip")
     datalist = glob.glob(os.path.join(dir_, '*.phy'))
-    if reuse and (basedir['dir'], 'iqtree') in cache:
-        # Use cached raxml
-        logging.info('Using cached iqtree')
-        ret_sad = cache[(basedir['dir'], 'iqtree')]
-    else:
-        for input_file in datalist:
-            ret = apps.iqtree(basedir, bio_config, inputs=prepare_to_run,
-                              input_file=input_file, next_pipe=pool.next())
-            pool.current(ret)
-            ret_tree.append(ret)
-        
-        if reuse:
-            ret_sad = apps.setup_tree_output(basedir, bio_config, inputs=ret_tree)
-            cache[(basedir['dir'], 'iqtree')] = ret_sad
-            logging.info('Creating cache on iqtree')
-        else:
-            ret_sad = apps.setup_tree_output(basedir, bio_config, inputs=ret_tree)
+    for input_file in datalist:
+        ret = apps.iqtree(basedir, bio_config, inputs=prepare_to_run,
+                            input_file=input_file, next_pipe=pool.next())
+        pool.current(ret)
+        ret_tree.append(ret)
+    ret_sad = apps.setup_tree_output(basedir, bio_config, inputs=ret_tree)
     ret_rooted = apps.root_tree(basedir, bio_config, inputs=[ret_sad])
     logging.info("Using the Maximum Parsimony Method")
     out_dir = os.path.join(basedir['dir'], bio_config.phylonet_dir)
