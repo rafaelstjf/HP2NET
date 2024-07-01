@@ -7,6 +7,34 @@ from iqtree_phylonet import iqtree_phylonet
 from iqtree_snaq import iqtree_snaq
 from mrbayes_snaq import mrbayes_snaq
 
+
+@parsl.python_app
+def raxml_snaq_app(bio_config, basedir, prep, inputs = [], stderr=parsl.AUTO_LOGNAME,
+                      stdout=parsl.AUTO_LOGNAME):
+    return raxml_snaq(bio_config, basedir, prep)
+
+@parsl.python_app
+def raxml_phylonet_app(bio_config, basedir, prep, inputs = [], stderr=parsl.AUTO_LOGNAME,
+                      stdout=parsl.AUTO_LOGNAME):
+    return raxml_phylonet(bio_config, basedir, prep)
+
+@parsl.python_app
+def iqtree_snaq_app(bio_config, basedir, prep, inputs = [], stderr=parsl.AUTO_LOGNAME,
+                      stdout=parsl.AUTO_LOGNAME):
+    return iqtree_snaq(bio_config, basedir, prep)
+
+@parsl.python_app
+def iqtree_phylonet_app(bio_config, basedir, prep, inputs = [], stderr=parsl.AUTO_LOGNAME,
+                      stdout=parsl.AUTO_LOGNAME):
+    return iqtree_phylonet(bio_config, basedir, prep)
+
+@parsl.python_app
+def mrbayes_snaq_app(bio_config, basedir, prep, inputs = [], stderr=parsl.AUTO_LOGNAME,
+                      stdout=parsl.AUTO_LOGNAME):
+    return mrbayes_snaq(bio_config, basedir, prep)
+
+
+
 def prepare_to_run(config):
     folder_list = list()
     r = list()
@@ -58,19 +86,19 @@ def main(**kwargs):
         tree_method = basedir['tree_method']
         if (network_method == 'MPL'):
             if (tree_method == 'RAXML'):
-                r = raxml_snaq(bio_config, basedir, prep)
+                r = raxml_snaq_app(bio_config, basedir, prep)
             elif (tree_method == 'IQTREE'):
-                r = iqtree_snaq(bio_config, basedir, prep)
+                r = iqtree_snaq_app(bio_config, basedir, prep)
             elif (tree_method == 'MRBAYES'):
-                r = mrbayes_snaq(bio_config, basedir, prep)
+                r = mrbayes_snaq_app(bio_config, basedir, prep)
             else:
                 logging.error(
                     f'Invalid parameter combination: {bio_config.network_method} and {bio_config.tree_method}')
         elif (network_method == 'MP'):
             if (tree_method == 'RAXML'):
-                r = raxml_phylonet(bio_config, basedir, prep)
+                r = raxml_phylonet_app(bio_config, basedir, prep)
             elif (tree_method == 'IQTREE'):
-                r = iqtree_phylonet(bio_config, basedir, prep)
+                r = iqtree_phylonet_app(bio_config, basedir, prep)
             else:
                 logging.error(
                     f'Invalid parameter combination: {bio_config.network_method} and {bio_config.tree_method}')
