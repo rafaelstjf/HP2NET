@@ -69,10 +69,14 @@ def workflow_config(config: BioConfig, **kwargs) -> parsl.config.Config:
 
     # Read where datasets are...
     env_str = config.environ
+    provider = config.execution_provider
 
+    # hierarchic scheduling
+    if kwargs.get("level") is not None and kwargs["level"] == 2:
+        provider = "Local"
     logging.info(f'Task Environment {env_str}')
 
-    if config.execution_provider == "SLURM":
+    if provider == "SLURM":
         mon_hub = parsl.monitoring.monitoring.MonitoringHub(
             workflow_name=name,
             hub_address=address_by_hostname(),
