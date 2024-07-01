@@ -44,4 +44,5 @@ def mrbayes_snaq(bio_config, basedir, prepare_to_run):
         pool_phylo.current(ret_snq)
         result.append(ret_snq)
     wait_for_all(result)
-    return True
+    f = 1
+    return f

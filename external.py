@@ -1,43 +1,46 @@
-import parsl, apps, bioconfig, logging, argparse
+import parsl
+import apps
+import bioconfig
+import logging
+import argparse
 from infra_manager import workflow_config, wait_for_all
 from utils import CircularList
 from iqtree_snaq import iqtree_snaq
 
-@parsl.python_app
-def raxml_snaq_app(bio_config, basedir, prep, inputs = [], stderr=parsl.AUTO_LOGNAME,
-                      stdout=parsl.AUTO_LOGNAME):
+
+@parsl.python_app(executors=['single_partition'])
+def raxml_snaq_app(bio_config: bioconfig.BioConfig, basedir: dict, prep, inputs=[], stderr=parsl.AUTO_LOGNAME, stdout=parsl.AUTO_LOGNAME):
     from raxml_snaq import raxml_snaq
     r = raxml_snaq(bio_config, basedir, prep)
-    return 
+    return
 
-@parsl.python_app
-def raxml_phylonet_app(bio_config, basedir, prep, inputs = [], stderr=parsl.AUTO_LOGNAME,
-                      stdout=parsl.AUTO_LOGNAME):
+
+@parsl.python_app(executors=['single_partition'])
+def raxml_phylonet_app(bio_config: bioconfig.BioConfig, basedir: dict, prep, inputs=[], stderr=parsl.AUTO_LOGNAME, stdout=parsl.AUTO_LOGNAME):
     from raxml_phylonet import raxml_phylonet
     r = raxml_phylonet(bio_config, basedir, prep)
     return r
 
-@parsl.python_app
-def iqtree_snaq_app(bio_config, basedir, prep, inputs = [], stderr=parsl.AUTO_LOGNAME,
-                      stdout=parsl.AUTO_LOGNAME):
-    
+
+@parsl.python_app(executors=['single_partition'])
+def iqtree_snaq_app(bio_config: bioconfig.BioConfig, basedir: dict, prep, inputs=[], stderr=parsl.AUTO_LOGNAME, stdout=parsl.AUTO_LOGNAME):
+
     r = iqtree_snaq(bio_config, basedir, prep)
     return r
 
-@parsl.python_app
-def iqtree_phylonet_app(bio_config, basedir, prep, inputs = [], stderr=parsl.AUTO_LOGNAME,
-                      stdout=parsl.AUTO_LOGNAME):
+
+@parsl.python_app(executors=['single_partition'])
+def iqtree_phylonet_app(bio_config: bioconfig.BioConfig, basedir: dict, prep, inputs=[], stderr=parsl.AUTO_LOGNAME, stdout=parsl.AUTO_LOGNAME):
     from iqtree_phylonet import iqtree_phylonet
     r = iqtree_phylonet(bio_config, basedir, prep)
     return r
 
-@parsl.python_app
-def mrbayes_snaq_app(bio_config, basedir, prep, inputs = [], stderr=parsl.AUTO_LOGNAME,
-                      stdout=parsl.AUTO_LOGNAME):
+
+@parsl.python_app(executors=['single_partition'])
+def mrbayes_snaq_app(bio_config: bioconfig.BioConfig, basedir: dict, prep, inputs=[], stderr=parsl.AUTO_LOGNAME, stdout=parsl.AUTO_LOGNAME):
     from mrbayes_snaq import mrbayes_snaq
     r = mrbayes_snaq(bio_config, basedir, prep)
     return r
-
 
 
 def prepare_to_run(config):
@@ -67,6 +70,7 @@ def prepare_to_run(config):
                 folder_list.extend([config.iqtree_dir, config.phylonet_dir])
         r.append(apps.create_folders(basedir, config, folders=folder_list))
     return r
+
 
 def main(**kwargs):
     logging.info('Starting the Workflow Orchestration')
@@ -136,4 +140,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     main(config_file=args.settings, workload_file=args.workload,
-        max_workers=args.maxworkers, runinfo=args.runinfo)
+         max_workers=args.maxworkers, runinfo=args.runinfo)

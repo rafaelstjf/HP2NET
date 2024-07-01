@@ -38,4 +38,5 @@ def raxml_phylonet(bio_config, basedir, prepare_to_run):
         pool_phylo.current(ret_phylonet)
         result.append(ret_phylonet)
     wait_for_all(result)
-    return True
+    f = 1
+    return f
