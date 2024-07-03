@@ -98,7 +98,7 @@ def workflow_config(config: BioConfig, **kwargs) -> parsl.config.Config:
                     provider=LocalProvider(
                         nodes_per_block=1,
                         channel=LocalChannel(script_dir=config.script_dir),
-                        parallelism=1,
+                        parallelism=0,
                         init_blocks=config.workflow_node,
                         max_blocks=config.workflow_node,
                         min_blocks = config.workflow_node,
