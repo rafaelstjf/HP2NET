@@ -3,44 +3,23 @@ import apps
 import bioconfig
 import logging
 import argparse
+import json
 from infra_manager import workflow_config, wait_for_all
 from utils import CircularList
-from iqtree_snaq import iqtree_snaq
+
+RAXML_SNAQ = 0
+RAXML_PHYLONET = 1
+IQTREE_SNAQ = 2
+IQTREE_PHYLONET = 3
+MRBAYES_SNAQ = 4
 
 
-@parsl.python_app(executors=['single_partition'])
-def raxml_snaq_app(bio_config: bioconfig.BioConfig, basedir: dict, prep, inputs=[], stderr=parsl.AUTO_LOGNAME, stdout=parsl.AUTO_LOGNAME):
-    from raxml_snaq import raxml_snaq
-    r = raxml_snaq(bio_config, basedir, prep)
-    return
-
-
-@parsl.python_app(executors=['single_partition'])
-def raxml_phylonet_app(bio_config: bioconfig.BioConfig, basedir: dict, prep, inputs=[], stderr=parsl.AUTO_LOGNAME, stdout=parsl.AUTO_LOGNAME):
-    from raxml_phylonet import raxml_phylonet
-    r = raxml_phylonet(bio_config, basedir, prep)
-    return r
-
-
-@parsl.python_app(executors=['single_partition'])
-def iqtree_snaq_app(bio_config: bioconfig.BioConfig, basedir: dict, prep, inputs=[], stderr=parsl.AUTO_LOGNAME, stdout=parsl.AUTO_LOGNAME):
-
-    r = iqtree_snaq(bio_config, basedir, prep)
-    return r
-
-
-@parsl.python_app(executors=['single_partition'])
-def iqtree_phylonet_app(bio_config: bioconfig.BioConfig, basedir: dict, prep, inputs=[], stderr=parsl.AUTO_LOGNAME, stdout=parsl.AUTO_LOGNAME):
-    from iqtree_phylonet import iqtree_phylonet
-    r = iqtree_phylonet(bio_config, basedir, prep)
-    return r
-
-
-@parsl.python_app(executors=['single_partition'])
-def mrbayes_snaq_app(bio_config: bioconfig.BioConfig, basedir: dict, prep, inputs=[], stderr=parsl.AUTO_LOGNAME, stdout=parsl.AUTO_LOGNAME):
-    from mrbayes_snaq import mrbayes_snaq
-    r = mrbayes_snaq(bio_config, basedir, prep)
-    return r
+@parsl.bash_app
+def run_workflow(workflow: str, basedir: dict, config_filename: str,
+                 stderr=parsl.AUTO_LOGNAME,
+                 stdout=parsl.AUTO_LOGNAME):
+    basedir_dict = json.dumps(basedir)
+    return f"python3 isolated_pipelines.py --s {config_filename} --d {basedir_dict} --w {workflow}"
 
 
 def prepare_to_run(config):
@@ -95,19 +74,19 @@ def main(**kwargs):
         tree_method = basedir['tree_method']
         if (network_method == 'MPL'):
             if (tree_method == 'RAXML'):
-                r = raxml_snaq_app(bio_config, basedir, prep)
+                r = run_workflow(RAXML_SNAQ, basedir, config_file)
             elif (tree_method == 'IQTREE'):
-                r = iqtree_snaq_app(bio_config, basedir, prep)
+                r = run_workflow(IQTREE_SNAQ, basedir, config_file)
             elif (tree_method == 'MRBAYES'):
-                r = mrbayes_snaq_app(bio_config, basedir, prep)
+                r = run_workflow(MRBAYES_SNAQ, basedir, config_file)
             else:
                 logging.error(
                     f'Invalid parameter combination: {bio_config.network_method} and {bio_config.tree_method}')
         elif (network_method == 'MP'):
             if (tree_method == 'RAXML'):
-                r = raxml_phylonet_app(bio_config, basedir, prep)
+                r = run_workflow(RAXML_PHYLONET, basedir, config_file)
             elif (tree_method == 'IQTREE'):
-                r = iqtree_phylonet_app(bio_config, basedir, prep)
+                r = run_workflow(IQTREE_PHYLONET, basedir, config_file)
             else:
                 logging.error(
                     f'Invalid parameter combination: {bio_config.network_method} and {bio_config.tree_method}')
@@ -117,10 +96,6 @@ def main(**kwargs):
         if r is not None:
             results.append(r)
             # wait_for_all(r)
-    if bio_config.plot_networks == True:
-        plot = apps.plot_networks(bio_config, inputs=results)
-        wait_for_all([plot])
-    else:
         wait_for_all(results)
     return
 
