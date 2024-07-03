@@ -68,7 +68,7 @@ def main(**kwargs):
     dkf = parsl.load(dkf_config)
     results = list()
     prep = prepare_to_run(bio_config)
-    prep.result()
+    wait_for_all(prep)
     for basedir in bio_config.workload:
         r = None
         network_method = basedir['network_method']
