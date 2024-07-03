@@ -73,7 +73,7 @@ def raxml_phylonet(bio_config, basedir):
         result.append(ret_phylonet)
     wait_for_all(result)
 
-def iqtree_snaq(bio_config, basedir)
+def iqtree_snaq(bio_config, basedir):
     max_workers = bio_config.workflow_core*bio_config.workflow_node
     result = list()
     ret_tree = list()
