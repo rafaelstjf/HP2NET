@@ -74,6 +74,7 @@ def workflow_config(config: BioConfig, **kwargs) -> parsl.config.Config:
     # hierarchic scheduling
     if kwargs.get("level") is not None and kwargs["level"] == 2:
         provider = "Local"
+        curr_workers = config.workflow_core
     logging.info(f'Task Environment {env_str}')
 
     if provider == "SLURM":
