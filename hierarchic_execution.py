@@ -4,6 +4,7 @@ import bioconfig
 import logging
 import argparse
 import json
+import math
 from infra_manager import workflow_config, wait_for_all
 from utils import CircularList
 
@@ -63,7 +64,9 @@ def main(**kwargs):
     else:
         cf = bioconfig.ConfigFactory(config_file)
     bio_config = cf.build_config()
-    dkf_config = workflow_config(bio_config, max_workers=1)
+    # distribute the workload between the nodes
+    max_workers = math.ceil(len(bio_config.workload)/bio_config.workflow_node)
+    dkf_config = workflow_config(bio_config, max_workers=max_workers)
     logging.info(f"{hash(bio_config)}")
     dkf = parsl.load(dkf_config)
     results = list()
