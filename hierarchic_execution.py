@@ -20,7 +20,7 @@ def run_workflow(workflow: str, basedir: dict, config_filename: str,
                  stderr=parsl.AUTO_LOGNAME,
                  stdout=parsl.AUTO_LOGNAME):
     basedir_dict = json.dumps(basedir)
-    return f"python3 isolated_pipelines.py -s {config_filename} -d {basedir_dict} -w {workflow}"
+    return f"python3 isolated_pipelines.py -s {config_filename} -d \'{basedir_dict}\' -w {workflow}"
 
 
 def prepare_to_run(config):
