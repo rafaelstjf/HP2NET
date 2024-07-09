@@ -84,7 +84,7 @@ def main(**kwargs):
             elif (tree_method == 'IQTREE'):
                 r = run_workflow(IQTREE_SNAQ, basedir, config_file, custom_workload)
             elif (tree_method == 'MRBAYES'):
-                r = run_workflow(MRBAYES_SNAQ, basedir, config_file)
+                r = run_workflow(MRBAYES_SNAQ, basedir, config_file, custom_workload)
             else:
                 logging.error(
                     f'Invalid parameter combination: {bio_config.network_method} and {bio_config.tree_method}')
