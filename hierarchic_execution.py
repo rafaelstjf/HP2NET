@@ -16,11 +16,11 @@ MRBAYES_SNAQ = 4
 
 
 @parsl.bash_app
-def run_workflow(workflow: str, basedir: dict, config_filename: str,
+def run_workflow(workflow: str, basedir: dict, config_filename: str, custom_workload: str,
                  stderr=parsl.AUTO_LOGNAME,
                  stdout=parsl.AUTO_LOGNAME):
     basedir_dict = json.dumps(basedir)
-    return f"python3 isolated_pipelines.py -s {config_filename} -d \'{basedir_dict}\' -w {workflow}"
+    return f"python3 isolated_pipelines.py -s {config_filename} -d \'{basedir_dict}\' -w \'{custom_workload}\' -p {workflow}"
 
 
 def prepare_to_run(config):
@@ -54,11 +54,13 @@ def prepare_to_run(config):
 
 def main(**kwargs):
     logging.info('Starting the Workflow Orchestration')
+    custom_workload = ""
     if kwargs["config_file"] is not None:
         config_file = kwargs["config_file"]
     else:
         config_file = 'default.ini'
     if kwargs["workload_file"] is not None:
+        custom_workload = kwargs["workload_file"]
         cf = bioconfig.ConfigFactory(
             config_file, custom_workload=kwargs["workload_file"])
     else:
@@ -78,9 +80,9 @@ def main(**kwargs):
         tree_method = basedir['tree_method']
         if (network_method == 'MPL'):
             if (tree_method == 'RAXML'):
-                r = run_workflow(RAXML_SNAQ, basedir, config_file)
+                r = run_workflow(RAXML_SNAQ, basedir, config_file, custom_workload)
             elif (tree_method == 'IQTREE'):
-                r = run_workflow(IQTREE_SNAQ, basedir, config_file)
+                r = run_workflow(IQTREE_SNAQ, basedir, config_file, custom_workload)
             elif (tree_method == 'MRBAYES'):
                 r = run_workflow(MRBAYES_SNAQ, basedir, config_file)
             else:
@@ -88,9 +90,9 @@ def main(**kwargs):
                     f'Invalid parameter combination: {bio_config.network_method} and {bio_config.tree_method}')
         elif (network_method == 'MP'):
             if (tree_method == 'RAXML'):
-                r = run_workflow(RAXML_PHYLONET, basedir, config_file)
+                r = run_workflow(RAXML_PHYLONET, basedir, config_file, custom_workload)
             elif (tree_method == 'IQTREE'):
-                r = run_workflow(IQTREE_PHYLONET, basedir, config_file)
+                r = run_workflow(IQTREE_PHYLONET, basedir, config_file, custom_workload)
             else:
                 logging.error(
                     f'Invalid parameter combination: {bio_config.network_method} and {bio_config.tree_method}')

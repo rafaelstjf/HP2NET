@@ -180,12 +180,17 @@ if __name__ == "__main__":
     parser.add_argument('-s', '--settings', help='Settings file',
                         required=True, type=str)
     parser.add_argument('-d', '--basedir', required=True, type=str)
-    parser.add_argument('-w', '--workflow', required=True, type=int)
+    parser.add_argument('-p', '--pipeline', required=True, type=int)
+    parser.add_argument('-w', '--workload', help='Workload file',
+                        required=True, type=str, default=None)
     args = parser.parse_args()
     basedir = json.loads(args.basedir) # loads the dict that was previously dumped as json
     # load the settings
     config_file=args.settings
-    cf = bioconfig.ConfigFactory(config_file)
+    if len(args.workload) > 0:
+        cf = bioconfig.ConfigFactory(config_file, args.workload)
+    else:
+        cf = bioconfig.ConfigFactory(config_file)
     bio_config = cf.build_config()
     dkf_config = workflow_config(bio_config, level=2)
     dfk = parsl.load(dkf_config)
