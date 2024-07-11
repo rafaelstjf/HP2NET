@@ -73,11 +73,17 @@ def workflow_config(config: BioConfig, **kwargs) -> parsl.config.Config:
 
     # hierarchic scheduling
     if kwargs.get("level") is not None and kwargs["level"] == 2:
+        # Checking if the workflow is calling the settings on second level
         provider = "Local"
-        curr_workers = config.workflow_core
+        if kwargs.get("num_workflows") is not None and config.workflow_node == 1:
+            # Adapting the number of computer cores to execute multiple workflows in one node
+            # using the workload variable
+            curr_workers = int(config.workflow_core / kwargs["num_workflows"])
+        else:
+            curr_workers = config.workflow_core
     logging.info(f'Task Environment {env_str}')
 
-    if provider == "SLURM":
+    if provider.upper() == "SLURM":
         mon_hub = parsl.monitoring.monitoring.MonitoringHub(
             workflow_name=name,
             hub_address=address_by_hostname(),
@@ -129,15 +135,15 @@ def workflow_config(config: BioConfig, **kwargs) -> parsl.config.Config:
                     label=f'single_partition',
                     # Optional: The network interface on node 0 which compute nodes can communicate with.
                     address="127.0.0.1",
-                    cores_per_worker=config.workflow_node,
+                    cores_per_worker=1,
                     max_workers=curr_workers,
                     worker_debug=False,
                     provider=LocalProvider(
                         nodes_per_block=1,
                         channel=LocalChannel(script_dir=config.script_dir),
                         parallelism=1,
-                        init_blocks=config.workflow_node,
-                        max_blocks=config.workflow_node,
+                        init_blocks=1,
+                        max_blocks=1,
                         worker_init=env_str,
                     ),
                 ),
