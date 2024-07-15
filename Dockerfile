@@ -35,12 +35,17 @@ RUN wget --no-check-certificate https://julialang-s3.julialang.org/bin/linux/x64
 ENV PATH=$PATH:/app/julia-1.9.3/bin
 
 # Clone and build Bucky
-RUN git clone https://pages.stat.wisc.edu/~ane/bucky.git/ && \
-    cd bucky/src && \
-    sed -i 's/unordered_map/boost::unordered_map/g' TGM.h && \
-    make && \
-    mv bucky mbsum /usr/local/bin
+# RUN git clone https://pages.stat.wisc.edu/~ane/bucky.git/ && \
+#     cd bucky/src && \
+#     sed -i 's/unordered_map/boost::unordered_map/g' TGM.h && \
+#     make && \
+#     mv bucky mbsum /usr/local/bin
 
+# Install Bucky and mbsum
+RUN mv /app/tools/bucky /usr/local/bin && \
+    chmod a+x /usr/local/bin/bucky
+RUN mv /app/tools/mbsum /usr/local/bin && \
+    chmod a+x /usr/local/bin/mbsum
 # Install ASTRAL
 RUN mkdir -p /usr/local/bin/lib
 RUN git clone https://github.com/smirarab/ASTRAL.git && \

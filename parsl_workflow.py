@@ -16,7 +16,6 @@ logger = logging.getLogger()
 logging.basicConfig(level=logging.CRITICAL)
 
 
-
 def raxml_snaq(bio_config, basedir, prepare_to_run):
     max_workers = bio_config.workflow_core*bio_config.workflow_node
     result = list()
@@ -29,12 +28,13 @@ def raxml_snaq(bio_config, basedir, prepare_to_run):
     datalist = glob.glob(os.path.join(dir_, '*.phy'))
     for i, input_file in enumerate(datalist):
         ret = apps.raxml(basedir=basedir,
-                        config=bio_config,
-                        inputs=prepare_to_run,
-                        input_file=input_file, next_pipe=pool.next())
+                         config=bio_config,
+                         inputs=prepare_to_run,
+                         input_file=input_file, next_pipe=pool.next())
         pool.current(ret)
         ret_tree.append(ret)
-    ret_sad = apps.setup_tree_output(basedir=basedir, config=bio_config, inputs=ret_tree)
+    ret_sad = apps.setup_tree_output(
+        basedir=basedir, config=bio_config, inputs=ret_tree)
     logging.info("Using the Maximum Pseudo Likelihood Method")
     ret_ast = apps.astral(basedir, config=bio_config, inputs=[ret_sad])
     pool_phylo = CircularList(math.floor(
@@ -45,6 +45,7 @@ def raxml_snaq(bio_config, basedir, prepare_to_run):
         pool_phylo.current(ret_snq)
         result.append(ret_snq)
     return result
+
 
 def raxml_phylonet(bio_config, basedir, prepare_to_run):
     result = list()
@@ -58,12 +59,13 @@ def raxml_phylonet(bio_config, basedir, prepare_to_run):
     datalist = glob.glob(os.path.join(dir_, '*.phy'))
     for i, input_file in enumerate(datalist):
         ret = apps.raxml(basedir=basedir,
-                            inputs=prepare_to_run,
-                        config=bio_config,
-                        input_file=input_file, next_pipe=pool.next())
+                         inputs=prepare_to_run,
+                         config=bio_config,
+                         input_file=input_file, next_pipe=pool.next())
         pool.current(ret)
         ret_tree.append(ret)
-    ret_sad = apps.setup_tree_output(basedir=basedir, config=bio_config, inputs=ret_tree)
+    ret_sad = apps.setup_tree_output(
+        basedir=basedir, config=bio_config, inputs=ret_tree)
     ret_rooted = apps.root_tree(basedir, config=bio_config, inputs=[ret_sad])
     logging.info("Using the Maximum Parsimony Method")
     out_dir = os.path.join(basedir['dir'], bio_config.phylonet_dir)
@@ -80,6 +82,7 @@ def raxml_phylonet(bio_config, basedir, prepare_to_run):
         result.append(ret_phylonet)
     return result
 
+
 def iqtree_snaq(bio_config, basedir, prepare_to_run):
     max_workers = bio_config.workflow_core*bio_config.workflow_node
     result = list()
@@ -90,24 +93,13 @@ def iqtree_snaq(bio_config, basedir, prepare_to_run):
     # append the input files
     dir_ = os.path.join(os.path.join(basedir['dir'], "input"), "phylip")
     datalist = glob.glob(os.path.join(dir_, '*.phy'))
-    if reuse and (basedir['dir'], 'iqtree') in cache:
-        # Use cached raxml
-        logging.info('Using cached iqtree')
-        ret_sad = cache[(basedir['dir'], 'iqtree')]
-    else:
-        for input_file in datalist:
-            ret = apps.iqtree(basedir, bio_config,
-                              inputs=prepare_to_run,
-                              input_file=input_file, next_pipe=pool.next())
-            pool.current(ret)
-            ret_tree.append(ret)
-        
-        if reuse:
-            ret_sad = apps.setup_tree_output(basedir, bio_config, inputs=ret_tree)
-            cache[(basedir['dir'], 'iqtree')] = ret_sad
-            logging.info('Creating cache on iqtree')
-        else:
-            ret_sad = apps.setup_tree_output(basedir, bio_config, inputs=ret_tree)
+    for input_file in datalist:
+        ret = apps.iqtree(basedir=basedir, config=bio_config,
+                          inputs=prepare_to_run,
+                          input_file=input_file, next_pipe=pool.next())
+        pool.current(ret)
+        ret_tree.append(ret)
+    ret_sad = apps.setup_tree_output(basedir, bio_config, inputs=ret_tree)
     logging.info("Using the Maximum Pseudo Likelihood Method")
     ret_ast = apps.astral(basedir, bio_config, inputs=[ret_sad])
     pool_phylo = CircularList(math.floor(
@@ -119,6 +111,7 @@ def iqtree_snaq(bio_config, basedir, prepare_to_run):
         result.append(ret_snq)
     return result
 
+
 def iqtree_phylonet(bio_config, basedir, prepare_to_run):
     result = list()
     ret_tree = list()
@@ -128,23 +121,12 @@ def iqtree_phylonet(bio_config, basedir, prepare_to_run):
     # append the input files
     dir_ = os.path.join(os.path.join(basedir['dir'], "input"), "phylip")
     datalist = glob.glob(os.path.join(dir_, '*.phy'))
-    if reuse and (basedir['dir'], 'iqtree') in cache:
-        # Use cached raxml
-        logging.info('Using cached iqtree')
-        ret_sad = cache[(basedir['dir'], 'iqtree')]
-    else:
-        for input_file in datalist:
-            ret = apps.iqtree(basedir, bio_config, inputs=prepare_to_run,
-                              input_file=input_file, next_pipe=pool.next())
-            pool.current(ret)
-            ret_tree.append(ret)
-        
-        if reuse:
-            ret_sad = apps.setup_tree_output(basedir, bio_config, inputs=ret_tree)
-            cache[(basedir['dir'], 'iqtree')] = ret_sad
-            logging.info('Creating cache on iqtree')
-        else:
-            ret_sad = apps.setup_tree_output(basedir, bio_config, inputs=ret_tree)
+    for input_file in datalist:
+        ret = apps.iqtree(basedir=basedir, config=bio_config, inputs=prepare_to_run,
+                          input_file=input_file, next_pipe=pool.next())
+        pool.current(ret)
+        ret_tree.append(ret)
+    ret_sad = apps.setup_tree_output(basedir, bio_config, inputs=ret_tree)
     ret_rooted = apps.root_tree(basedir, bio_config, inputs=[ret_sad])
     logging.info("Using the Maximum Parsimony Method")
     out_dir = os.path.join(basedir['dir'], bio_config.phylonet_dir)
@@ -160,6 +142,7 @@ def iqtree_phylonet(bio_config, basedir, prepare_to_run):
         pool_phylo.current(ret_phylonet)
         result.append(ret_phylonet)
     return result
+
 
 def mrbayes_snaq(bio_config, basedir, prepare_to_run):
     max_workers = bio_config.workflow_core*bio_config.workflow_node
@@ -200,6 +183,8 @@ def mrbayes_snaq(bio_config, basedir, prepare_to_run):
         pool_phylo.current(ret_snq)
         result.append(ret_snq)
     return result
+
+
 """
 def mrbayes_snaq(bio_config, basedir):
     max_workers = bio_config.workflow_core*bio_config.workflow_node
@@ -234,7 +219,9 @@ def mrbayes_snaq(bio_config, basedir):
         pool_phylo.current(ret_snq)
         result.append(ret_snq)
     return result
-"""    
+"""
+
+
 def prepare_to_run(config):
     folder_list = list()
     r = list()
@@ -262,6 +249,7 @@ def prepare_to_run(config):
                 folder_list.extend([config.iqtree_dir, config.phylonet_dir])
         r.append(apps.create_folders(basedir, config, folders=folder_list))
     return r
+
 
 def main(**kwargs):
     logging.info('Starting the Workflow Orchestration')
@@ -331,4 +319,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     main(config_file=args.settings, workload_file=args.workload,
-        max_workers=args.maxworkers, runinfo=args.runinfo)
+         max_workers=args.maxworkers, runinfo=args.runinfo)
