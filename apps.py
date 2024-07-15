@@ -36,6 +36,7 @@ import parsl
 from appsexception import FileCreationError, FolderDeletionError
 from bioconfig import BioConfig
 from typing import Any
+from utils import app_reuse, Cache
 
 
 # setup_phylip_data bash app
@@ -122,6 +123,7 @@ def setup_phylip_data(basedir: dict, config: BioConfig,
 
 
 # raxml bash app
+@app_reuse(cache=Cache(), args_to_ignore=["basedir", "config", "stderr", "stdout", "next_pipe"])
 @parsl.bash_app(executors=['single_partition'])
 def raxml(basedir: dict, 
           config: BioConfig,
@@ -145,7 +147,6 @@ def raxml(basedir: dict,
         named according to task id and saved under task_logs in the run directory.
     """
     import os, random, logging
-
     num_threads = config.raxml_threads
     raxml_exec = config.raxml
     logging.info(f'Raxml called with {basedir["dir"]}')
@@ -165,7 +166,8 @@ def raxml(basedir: dict,
     return f"cd {raxml_dir}; {raxml_exec} {params} -s {input_file} -n {output_file}"
 
 
-@parsl.python_app(executors=['single_partition'])
+@app_reuse(cache=Cache(), args_to_ignore=["basedir", "config", "stderr", "stdout"])
+@parsl.python_app(executors=['single_partition'], cache=True, ignore_for_cache=["config", "basedir"])
 def setup_tree_output(basedir: dict,
                       config: BioConfig,
                       inputs=[],
@@ -349,6 +351,7 @@ def setup_tree_output(basedir: dict,
             raise FileCreationError(iqtree_dir)
     return
 
+@app_reuse(cache=Cache(), args_to_ignore=["basedir", "config", "stderr", "stdout"])
 @parsl.python_app(executors=['single_partition'])
 def root_tree(basedir: dict,
               config: BioConfig,
@@ -667,15 +670,15 @@ def setup_bucky_data(basedir: dict,
     files = glob.glob(os.path.join(mbsum_folder, '*.sum'))
     taxa = {}
     selected_taxa = {}
-    pattern = re.compile('translate(\n\s*\d+\s+\w+(,|;))+')
-    taxa_pattern = re.compile('(\w+(,|;))')
+    pattern = re.compile(r'translate(\n\s*\d+\s+\w+(,|;))+')
+    taxa_pattern = re.compile(r'(\w+(,|;))')
     for file in files:
         gene_sum = open(file, 'r')
         text = gene_sum.read()
         gene_sum.close()
         translate_block = pattern.search(text)
         for match in re.findall(taxa_pattern, translate_block[0]):
-            key = re.sub(re.compile('(,|;)'), '', match[0])
+            key = re.sub(re.compile(r'(,|;)'), '', match[0])
             if key in taxa:
                 taxa[key] += 1
             else:
@@ -771,12 +774,12 @@ def setup_bucky_output(basedir: dict,
     work_dir = basedir['dir']
     logging.info(f'Setting up BUCky output in {work_dir}')
     bucky_folder = os.path.join(work_dir, config.bucky_dir)
-    pattern = re.compile("Read \d+ genes with a ")
+    pattern = re.compile(r"Read \d+ genes with a ")
     out_files = glob.glob(os.path.join(bucky_folder, "*.out"))
     table_string = "taxon1,taxon2,taxon3,taxon4,CF12.34,CF12.34_lo,CF12.34_hi,CF13.24,CF13.24_lo,CF13.24_hi,CF14.23,CF14.23_lo,CF14.23_hi,ngenes\n"
-    cf_95_pattern = re.compile("(95% CI for CF = \(\w+,\w+\))")
-    mean_num_loci_pattern = re.compile("(=\s+\d+\.\d+\s+\(number of loci\))")
-    translate_block_pattern = re.compile("translate\n(\s*\w+\s*\w+(,|;)\n*)+")
+    cf_95_pattern = re.compile(r"(95% CI for CF = \(\w+,\w+\))")
+    mean_num_loci_pattern = re.compile(r"(=\s+\d+\.\d+\s+\(number of loci\))")
+    translate_block_pattern = re.compile(r"translate\n(\s*\w+\s*\w+(,|;)\n*)+")
     # open all the bucky's output files and parse them
     for out_file in out_files:
         taxa = []
@@ -785,7 +788,7 @@ def setup_bucky_output(basedir: dict,
         lines = f.read()
         f.close()
         num_genes = re.search(pattern, lines).group(0)
-        num_genes = re.search("\d+", num_genes).group(0)
+        num_genes = re.search(r"\d+", num_genes).group(0)
         name_wo_extension = re.sub(".out|", "", os.path.basename(out_file))
         concordance_file = os.path.join(os.path.dirname(
             out_file), f"{name_wo_extension}.concordance")
@@ -793,7 +796,7 @@ def setup_bucky_output(basedir: dict,
         lines = f.read()
         f.close()
         translate_block = re.search(translate_block_pattern, lines).group(0)
-        translate_block = re.sub("(,|;|translate\n)", "", translate_block)
+        translate_block = re.sub(r"(,|;|translate\n)", "", translate_block)
         taxon_list = translate_block.split('\n')
         for taxon in taxon_list:
             if(taxon == ""):
@@ -807,8 +810,8 @@ def setup_bucky_output(basedir: dict,
         for i in range(0, len(split)):
             split[i] = re.sub("({|,|})", "", split[i])
             split_dict = {}
-            cf[i] = re.sub("(=|\(number of loci\)|\s+)", "", cf[i])
-            cf_95[i] = re.sub("(95% CI for CF = \(|\))", "", cf_95[i])
+            cf[i] = re.sub(r"(=|\(number of loci\)|\s+)", "", cf[i])
+            cf_95[i] = re.sub(r"(95% CI for CF = \(|\))", "", cf_95[i])
             cf_95_list = cf_95[i].split(',')
             split_dict['CF'] = float(cf[i])/float(num_genes)
             split_dict['95_CI_LO'] = float(cf_95_list[0])/float(num_genes)
@@ -1102,7 +1105,7 @@ def phylonet(basedir: dict,
     # Return to Parsl to be executed on the workflow
     return f'cd {output_dir};{exec_phylonet} {input_file}'
 
-
+@app_reuse(cache=Cache(), args_to_ignore=["basedir", "config", "stderr", "stdout", "next_pipe"])
 @parsl.bash_app(executors=['single_partition'])
 def iqtree(basedir: dict,
             config: BioConfig,
@@ -1130,7 +1133,10 @@ def iqtree(basedir: dict,
     outgroup = basedir['outgroup']
     logging.info(f'IQ-TREE with {work_dir}')
     iqtree_dir = os.path.join(work_dir, config.iqtree_dir)
-    flags = f"-T AUTO -ntmax {config.iqtree_threads} -B {config.bootstrap} --boot-trees -m {config.iqtree_model}  -s {input_file} --keep-ident -redo -quiet"
+    if ((config.iqtree_model).upper() == "AUTO"):
+        flags = f"-T AUTO -ntmax {config.iqtree_threads} -B {config.bootstrap} --boot-trees -m TEST -s {input_file} --keep-ident -redo -quiet"
+    else:
+        flags = f"-T AUTO -ntmax {config.iqtree_threads} -B {config.bootstrap} --boot-trees -m {config.iqtree_model}  -s {input_file} --keep-ident -redo -quiet"
     # Return to Parsl to be executed on the workflow
     return f"cd {iqtree_dir}; {config.iqtree} {flags}"
 

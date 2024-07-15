@@ -52,7 +52,7 @@ class borg(object):
         return self.my_instance
 
 
-@dataclass
+@dataclass()
 class BioConfig:
     env_path:           str
     environ:            str
@@ -111,9 +111,70 @@ class BioConfig:
     phylonet_runs:      str
     plot_script:        str
 
+    def __hash__(self):
+        workload_tuples = [tuple(item.items()) for item in self.workload]
+        return hash((
+            self.env_path,
+            self.environ,
+            self.script_dir,
+            self.execution_provider,
+            self.plot_networks,
+            self.network_method,
+            self.tree_method,
+            self.bootstrap,
+            tuple(workload_tuples),
+            self.workflow_name,
+            self.workflow_path,
+            self.workflow_monitor,
+            self.workflow_walltime,
+            self.workflow_core,
+            self.workflow_node,
+            self.raxml,
+            self.raxml_dir,
+            self.raxml_output,
+            self.raxml_rooted_output,
+            self.raxml_threads,
+            self.raxml_model,
+            self.iqtree,
+            self.iqtree_dir,
+            self.iqtree_model,
+            self.iqtree_threads,
+            self.iqtree_output,
+            self.iqtree_rooted_output,
+            self.astral_exec_dir,
+            self.astral_jar,
+            self.astral,
+            self.astral_dir,
+            self.astral_output,
+            self.snaq,
+            self.snaq_threads,
+            tuple(self.snaq_hmax),
+            self.snaq_runs,
+            self.snaq_dir,
+            self.mrbayes,
+            self.mrbayes_parameters,
+            self.mrbayes_dir,
+            self.bucky,
+            self.bucky_dir,
+            self.mbsum,
+            self.mbsum_dir,
+            self.quartet_maxcut,
+            self.quartet_maxcut_exec_dir,
+            self.quartet_maxcut_dir,
+            self.phylonet,
+            self.phylonet_exec_dir,
+            self.phylonet_jar,
+            self.phylonet_threads,
+            tuple(self.phylonet_hmax),
+            self.phylonet_input,
+            self.phylonet_dir,
+            self.phylonet_runs,
+            self.plot_script,
+        ))
+
+
 @borg
 class ConfigFactory:
-
     def __init__(self, config_file: str = "default.ini", custom_workload: str = None) -> None:
         import configparser
         self.custom_workload = custom_workload
