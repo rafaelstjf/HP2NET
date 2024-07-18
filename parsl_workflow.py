@@ -153,7 +153,6 @@ def mrbayes_snaq(bio_config, basedir, prepare_to_run):
     dir_ = os.path.join(os.path.join(basedir['dir'], "input"), "nexus")
     datalist = glob.glob(os.path.join(dir_, '*.nex'))
     ret_mbsum = list()
-    ret_mb = list()
     for input_file in datalist:
         ret_mb = apps.mrbayes(basedir, bio_config,
                               input_file=input_file, inputs=prepare_to_run)
