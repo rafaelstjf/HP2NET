@@ -143,13 +143,11 @@ def mrbayes_snaq(bio_config, basedir):
     dir_ = os.path.join(os.path.join(basedir['dir'], "input"), "nexus")
     datalist = glob.glob(os.path.join(dir_, '*.nex'))
     ret_mbsum = list()
-    ret_mb = list()
     for input_file in datalist:
-        ret_mb.append(apps.mrbayes(basedir, bio_config,
-                              input_file=input_file))
-    for input_file in datalist:
+        ret_mb = apps.mrbayes(basedir, bio_config,
+                              input_file=input_file)
         ret_mbsum.append(apps.mbsum(basedir, bio_config,
-                         input_file=input_file, inputs=ret_mb))
+                         input_file=input_file, inputs=[ret_mb]))
     ret_pre_bucky = apps.setup_bucky_data(
         basedir, bio_config, inputs=ret_mbsum)
     wait_for_all([ret_pre_bucky])
