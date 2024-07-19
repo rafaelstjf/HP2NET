@@ -171,17 +171,6 @@ def wait_for_all(list_of_futures: list, sleep_interval=10) -> None:
     # Perhaps, DAG executer should be implemented, where the user
     # may provide several workflows (DAGs) and the may be enacted by
     # a scheduler.
-
-    # Loop
-    not_done = True
-    while not_done:
-        not_done = False
-        for r in list_of_futures:
-            if not r.done():
-                not_done = True
-                break
-        time.sleep(sleep_interval)
-
     # Fetch status (just inform parsl that we can proceed)
     for r in list_of_futures:
         r.result()
