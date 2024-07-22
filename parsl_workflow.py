@@ -127,7 +127,8 @@ def iqtree_phylonet(bio_config, basedir, prepare_to_run):
                           input_file=input_file, next_pipe=pool.next())
         pool.current(ret)
         ret_tree.append(ret)
-    ret_sad = apps.setup_tree_output(basedir, bio_config, inputs=ret_tree)
+    ret_sad = apps.setup_tree_output(
+        basedir=basedir, config=bio_config, inputs=ret_tree)
     ret_rooted = apps.root_tree(basedir, bio_config, inputs=[ret_sad])
     logging.info("Using the Maximum Parsimony Method")
     out_dir = os.path.join(basedir['dir'], bio_config.phylonet_dir)
