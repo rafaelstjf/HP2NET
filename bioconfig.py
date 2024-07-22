@@ -277,7 +277,7 @@ class ConfigFactory:
         #ASTRAL
         astral_exec_dir = cf['ASTRAL']['AstralExecDir']
         astral_jar = cf['ASTRAL']['AstralJar']
-        astral = f"cd {astral_exec_dir}; java -jar {astral_jar}"
+        astral = f"java -jar {os.path.join(astral_exec_dir, astral_jar)}"
         astral_dir = 'astral'
         astral_output = 'astral.tre'
         #SNAQ
