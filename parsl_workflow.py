@@ -99,7 +99,8 @@ def iqtree_snaq(bio_config, basedir, prepare_to_run):
                           input_file=input_file, next_pipe=pool.next())
         pool.current(ret)
         ret_tree.append(ret)
-    ret_sad = apps.setup_tree_output(basedir, bio_config, inputs=ret_tree)
+    ret_sad = apps.setup_tree_output(
+        basedir=basedir, config=bio_config, inputs=ret_tree)
     logging.info("Using the Maximum Pseudo Likelihood Method")
     ret_ast = apps.astral(basedir, bio_config, inputs=[ret_sad])
     pool_phylo = CircularList(math.floor(
