@@ -167,7 +167,7 @@ def raxml(basedir: dict,
 
 
 @app_reuse(cache=Cache(), args_to_ignore=["basedir", "config", "stderr", "stdout"])
-@parsl.python_app(executors=['single_partition'], cache=True)
+@parsl.python_app(executors=['single_partition'])
 def setup_tree_output(basedir: dict,
                       config: BioConfig,
                       inputs=[],
