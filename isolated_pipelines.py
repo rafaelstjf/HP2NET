@@ -206,3 +206,4 @@ if __name__ == "__main__":
         iqtree_phylonet(bio_config = bio_config, basedir=basedir)
     else:
         mrbayes_snaq(bio_config = bio_config, basedir=basedir)
+    parsl.dfk().cleanup()

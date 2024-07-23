@@ -310,3 +310,4 @@ if __name__ == "__main__":
 
     main(config_file=args.settings, workload_file=args.workload,
         max_workers=args.maxworkers, runinfo=args.runinfo)
+    parsl.dfk().cleanup()
