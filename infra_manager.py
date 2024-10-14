@@ -88,7 +88,7 @@ def workflow_config(config: BioConfig, **kwargs) -> parsl.config.Config:
                     label=f'single_partition',
                     # Optional: The network interface on node 0 which compute nodes can communicate with.
                     address=address_by_hostname(),
-                    max_workers=curr_workers,
+                    max_workers_per_node=curr_workers,
                     cores_per_worker=1,
                     worker_debug=False,
                     provider=LocalProvider(
@@ -125,7 +125,7 @@ def workflow_config(config: BioConfig, **kwargs) -> parsl.config.Config:
                     # Optional: The network interface on node 0 which compute nodes can communicate with.
                     address="127.0.0.1",
                     cores_per_worker=config.workflow_node,
-                    max_workers=curr_workers,
+                    max_workers_per_node=curr_workers,
                     worker_debug=False,
                     provider=LocalProvider(
                         nodes_per_block=1,
@@ -153,23 +153,11 @@ def wait_for_all(list_of_futures: list, sleep_interval=10) -> None:
         list_of_futures (list): a list of parsl's futures.
         sleep_interval (int): sleep interval
     """
-    import time
-
     # TODO: must find a better algorithm, since there are different
     # workflows being executed on parallel (several DAGs).
     # Perhaps, DAG executer should be implemented, where the user
     # may provide several workflows (DAGs) and the may be enacted by
     # a scheduler.
-
-    # Loop
-    not_done = True
-    while not_done:
-        not_done = False
-        for r in list_of_futures:
-            if not r.done():
-                not_done = True
-                break
-        time.sleep(sleep_interval)
 
     # Fetch status (just inform parsl that we can proceed)
     for r in list_of_futures:

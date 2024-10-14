@@ -31,7 +31,6 @@ __status__ = "Research"
 #
 # Parsl Bash and Python Applications
 #
-from pandas.core import base
 import parsl
 from appsexception import FileCreationError, FolderDeletionError
 from bioconfig import BioConfig
