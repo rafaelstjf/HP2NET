@@ -9,6 +9,8 @@ RAXML_PHYLONET = 1
 IQTREE_SNAQ = 2
 IQTREE_PHYLONET = 3
 MRBAYES_SNAQ = 4
+RAXML_SNAQ_PHYLONET = 5
+IQTREE_SNAQ_PHYLONET = 6
 
 def raxml_snaq(bio_config, basedir):
     
@@ -204,5 +206,12 @@ if __name__ == "__main__":
         iqtree_snaq(bio_config = bio_config, basedir=basedir)
     elif workflow == IQTREE_PHYLONET:
         iqtree_phylonet(bio_config = bio_config, basedir=basedir)
-    else:
+    elif workflow == MRBAYES_SNAQ:
         mrbayes_snaq(bio_config = bio_config, basedir=basedir)
+    elif workflow == RAXML_SNAQ_PHYLONET:
+        raxml_snaq(bio_config = bio_config, basedir=basedir)
+        raxml_phylonet(bio_config=bioconfig, basedir=basedir)
+    elif workflow == IQTREE_SNAQ_PHYLONET:
+        iqtree_snaq(bio_config=bioconfig, basedir=basedir)
+        iqtree_phylonet(bio_config=bioconfig, basedir=basedir)
+    parsl.dfk().cleanup()

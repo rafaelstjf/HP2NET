@@ -1187,7 +1187,20 @@ def plot_networks(config: BioConfig,
                 if len(networks) > 0:
                     networks+=','
                 networks+=os.path.join(snaq_dir, name)
-        if basedir['network_method'] == "MP":
+        elif basedir['network_method'] == "MP":
+            phylonet_dir = os.path.join(basedir['dir'], config.phylonet_dir)
+            for h in config.snaq_hmax:
+                name = f'{os.path.basename(basedir["dir"])}_{basedir["tree_method"]}_MP_{h}.nex'
+                if len(networks) > 0:
+                    networks+=','
+                networks+=os.path.join(phylonet_dir, name)
+        elif basedir['network_method'] == "BOTH":
+            snaq_dir = os.path.join(basedir['dir'], config.snaq_dir)
+            for h in config.snaq_hmax:
+                name = f'{os.path.basename(basedir["dir"])}_{basedir["tree_method"]}_MPL_{h}.out'
+                if len(networks) > 0:
+                    networks+=','
+                networks+=os.path.join(snaq_dir, name)
             phylonet_dir = os.path.join(basedir['dir'], config.phylonet_dir)
             for h in config.snaq_hmax:
                 name = f'{os.path.basename(basedir["dir"])}_{basedir["tree_method"]}_MP_{h}.nex'

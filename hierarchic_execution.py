@@ -13,6 +13,8 @@ RAXML_PHYLONET = 1
 IQTREE_SNAQ = 2
 IQTREE_PHYLONET = 3
 MRBAYES_SNAQ = 4
+RAXML_SNAQ_PHYLONET = 5
+IQTREE_SNAQ_PHYLONET = 6
 
 
 @parsl.bash_app
@@ -74,33 +76,74 @@ def main(**kwargs):
     results = list()
     prep = prepare_to_run(bio_config)
     wait_for_all(prep)
+    # Check in which directory there is reuse
+    wfs_to_run = dict()
     for basedir in bio_config.workload:
-        r = None
+        c_dir = basedir["dir"]
         network_method = basedir['network_method']
         tree_method = basedir['tree_method']
+        if wfs_to_run.get(c_dir) is None:
+            wfs_to_run[c_dir] = list()
         if (network_method == 'MPL'):
             if (tree_method == 'RAXML'):
-                r = run_workflow(RAXML_SNAQ, basedir, config_file, custom_workload)
+                wfs_to_run[c_dir].append(RAXML_SNAQ)
             elif (tree_method == 'IQTREE'):
-                r = run_workflow(IQTREE_SNAQ, basedir, config_file, custom_workload)
+                wfs_to_run[c_dir].append(IQTREE_SNAQ)
             elif (tree_method == 'MRBAYES'):
-                r = run_workflow(MRBAYES_SNAQ, basedir, config_file, custom_workload)
-            else:
-                logging.error(
-                    f'Invalid parameter combination: {bio_config.network_method} and {bio_config.tree_method}')
+                wfs_to_run[c_dir].append(MRBAYES_SNAQ)
         elif (network_method == 'MP'):
             if (tree_method == 'RAXML'):
-                r = run_workflow(RAXML_PHYLONET, basedir, config_file, custom_workload)
+                wfs_to_run[c_dir].append(RAXML_PHYLONET)
             elif (tree_method == 'IQTREE'):
-                r = run_workflow(IQTREE_PHYLONET, basedir, config_file, custom_workload)
+                wfs_to_run[c_dir].append(IQTREE_PHYLONET)
+    # Change the cod of the workflow for the reuse code
+    for w in wfs_to_run.keys():
+        if (RAXML_PHYLONET in wfs_to_run[w]) and (RAXML_SNAQ in wfs_to_run[w]):
+            wfs_to_run[w].remove(RAXML_PHYLONET)
+            wfs_to_run[w].remove(RAXML_SNAQ)
+            wfs_to_run[w].append(RAXML_SNAQ_PHYLONET)
+        
+        if (IQTREE_PHYLONET in wfs_to_run[w]) and (IQTREE_SNAQ in wfs_to_run[w]):
+            wfs_to_run[w].remove(IQTREE_PHYLONET)
+            wfs_to_run[w].remove(IQTREE_SNAQ)
+            wfs_to_run[w].append(IQTREE_SNAQ_PHYLONET)
+
+    # modify the basedir according to the reuse list
+    processed_dir = list()    
+    for basedir in bio_config.workload:
+        r = None
+        if basedir["dir"] in processed_dir:
+            continue
+        processed_dir.append(basedir["dir"])
+        c_basedir = basedir
+        for w in wfs_to_run[basedir["dir"]]:
+            if w == RAXML_SNAQ:
+                c_basedir['tree_method'] = "RAXML"
+                c_basedir['network_method'] = "MPL"
+            elif w == RAXML_PHYLONET:
+                c_basedir['tree_method'] = "RAXML"
+                c_basedir['network_method'] = "MP"
+            elif w == RAXML_SNAQ_PHYLONET:
+                c_basedir['tree_method'] = "RAXML"
+                c_basedir['network_method'] = "BOTH"
+            elif w == IQTREE_SNAQ:
+                c_basedir['tree_method'] = "IQTREE"
+                c_basedir['network_method'] = "MPL"
+            elif w == IQTREE_PHYLONET:
+                c_basedir['tree_method'] = "IQTREE"
+                c_basedir['network_method'] = "MP"
+            elif w == IQTREE_SNAQ_PHYLONET:
+                c_basedir['tree_method'] = "IQTREE"
+                c_basedir['network_method'] = "BOTH"
+            elif w == MRBAYES_SNAQ:
+                c_basedir['tree_method'] = "MRBAYES"
+                c_basedir['network_method'] = "MPL"
             else:
                 logging.error(
                     f'Invalid parameter combination: {bio_config.network_method} and {bio_config.tree_method}')
-        else:
-            logging.error(
-                f'Invalid network method: {bio_config.network_method}')
-        if r is not None:
-            results.append(r)
+            r = run_workflow(w, c_basedir, config_file, custom_workload)
+            if r is not None:
+                results.append(r)
             # wait_for_all(r)
     wait_for_all(results)
     return
@@ -122,3 +165,4 @@ if __name__ == "__main__":
 
     main(config_file=args.settings, workload_file=args.workload,
          max_workers=args.maxworkers, runinfo=args.runinfo)
+    parsl.dfk().cleanup()
