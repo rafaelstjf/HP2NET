@@ -30,7 +30,6 @@ __status__ = "Research"
 
 import parsl
 import logging
-from parsl.channels import LocalChannel
 from parsl.launchers import SrunLauncher, SingleNodeLauncher
 from parsl.addresses import address_by_interface, address_by_hostname
 from parsl.executors import HighThroughputExecutor, WorkQueueExecutor
@@ -93,7 +92,6 @@ def workflow_config(config: BioConfig, **kwargs) -> parsl.config.Config:
                     worker_debug=False,
                     provider=LocalProvider(
                         nodes_per_block=1,
-                        channel=LocalChannel(script_dir=config.script_dir),
                         parallelism=1,
                         init_blocks=config.workflow_node,
                         max_blocks=config.workflow_node,
@@ -129,7 +127,6 @@ def workflow_config(config: BioConfig, **kwargs) -> parsl.config.Config:
                     worker_debug=False,
                     provider=LocalProvider(
                         nodes_per_block=1,
-                        channel=LocalChannel(script_dir=config.script_dir),
                         parallelism=1,
                         init_blocks=config.workflow_node,
                         max_blocks=config.workflow_node,
