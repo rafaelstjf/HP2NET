@@ -1,7 +1,8 @@
 import functools
 from typing import Any
+import logging
 
-
+logger = logging.getLogger(__name__)
 class Cache():
     _table = dict()
 
@@ -56,11 +57,11 @@ def app_reuse(cache, args_to_ignore):
             try:
                 value = cache[key]
                 if value:
-                    print("Value is already in the cache")
+                    logger.debug("Value is already in the cache")
                 return value
             except KeyError:
                 ret = func(*args, **kwargs)
-                print("Value is not in the cache. Adding!")
+                logger.debug("Value is not in the cache. Adding!")
                 cache[key] = ret
                 return ret
             
