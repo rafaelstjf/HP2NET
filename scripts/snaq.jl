@@ -1,70 +1,105 @@
-using Distributed: length
 #!/bin/env julia
 
-#use the args to generate the correct output
-#arg[1] = tree method
-#arg[2]= path of the tree
-#arg[3] = path of the topology
-#arg[4] = output dir
-#arg[5] = num_workers
-#arg[6] = hmax
-#arg[7] = runs
-#arg[8] = outgroup
+# Argument usage:
+# ARGS[1] = tree method (RAXML, IQTREE, MRBAYES)
+# ARGS[2] = path of the tree
+# ARGS[3] = path of the topology
+# ARGS[4] = output dir
+# ARGS[5] = num_workers
+# ARGS[6] = hmax
+# ARGS[7] = runs
+# ARGS[8] = (optional) outgroup
 
 println("Starting PhyloNetworks...")
+
+# Validate arguments
 if length(ARGS) < 7
-    println("Missing arguments!")
-else
-    println("Tree method: ", ARGS[1])
-    println("Path of the tree: ", ARGS[2])
-    println("Path of the topology: ", ARGS[3])
-    println("Output folder: ", ARGS[4])
-    println("Number of processors: ", ARGS[5])
-    println("Hybridization max: ", ARGS[6])
-    println("Number of runs max: ", ARGS[7])
-    #println("Outgroup taxon: ", ARGS[8])
-    if(length(ARGS) == 8)
-        println("Species mapping: ", ARGS[8])
+    println("Usage: script.jl <tree method> <tree path> <topology path> <output dir> <num_workers> <hmax> <runs> [outgroup]")
+    exit(1)
+end
+
+# Parse required arguments
+method = ARGS[1]
+tree_path = ARGS[2]
+topology_path = ARGS[3]
+output_dir = ARGS[4]
+num_workers = max(1, parse(Int, ARGS[5]) - 1)
+hmax = parse(Int, ARGS[6])
+runs = parse(Int, ARGS[7])
+outgroup = get(ARGS, 8, nothing)  # Optional
+
+println("Tree method: $method")
+println("Tree path: $tree_path")
+println("Topology path: $topology_path")
+println("Output folder: $output_dir")
+println("Number of processors: $num_workers")
+println("Hybridization max: $hmax")
+println("Number of runs: $runs")
+if outgroup !== nothing
+    println("Species mapping: $outgroup")
+end
+import Pkg
+
+# Ensure required packages are installed
+function ensure_installed(pkgs)
+    for pkg in pkgs
+        if Base.find_package(pkg) === nothing
+            println("Installing $pkg...")
+            Pkg.add(pkg)
+        end
     end
 end
+
+required_pkgs = ["PhyloNetworks", "Distributed", "CSV"]
+ensure_installed(required_pkgs)
+
+# Import packages
 using PhyloNetworks
 using Distributed
 using CSV
-addprocs(parse(Int64,ARGS[5]) - 1)
 
-basedir = dirname(ARGS[4])
-name = string(replace(basename(basedir),"/" => "" ), "_", ARGS[1], "_", "MPL_", ARGS[6])
-output = joinpath(ARGS[4], name)
-println("Using PhyloNetworks on every processor")
+if num_workers > 0
+    addprocs(num_workers)
+end
+
 @everywhere using PhyloNetworks
-if ARGS[1] == "RAXML" || ARGS[1] == "IQTREE"
-    if length(ARGS) == 8
-        genetrees = readMultiTopology(ARGS[2])
+
+basedir = dirname(output_dir)
+name = string(replace(basename(basedir), "/" => ""), "_", method, "_MPL_", hmax)
+output = joinpath(output_dir, name)
+
+println("Using PhyloNetworks on every processor")
+
+# Process different tree methods
+if method in ["RAXML", "IQTREE"]
+    if outgroup !== nothing
+        genetrees = readMultiTopology(tree_path)
         taxon_map = Dict{String, String}()
-        spec_list = split(ARGS[8], ';')
+        spec_list = split(outgroup, ';')
         for spec in spec_list
             sp = split(strip(spec), ':')
             for allele in split(sp[2], ',')
-                merge!(taxon_map, Dict(allele=>sp[1]))
+                taxon_map[allele] = sp[1]
             end
         end
         println(taxon_map)
         q, t = countquartetsintrees(genetrees, taxon_map)
         df_sp = writeTableCF(q, t)
         println(df_sp)
-        CSV.write(joinpath(ARGS[4], "tableCF_species.csv"), df_sp)
-        raxmlCF = readTableCF(joinpath(ARGS[4], "tableCF_species.csv"))
+        CSV.write(joinpath(output_dir, "tableCF_species.csv"), df_sp)
+        raxmlCF = readTableCF(joinpath(output_dir, "tableCF_species.csv"))
     else
-        raxmlCF = readTrees2CF(ARGS[2], writeTab=false, writeSummary=false)
+        raxmlCF = readTrees2CF(tree_path, writeTab=false, writeSummary=false)
     end
-    astraltree = readTopology(last(readlines(ARGS[3]))) # main tree with BS as node labels
-    net = snaq!(astraltree,  raxmlCF, hmax=parse(Int64,ARGS[6]), filename=string(output), runs=parse(Int64,ARGS[7]))
+    astraltree = readTopology(last(readlines(topology_path)))
+    net = snaq!(astraltree, raxmlCF, hmax=hmax, filename=output, runs=runs)
 
-elseif ARGS[1] == "MRBAYES"
-    buckyCF = readTableCF(ARGS[2])
-    qmc_tree = readTopology(ARGS[3])
-    net = snaq!(qmc_tree,  buckyCF, hmax=parse(Int64,ARGS[6]), filename=string(output), runs=parse(Int64,ARGS[7]))
+elseif method == "MRBAYES"
+    buckyCF = readTableCF(tree_path)
+    qmc_tree = readTopology(topology_path)
+    net = snaq!(qmc_tree, buckyCF, hmax=hmax, filename=output, runs=runs)
+
 else
-    println("Wrong argument!")
+    println("Invalid tree method! Supported methods: RAXML, IQTREE, MRBAYES")
     exit(1)
 end

@@ -1,4 +1,5 @@
-# Framework for construction of phylogenetic networks on High Performance Computing (HPC) environment
+# High Performance Phylogenetic Network (HP2NET) framework
+### Framework for construction of phylogenetic networks on High Performance Computing (HPC) environment
 
 ## Introduction
 
@@ -10,13 +11,13 @@ In view of the complexity in modeling network experiments, the present work intr
 
 ## Requirements
 
-1. Python >= 3.8
+1. Python >= 3.9.6
    1. Biopython >= 1.75
    2. Pandas >= 1.3.2
    3. Parsl >= 1.0
 3. Raxml >= 8.2.12
 4. Astral  >= 5.7.1
-5. SnaQ (PhyloNetworks) >= 0.13.0
+5. SnaQ (PhyloNetworks) <= 0.16.4
 6. MrBayes >= 3.2.7a
 7. BUCKy >=  1.4.4
 8. Quartet MaxCut >= 2.10

@@ -265,6 +265,7 @@ def main(**kwargs):
         wait_for_all([plot])
     else:
         wait_for_all(results)
+    parsl.dfk().cleanup() 
     return
 
 
