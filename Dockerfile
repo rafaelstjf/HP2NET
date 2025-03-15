@@ -1,6 +1,6 @@
 # Dockerfile for installation of HP2Net framework. All the lines related to quartet maxcut are commented due to the software
 # being unavailable
-FROM python:3.9.18-slim-bullseye
+FROM python:3.12-slim-bullseye
 LABEL version="1.0" maintainer="Rafael Terra <rafaelstjf@gmail.com>"
 WORKDIR /app
 COPY . /app/
@@ -78,6 +78,7 @@ RUN rm -rf ASTRAL iqtree bucky /var/lib/apt/lists/*
 RUN python3 -m pip install  --upgrade pip && \
     python3 -m pip install -r requirements.txt
 
-RUN julia -e 'using Pkg; Pkg.add(["PhyloNetworks", "RCall", "PhyloPlots", "CSV"])'
+RUN julia -e 'using Pkg; Pkg.add(Pkg.PackageSpec(name="PhyloNetworks", version="0.16.4"))'
+RUN julia -e 'using Pkg; Pkg.add(["RCall", "PhyloPlots", "CSV"])'
 # Set the default command
 ENTRYPOINT ["python3", "parsl_workflow.py"]
