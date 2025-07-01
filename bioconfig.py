@@ -20,7 +20,7 @@ this program. If not, see <http://www.gnu.org/licenses/>.
 #from apps import quartet_maxcut
 from genericpath import isfile
 from parsl import bash_app, python_app
-import parsl, os, json, glob
+import parsl, os, json, glob, random
 from appsexception import JsonMissingData, RootMissing, TarMissingData
 
 # COPYRIGHT SECTION
@@ -62,6 +62,7 @@ class BioConfig:
     network_method:     str
     tree_method:        str
     bootstrap:          str
+    seed:               int
     workload:           field(default_factory=list)
     workflow_name:      str
     workflow_path:      str
@@ -122,6 +123,7 @@ class BioConfig:
             self.network_method,
             self.tree_method,
             self.bootstrap,
+            self.seed,
             tuple(workload_tuples),
             self.workflow_name,
             self.workflow_path,
@@ -247,7 +249,7 @@ class ConfigFactory:
         bootstrap = cf['GENERAL']['BootStrap']
         execution_provider = cf['GENERAL']['ExecutionProvider'].upper()
         plot_networks = cf["WORKFLOW"].getboolean("Plot")
-
+        seed = int(cf["GENERAL"].get("Seed", random.randrange(1, 1000, 2)))
         #SYSTEM
         #WORKFLOW
         workflow_name = "HP2NET"
@@ -324,6 +326,7 @@ class ConfigFactory:
                                    network_method=network_method,
                                    tree_method=tree_method,
                                    bootstrap=bootstrap,
+                                   seed=seed,
                                    workload=workload,
                                    env_path=env_path,
                                    environ=environ,
