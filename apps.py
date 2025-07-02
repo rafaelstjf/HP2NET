@@ -582,7 +582,7 @@ def mrbayes(basedir: dict,
     # open the gene alignment file, read its contents and create a new file with mrbayes parameters
     gene_par = open(os.path.join(mb_folder, gene_name), 'w+')
     gene_par.write(gene_string)
-    par = f"begin mrbayes;\nset nowarnings=yes;\nset autoclose=yes;\nlset nst=2;\n{config.mrbayes_parameters};\nSeed={config.seed};\nmcmc;\nsumt;\nend;"
+    par = f"begin mrbayes;\nset nowarnings=yes;\nset autoclose=yes;\nlset nst=2;\n{config.mrbayes_parameters};\nseed={config.seed};\nmcmc;\nsumt;\nend;"
     gene_par.write(par)
     return f"{config.mrbayes} {os.path.join(mb_folder, gene_name)}"
 
