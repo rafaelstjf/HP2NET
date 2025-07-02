@@ -35,7 +35,7 @@ if length(ARGS) == 8
     # Sem outgroup, seed é ARGS[8]
     outgroup = nothing
 elseif length(ARGS) == 9
-    # Com outgroup, seed é ARGS[9]
+    # Com outgroup
     outgroup = ARGS[9]
 end
 
@@ -50,7 +50,6 @@ if outgroup !== nothing
     println("Species mapping: $outgroup")
 end
 println("Using random seed: $seed")
-Random.seed!(seed)
 import Pkg
 
 # Ensure required packages are installed
