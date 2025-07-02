@@ -1075,10 +1075,10 @@ def setup_phylonet_data(basedir: dict,
     filename = f"{os.path.basename(work_dir)}_{tree_method}_{network_method}_{hmax}.nex"
     output_network = os.path.join(out_dir,filename)
     if(len(mapping) == 0):
-        buffer+="geneTree" + str(tree_index) +') ' + hmax + " -pl " + config.phylonet_threads + " -seed" + str(config.seed) + " -x " + config.phylonet_runs + " " + output_network + ';\nEND;'
+        buffer+="geneTree" + str(tree_index) +') ' + hmax + " -pl " + config.phylonet_threads + " -seed " + str(config.seed) + " -x " + config.phylonet_runs + " " + output_network + ';\nEND;'
     else:
         mapping = re.sub(" ", "_", mapping)
-        buffer+="geneTree" + str(tree_index) +') ' + hmax + " -pl " + config.phylonet_threads + " -seed" + str(config.seed) + " -a <" + mapping +"> -x " + config.phylonet_runs + " " + output_network + ';\nEND;'
+        buffer+="geneTree" + str(tree_index) +') ' + hmax + " -pl " + config.phylonet_threads + " -seed " + str(config.seed) + " -a <" + mapping +"> -x " + config.phylonet_runs + " " + output_network + ';\nEND;'
 
     #---
     out_file.write(buffer)
