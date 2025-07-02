@@ -768,7 +768,7 @@ def bucky(basedir: dict,
     s_temp = str(seed)
     s_temp = s_temp[::-1]
     seed2 = int(s_temp)
-    params = f"-a 1 -n 1000000 -cf 0 -s1 {seed} -s2 {seed2} -o {output_file} -s -p {prune_file} {(' ').join(files)}"
+    params = f"-a 1 -n 1000000 -cf 0 -s1 {seed} -s2 {seed2} -o {output_file} -p {prune_file} {(' ').join(files)}"
     return f"{config.bucky} {params}"
 
 
