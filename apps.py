@@ -585,13 +585,23 @@ def mrbayes(basedir: dict,
     params = config.mrbayes_parameters.strip()
 
     # add the seed if it's not in the parameters
-    if 'seed=' not in params and 'swapseed=' not in params:
-        params += f" seed={config.seed} swapseed={config.seed}"
+    params = config.mrbayes_parameters.strip()
 
+    # Remove parâmetros obsoletos (caso existam) da string original
+    for deprecated in ["seed=", "swapseed="]:
+        if deprecated in params:
+            # remove qualquer trecho tipo seed=12345 ou swapseed=12345
+            params = ' '.join(
+                part for part in params.split()
+                if not part.strip().startswith(deprecated)
+            )
+
+    # Adiciona os seeds na forma correta (comando set)
     par = (
         "begin mrbayes;\n"
         "set nowarnings=yes;\n"
         "set autoclose=yes;\n"
+        f"set seed={config.seed} swapseed={config.seed};\n"
         "lset nst=2;\n"
         f"{params};\n"
         "mcmc;\n"
