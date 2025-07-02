@@ -582,8 +582,25 @@ def mrbayes(basedir: dict,
     # open the gene alignment file, read its contents and create a new file with mrbayes parameters
     gene_par = open(os.path.join(mb_folder, gene_name), 'w+')
     gene_par.write(gene_string)
-    par = f"begin mrbayes;\nset nowarnings=yes;\nset autoclose=yes;\nlset nst=2;\n{config.mrbayes_parameters};\nseed={config.seed};swapseed={config.seed};\nmcmc;\nsumt;\nend;"
+    params = config.mrbayes_parameters.strip()
+
+    # add the seed if it's not in the parameters
+    if 'seed=' not in params and 'swapseed=' not in params:
+        params += f" seed={config.seed} swapseed={config.seed}"
+
+    par = (
+        "begin mrbayes;\n"
+        "set nowarnings=yes;\n"
+        "set autoclose=yes;\n"
+        "lset nst=2;\n"
+        f"{params};\n"
+        "mcmc;\n"
+        "sumt;\n"
+        "end;"
+    )
+
     gene_par.write(par)
+
     return f"{config.mrbayes} {os.path.join(mb_folder, gene_name)}"
 
 # mbsum bash app
