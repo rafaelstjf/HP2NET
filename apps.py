@@ -531,7 +531,7 @@ def snaq(basedir: dict,
         bucky_folder = os.path.join(work_dir, config.bucky_dir)
         bucky_table = os.path.join(bucky_folder, f"{dir_name}.csv")
         #mrbayes flow doesn't support mapping
-        return f'julia {snaq_exec} {tree_method} {bucky_table} {qmc_output} {output_folder} {num_threads} {hmax} {runs}'
+        return f'julia {snaq_exec} {tree_method} {bucky_table} {qmc_output} {output_folder} {num_threads} {hmax} {runs} {seed}'
     else:
         return
 
