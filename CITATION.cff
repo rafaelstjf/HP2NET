@@ -1,0 +1,60 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: HP2NET - High Performance Phylogenetic Network
+message: 'If you use this framework, please cite it as below'
+type: software
+authors:
+  - given-names: Rafael
+    family-names: Terra
+    email: rafaelst@posgrad.lncc.br
+    affiliation: National Laboratory for Scientific Computing
+    orcid: 'https://orcid.org/0000-0002-3811-4527'
+  - given-names: Diego
+    family-names: Carvalho
+    orcid: 'https://orcid.org/0000-0003-1592-6327'
+    affiliation: >-
+      Federal Center for Technological Education Celso
+      Suckow da Fonseca
+identifiers:
+  - type: doi
+    value: 10.48546/workflowhub.workflow.703.1
+repository-code: 'https://github.com/rafaelstjf/HP2NET'
+abstract: >-
+  Phylogeny refers to the evolutionary history and
+  relationship between biological lineages related by common
+  descent. Reticulate evolution refers to the origination of
+  lineages through the complete or partial merging of
+  ancestor lineages. Networks may be used to represent
+  lineage independence events in non-treelike phylogenetic
+  processes.
+
+
+  The methodology for reconstructing networks is still in
+  development. Here we explore two methods for
+  reconstructing rooted explicit phylogenetic networks,
+  PhyloNetworks and Phylonet, which employ computationally
+  expensive and time consuming algorithms. The construction
+  of phylogenetic networks follows a coordinated processing
+  flow of data sets analyzed and processed by the
+  coordinated execution of a set of different programs,
+  packages, libraries or pipelines, called workflow
+  activities.
+
+
+  In view of the complexity in modeling network experiments,
+  the present work introduces a workflow for phylogenetic
+  network analyses coupled to be executed in
+  High-Performance Computing (HPC) environments. The
+  workflow aims to integrate well-established software,
+  pipelines and scripts, implementing a challenging task
+  since these tools do not consistently profit from the HPC
+  environment, leading to an increase in the expected
+  makespan and idle computing resources.
+keywords:
+  - Scientific Workflows
+  - Phylogenetic Networks
+  - High-Performance Computing
+  - Parsl
+license: MIT
