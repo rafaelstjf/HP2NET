@@ -17,6 +17,16 @@ authors:
     affiliation: >-
       Federal Center for Technological Education Celso
       Suckow da Fonseca
+ - given-names: Carla
+    family-names: Osthoff
+    email: osthoff.lncc.br
+    affiliation: National Laboratory for Scientific Computing
+    orcid: 'https://orcid.org/0000-0002-4694-7182'
+- given-names: Kary
+    family-names: Ocaña
+    email: karyann.lncc.br
+    affiliation: National Laboratory for Scientific Computing
+    orcid: 'https://orcid.org/0000-0002-2151-7418'
 identifiers:
   - type: doi
     value: 10.48546/workflowhub.workflow.703.1
