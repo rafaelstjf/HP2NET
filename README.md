@@ -286,5 +286,6 @@ Terra, R., Coelho, M., Cruz, L., Garcia-Zapata, M., Gadelha, L., Osthoff, C., ..
 
 ---
 IEEE paper resuls (temporary):
+
 ![qrcode](docs/qrcode.png)
 
