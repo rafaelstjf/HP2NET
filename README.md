@@ -284,3 +284,7 @@ Terra, R., Coelho, M., Cruz, L., Garcia-Zapata, M., Gadelha, L., Osthoff, C., ..
 
 **Also cite all the coupled software!**
 
+---
+IEEE paper resuls (temporary):
+[!qrcode](docs/qrcode.png)
+
