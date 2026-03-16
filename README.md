@@ -286,8 +286,3 @@ Terra, R., Carvalho, D., Machado, D. J., Osthoff, C., & Ocaña, K. (2026). HP2NE
 
 **Also cite all the coupled software!**
 
----
-IEEE paper resuls (temporary):
-
-![qrcode](docs/qrcode.png)
-
