@@ -281,6 +281,8 @@ docker run --rm -v $DIR:$DIR rafaelstjf/hp2net:main -s ${DIR}/sdumont.ini -w ${D
 ## If you use it, please cite
 
 Terra, R., Coelho, M., Cruz, L., Garcia-Zapata, M., Gadelha, L., Osthoff, C., ... & Ocana, K. (2021, July). Gerência e Análises de Workflows aplicados a Redes Filogenéticas de Genomas de Dengue no Brasil. In *Anais do XV Brazilian e-Science Workshop* (pp. 49-56). SBC.
+Terra, R., Carvalho, D., Machado, D. J., Osthoff, C., & Ocaña, K. (2026). HP2NET: Empowering Efficient Phylogenetic Network Analysis through High-Performance Computing. Bioinformatics. https://doi.org/10.64898/2026.03.05.709005
+
 
 **Also cite all the coupled software!**
 
