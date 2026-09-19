@@ -57,7 +57,7 @@ hmax = parse(Int, ARGS[6])
 runs = parse(Int, ARGS[7])
 seed = parse(Int, ARGS[8])
 
-if length(ARGS) < 8
+if length(ARGS) < 9
     # without species mapping
     species_mapping = nothing
 else
@@ -73,8 +73,8 @@ println("Number of processors: $num_workers")
 println("Hybridization max: $hmax")
 println("Number of runs: $runs")
 println("Julia threads: $(Threads.nthreads())")
-if outgroup !== nothing
-    println("Allele/species mapping: $mapping")
+if species_mapping !== nothing
+    println("Allele/species mapping: $species_mapping")
 else
     println("Allele/species mapping: disabled")
 end
@@ -166,11 +166,12 @@ function calculate_species_cf(tree_path::String, output_dir::String, species_map
         "using $(Threads.nthreads()) Julia threads..."
     )
     q, t = countquartetsintrees(genetrees)
-    df_cf = writeTableCF(q, t)
+    nt_cf = tablequartetCF(q, t)
+    df_cf = DataFrame(nt_cf)
     if species_mapping === nothing
         cf_file = joinpath(output_dir, "tableCF.csv")
         CSV.write(cf_file, df_cf)
-        return readTableCF(df_cf)
+        return readtableCF(df_cf)
     end
     mapping_df = parse_species_mapping(species_mapping)
     mapping_file = joinpath(output_dir, "allele_species_mapping.csv")
@@ -180,6 +181,7 @@ function calculate_species_cf(tree_path::String, output_dir::String, species_map
     CSV.write(mapped_cf_file, df_cf)
     dataCF = readtableCF(df_cf; mergerows=true)
     return dataCF
+end
 
 # Process different tree methods
 if method in ["RAXML", "IQTREE"]
@@ -190,7 +192,7 @@ if method in ["RAXML", "IQTREE"]
     end
     astraltree = readTopology(last(topology_lines))
     net = snaq!(astraltree, raxmlCF, hmax=hmax, filename=output, runs=runs, seed=seed)
-elseif
+elseif method == "MRBAYES"
     buckyCF = readtableCF(tree_path)
     topology_lines = readlines(topology_path)
     if isempty(topology_lines)
@@ -198,7 +200,6 @@ elseif
     end
     qmc_tree = readTopology(last(topology_lines))
     net = snaq!(qmc_tree, buckyCF, hmax=hmax, filename=output, runs=runs, seed=seed)
-end
 else
     error("Invalid tree method '$method'.")
 end
