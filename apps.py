@@ -768,6 +768,14 @@ def bucky(basedir: dict,
     s_temp = str(seed)
     s_temp = s_temp[::-1]
     seed2 = int(s_temp)
+    """
+    -a 1 Specifies the alpha parameter. 
+    -n 1000000 Number of MCMC generations. 
+    -cf 0 Configures the concordance-factor analysis. 
+    -s1 and -s2 Random seeds. 
+    -o BUCKy output prefix. 
+    -p Prune-tree file.
+    """
     params = f"-a 1 -n 1000000 -cf 0 -s1 {seed} -s2 {seed2} -o {output_file} -p {prune_file} {(' ').join(files)}"
     return f"{config.bucky} {params}"
 
@@ -793,6 +801,7 @@ def setup_bucky_output(basedir: dict,
         named according to task id and saved under task_logs in the run directory.
     """
     import re, os, glob, logging
+
     work_dir = basedir['dir']
     logging.info(f'Setting up BUCky output in {work_dir}')
     bucky_folder = os.path.join(work_dir, config.bucky_dir)
@@ -803,6 +812,17 @@ def setup_bucky_output(basedir: dict,
     mean_num_loci_pattern = re.compile(r"(=\s+\d+\.\d+\s+\(number of loci\))")
     translate_block_pattern = re.compile(r"translate\n(\s*\w+\s*\w+(,|;)\n*)+")
     # open all the bucky's output files and parse them
+    """
+    For each BUCKy ``.out`` file, the corresponding ``.concordance`` file is read and parsed to extract:
+        - the four taxa associated with the quartet;
+        - the concordance factor (CF) for the ``12|34`` split;
+        - the lower and upper bounds of its 95% confidence interval; 
+        - the concordance factor for the ``13|24`` split; 
+        - the lower and upper bounds of its 95% confidence interval; 
+        - the concordance factor for the ``14|23`` split; 
+        - the lower and upper bounds of its 95% confidence interval; 
+        - the number of genes/loci used in the analysis. 
+    """
     for out_file in out_files:
         taxa = []
         splits = {}
