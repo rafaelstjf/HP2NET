@@ -81,4 +81,4 @@ RUN python3 -m pip install  --upgrade pip && \
 RUN julia -e 'using Pkg; Pkg.add(Pkg.PackageSpec(name="PhyloNetworks", version="0.16.4"))'
 RUN julia -e 'using Pkg; Pkg.add(["RCall", "PhyloPlots", "CSV"])'
 # Set the default command
-ENTRYPOINT ["python3", "parsl_workflow.py"]
+ENTRYPOINT ["python3", "HP2NET.py"]

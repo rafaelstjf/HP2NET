@@ -209,11 +209,11 @@ Where ``Mapping`` is a direct mapping of the taxon, when there are multiple alle
 
 * In a local machine:
 
-  After setting up the framework, just run ``python3 parsl_workflow.py``.
+  After setting up the framework, just run ``python3 HP2NET.py``.
   
 * In a SLURM environment:
 
-  Create an submition script that inside contains: ``python3 parsl_workflow.py``.
+  Create an submition script that inside contains: ``python3 HP2NET.py``.
 
   ```sh
   #!/bin/bash
@@ -222,7 +222,7 @@ Where ``Mapping`` is a direct mapping of the taxon, when there are multiple alle
   #SBATCH -o slurm-%j.out
   module load python/3.9.6
   cd /path/to/biocomp
-  python3 parsl_workflow.py
+  python3 HP2NET.py
   ```
 
 The framework is under heavy development. If you notice any bug, please create an issue here on GitHub.
