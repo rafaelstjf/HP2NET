@@ -527,15 +527,8 @@ def snaq(basedir: dict,
     else:
         return
 
-    previous_hmax = ""
-    try:
-        parsed_hmax = int(str(use_last_topology).strip())
-        if parsed_hmax >= 0:
-            previous_hmax = str(parsed_hmax)
-    except (TypeError, ValueError):
-        pass
+    previous_hmax = use_last_topology.strip()
 
-    topology_setup = f'topology_path="{topology_file}"'
     if previous_hmax != "":
         dir_name = os.path.basename(work_dir)
         previous_network = os.path.join(
@@ -546,22 +539,24 @@ def snaq(basedir: dict,
             output_folder,
             f"{dir_name}_{tree_method}_MPL_{hmax}_initial.tre",
         )
-        topology_setup += (
-            f'; if [ -s "{previous_network}" ]; then '
-            f'sed -n \'1s/ -Ploglik.*//p\' "{previous_network}" '
-            f'> "{initial_topology}"; '
-            f'if grep -q \';\' "{initial_topology}"; then '
-            f'topology_path="{initial_topology}"; fi; fi'
-        )
+        if os.path.isfile(previous_network):
+            with open(previous_network, "r") as network_file:
+                initial_network = network_file.readline().partition(
+                    " -Ploglik"
+                )[0].strip()
+            if initial_network.endswith(";"):
+                with open(initial_topology, "w") as topology_output:
+                    topology_output.write(initial_network + "\n")
+                topology_file = initial_topology
 
     command = (
-        f'julia "{snaq_exec}" {tree_method} "{tree_file}" '
-        f'"$topology_path" "{output_folder}" '
+        f'julia "{snaq_exec}" {tree_method} "{tree_file}" "{topology_file}" '
+        f'"{output_folder}" '
         f'{num_threads} {hmax} {runs} {seed}'
     )
     if tree_method in ("RAXML", "IQTREE") and len(mapping) > 0:
         command += f" '{mapping}'"
-    return f"{topology_setup}; {command}"
+    return command
 
 @parsl.python_app(executors=['single_partition'])
 def prepare_prunetrees(basedir: dict,
