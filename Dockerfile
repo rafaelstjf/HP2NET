@@ -78,7 +78,7 @@ RUN rm -rf ASTRAL iqtree bucky /var/lib/apt/lists/*
 RUN python3 -m pip install  --upgrade pip && \
     python3 -m pip install -r requirements.txt
 
-RUN julia -e 'using Pkg; Pkg.add(Pkg.PackageSpec(name="PhyloNetworks", version="0.16.4"))'
+RUN julia -e 'using Pkg; Pkg.add("PhyloNetworks")'
 RUN julia -e 'using Pkg; Pkg.add(["RCall", "PhyloPlots", "CSV"])'
 # Set the default command
 ENTRYPOINT ["python3", "HP2NET.py"]
