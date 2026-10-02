@@ -478,7 +478,7 @@ def snaq(basedir: dict,
         hmax: str,
         inputs=[],
         outputs=[],
-        next_pipe: Any = None,
+        use_last_topology = "",
         stderr=parsl.AUTO_LOGNAME,
         stdout=parsl.AUTO_LOGNAME
         ):
@@ -497,10 +497,8 @@ def snaq(basedir: dict,
     """
     # set environment variables
     import os, logging
-    from pathlib import Path
     work_dir = basedir['dir']
     tree_method = basedir['tree_method']
-    outgroup = basedir['outgroup']
     mapping = basedir['mapping']
     logging.info(f'SNAQ called with {work_dir}')
     # run the julia script with PhyloNetworks
@@ -509,31 +507,61 @@ def snaq(basedir: dict,
     output_folder = os.path.join(work_dir, config.snaq_dir)
     runs = config.snaq_runs
     seed = config.seed
+
     if tree_method == "RAXML":
-        raxml_tree = os.path.join(os.path.join(work_dir, config.raxml_dir), config.raxml_output)
-        astral_tree = os.path.join(work_dir, os.path.join(config.astral_dir, config.raxml_dir))
-        astral_tree = os.path.join(astral_tree, config.astral_output)
-        if len(mapping) > 0:
-            return f'julia {snaq_exec} {tree_method} {raxml_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs} {seed} \'{mapping}\''
-        else:
-            return f'julia {snaq_exec} {tree_method} {raxml_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs} {seed}'
+        tree_file = os.path.join(work_dir, config.raxml_dir, config.raxml_output)
+        topology_file = os.path.join(
+            work_dir, config.astral_dir, config.raxml_dir, config.astral_output
+        )
     elif tree_method == "IQTREE":
-        iqtree_tree = os.path.join(os.path.join(work_dir, config.iqtree_dir), config.iqtree_output)
-        astral_tree = os.path.join(work_dir, os.path.join(config.astral_dir,config.iqtree_dir))
-        astral_tree = os.path.join(astral_tree, config.astral_output)
-        if len(mapping) > 0:
-            return f'julia {snaq_exec} {tree_method} {iqtree_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs} {seed}\'{mapping}\''
-        else:
-            return f'julia {snaq_exec} {tree_method} {iqtree_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs} {seed}'
+        tree_file = os.path.join(work_dir, config.iqtree_dir, config.iqtree_output)
+        topology_file = os.path.join(
+            work_dir, config.astral_dir, config.iqtree_dir, config.astral_output
+        )
     elif tree_method == "MRBAYES":
         dir_name = os.path.basename(work_dir)
-        qmc_output = os.path.join(os.path.join(work_dir, config.quartet_maxcut_dir), f'{dir_name}.tre')
-        bucky_folder = os.path.join(work_dir, config.bucky_dir)
-        bucky_table = os.path.join(bucky_folder, f"{dir_name}.csv")
-        #mrbayes flow doesn't support mapping
-        return f'julia {snaq_exec} {tree_method} {bucky_table} {qmc_output} {output_folder} {num_threads} {hmax} {runs} {seed}'
+        tree_file = os.path.join(work_dir, config.bucky_dir, f"{dir_name}.csv")
+        topology_file = os.path.join(
+            work_dir, config.quartet_maxcut_dir, f"{dir_name}.tre"
+        )
     else:
         return
+
+    previous_hmax = ""
+    try:
+        parsed_hmax = int(str(use_last_topology).strip())
+        if parsed_hmax >= 0:
+            previous_hmax = str(parsed_hmax)
+    except (TypeError, ValueError):
+        pass
+
+    topology_setup = f'topology_path="{topology_file}"'
+    if previous_hmax != "":
+        dir_name = os.path.basename(work_dir)
+        previous_network = os.path.join(
+            output_folder,
+            f"{dir_name}_{tree_method}_MPL_{previous_hmax}.out",
+        )
+        initial_topology = os.path.join(
+            output_folder,
+            f"{dir_name}_{tree_method}_MPL_{hmax}_initial.tre",
+        )
+        topology_setup += (
+            f'; if [ -s "{previous_network}" ]; then '
+            f'sed -n \'1s/ -Ploglik.*//p\' "{previous_network}" '
+            f'> "{initial_topology}"; '
+            f'if grep -q \';\' "{initial_topology}"; then '
+            f'topology_path="{initial_topology}"; fi; fi'
+        )
+
+    command = (
+        f'julia "{snaq_exec}" {tree_method} "{tree_file}" '
+        f'"$topology_path" "{output_folder}" '
+        f'{num_threads} {hmax} {runs} {seed}'
+    )
+    if tree_method in ("RAXML", "IQTREE") and len(mapping) > 0:
+        command += f" '{mapping}'"
+    return f"{topology_setup}; {command}"
 
 @parsl.python_app(executors=['single_partition'])
 def prepare_prunetrees(basedir: dict,
@@ -1231,7 +1259,12 @@ def plot_networks(config: BioConfig,
                 networks+=os.path.join(snaq_dir, name)
         if basedir['network_method'] == "MP":
             phylonet_dir = os.path.join(basedir['dir'], config.phylonet_dir)
-            for h in config.snaq_hmax:
+            if len(config.phylonet_hmax) > 1:
+                hmax_values = config.phylonet_hmax
+            else:
+                hmax_values = [str(h) for h in range(
+                    1, int(config.phylonet_hmax[0]) + 1)]
+            for h in hmax_values:
                 name = f'{os.path.basename(basedir["dir"])}_{basedir["tree_method"]}_MP_{h}.nex'
                 if len(networks) > 0:
                     networks+=','
