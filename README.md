@@ -14,16 +14,16 @@ In view of the complexity in modeling network experiments, the present work intr
 1. Python >= 3.9.6
    1. Biopython >= 1.75
    2. Pandas >= 1.3.2
-   3. Parsl >= 1.0
+   3. Parsl >= 1.3
 3. Raxml >= 8.2.12
 4. Astral  >= 5.7.1
-5. SnaQ (PhyloNetworks) <= 0.16.4
+5. SnaQ (PhyloNetworks) >= 1.1
 6. MrBayes >= 3.2.7a
 7. BUCKy >=  1.4.4
 8. Quartet MaxCut >= 2.10
 9. PhyloNet >= 3.8.2
 10. Julia >= 1.4.1
-11. IQTREE >= 2.0
+11. IQ-TREE >= 2.0
 
 
 ## How to use
@@ -93,14 +93,16 @@ BootStrap       = 1000
   RaxmlEvolutionaryModel = GTRGAMMA --HKY85
   ```
 
-* IQTREE settings
+* IQ-TREE settings
 
   ```ini
   [IQTREE]
   IqTreeExecutable = iqtree2
-  IqTreeEvolutionaryModel = TIM2+I+G # if setted as AUTO, iqtree will try to find the best fitting model and create the trees
+  IqTreeEvolutionaryModel = TIM2+I+G 
   IqTreeThreads = 6
   ```
+
+If `IqTreeEvolutionaryModel` is set to AUTO, IQ-TREE will try to find the best-fitting model and create the trees. `IqTreeThreads` is the maximum number of threads that IQ-TREE is allowed to use, the software will decide how many threads to use.
 
 * ASTRAL settings
 
@@ -129,6 +131,8 @@ BootStrap       = 1000
   SnaqHMax        = 3
   SnaqRuns        = 3
   ```
+
+For both `PhyloNetHMax` and `SnaqHMax`, a single value specifies a range from 1 through that value, using the last h value as the initial topology. Setting hmax to 0 runs only with this value, while comma-separated values specify the exact hmax values to use.
 
 * Mr. Bayes settings
 
@@ -282,4 +286,3 @@ docker run --rm -v $DIR:$DIR rafaelstjf/hp2net:main -s ${DIR}/sdumont.ini -w ${D
 Terra, R., Coelho, M., Cruz, L., Garcia-Zapata, M., Gadelha, L., Osthoff, C., ... & Ocana, K. (2021, July). Gerência e Análises de Workflows aplicados a Redes Filogenéticas de Genomas de Dengue no Brasil. In *Anais do XV Brazilian e-Science Workshop* (pp. 49-56). SBC.
 
 **Also cite all the coupled software!**
-
