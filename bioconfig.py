@@ -287,8 +287,13 @@ class ConfigFactory:
         snaq_threads = int(cf['SNAQ']['SnaqThreads'])
         snaq_hmax_raw = cf['SNAQ']['SnaqHMax']
         snaq_hmax = [h.strip() for h in snaq_hmax_raw.split(',') if h.strip()]
+        if any(int(h) < 0 for h in snaq_hmax):
+            raise ValueError("SNAQ SnaqHMax values cannot be negative")
         if len(snaq_hmax) == 1:
-            snaq_hmax = [str(h) for h in range(1, int(snaq_hmax[0]) + 1)]
+            max_h = int(snaq_hmax[0])
+            snaq_hmax = (
+                ["0"] if max_h == 0 else [str(h) for h in range(1, max_h + 1)]
+            )
         snaq_runs = int(cf['SNAQ']['SnaqRuns'])
         snaq_dir = 'snaq'
         
@@ -300,8 +305,13 @@ class ConfigFactory:
         phylonet_runs = cf['PHYLONET']['PhyloNetRuns']
         phylonet_hmax_raw = cf['PHYLONET']['PhyloNetHMax']
         phylonet_hmax = [h.strip() for h in phylonet_hmax_raw.split(',') if h.strip()]
+        if any(int(h) < 0 for h in phylonet_hmax):
+            raise ValueError("PhyloNet PhyloNetHMax values cannot be negative")
         if len(phylonet_hmax) == 1:
-            phylonet_hmax = [str(h) for h in range(1, int(phylonet_hmax[0]) + 1)]
+            max_h = int(phylonet_hmax[0])
+            phylonet_hmax = (
+                ["0"] if max_h == 0 else [str(h) for h in range(1, max_h + 1)]
+            )
         phylonet_input = 'phylonet_phase_1.nex'
         phylonet_dir = 'phylonet'
         #MRBAYES
