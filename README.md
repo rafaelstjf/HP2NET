@@ -199,7 +199,7 @@ Each experiment folder needs to have a *input folder* containing a *.tar.gz* com
 }
 ```
 
-Where ``Mapping`` is a direct mapping of the taxon, when there are multiple alleles per species, in the format ``species1:taxon1,taxon2;species2:taxon3,taxon4`` *(white spaces are not supported)* and ``Outgroup`` is the taxon used to root the network. The Mapping parameter is optional (although it has to be in the json file without value), but the outgroup is obligatory. It's important to say that the flow *MRBAYES|MPL* doesn't support multiple alleles per species. Example:
+Where ``Mapping`` is a direct mapping of the taxon, when there are multiple alleles per species, in the format ``species1:taxon1,taxon2;species2:taxon3,taxon4`` *(white spaces are not supported)* and ``Outgroup`` is the taxon used to root the network. The Mapping parameter is optional (although it has to be in the json file without value); the outgroup is required when using PhyloNet. It's important to say that the flow *MRBAYES|MPL* doesn't support multiple alleles per species. Example:
 
 ```json
 {
