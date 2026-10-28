@@ -1078,6 +1078,7 @@ def setup_phylonet_data(basedir: dict,
                         hmax: str,
                         inputs=[],
                         outputs=[],
+                        previous_network_file: str = None,
                         stderr=parsl.AUTO_LOGNAME,
                         stdout=parsl.AUTO_LOGNAME):
     """Get the raxml/iqtree's output and create a NEXUS file as output for the phylonet in the basedir
@@ -1122,16 +1123,34 @@ def setup_phylonet_data(basedir: dict,
         tree_index+=1
         buffer+="Tree geneTree" + str(tree_index) + " = " + tree
     in_file.close()
-    buffer+='END;\nBEGIN PHYLONET;\nInferNetwork_MP ('
+    buffer += "END;\n"
+    start_network_option = ""
+    if previous_network_file is not None:
+        with open(previous_network_file, "r") as network_file:
+            previous_result = network_file.read()
+        previous_network = re.search(
+            r"Inferred Network #1:\s*(.+?;)", previous_result, re.DOTALL
+        )
+        if previous_network is None:
+            raise ValueError(
+                f"Could not find the previous PhyloNet network in {previous_network_file}"
+            )
+        buffer += (
+            "BEGIN NETWORKS;\n"
+            f"Network startingNetwork = {previous_network.group(1).strip()}\n"
+            "END;\n"
+        )
+        start_network_option = " -s startingNetwork"
+    buffer += "BEGIN PHYLONET;\nInferNetwork_MP ("
     for i in range(0, tree_index-1):
         buffer+="geneTree" + str(i+1) +','
     filename = f"{os.path.basename(work_dir)}_{tree_method}_{network_method}_{hmax}.nex"
     output_network = os.path.join(out_dir,filename)
     if(len(mapping) == 0):
-        buffer+="geneTree" + str(tree_index) +') ' + hmax + " -pl " + config.phylonet_threads + " -seed " + str(config.seed) + " -x " + config.phylonet_runs + " " + output_network + ';\nEND;'
+        buffer+="geneTree" + str(tree_index) +') ' + hmax + start_network_option + " -pl " + config.phylonet_threads + " -seed " + str(config.seed) + " -x " + config.phylonet_runs + " " + output_network + ';\nEND;'
     else:
         mapping = re.sub(" ", "_", mapping)
-        buffer+="geneTree" + str(tree_index) +') ' + hmax + " -pl " + config.phylonet_threads + " -seed " + str(config.seed) + " -a <" + mapping +"> -x " + config.phylonet_runs + " " + output_network + ';\nEND;'
+        buffer+="geneTree" + str(tree_index) +') ' + hmax + start_network_option + " -pl " + config.phylonet_threads + " -seed " + str(config.seed) + " -a <" + mapping +"> -x " + config.phylonet_runs + " " + output_network + ';\nEND;'
 
     #---
     out_file.write(buffer)

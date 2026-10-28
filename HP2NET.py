@@ -89,9 +89,18 @@ def raxml_phylonet(bio_config, basedir, prepare_to_run):
         math.floor(max_workers / int(bio_config.phylonet_threads))
     )
     hmax_values = bio_config.phylonet_hmax
+    previous_network_file = None
+    previous_phylonet = None
     for h in hmax_values:
+        setup_inputs = [ret_rooted]
+        if previous_phylonet is not None:
+            setup_inputs.append(previous_phylonet)
         ret_spd = apps.setup_phylonet_data(
-            basedir, config=bio_config, hmax=h, inputs=[ret_rooted]
+            basedir,
+            config=bio_config,
+            hmax=h,
+            previous_network_file=previous_network_file,
+            inputs=setup_inputs,
         )
         filename = os.path.join(
             out_dir,
@@ -106,6 +115,11 @@ def raxml_phylonet(bio_config, basedir, prepare_to_run):
         )
         pool_phylo.current(ret_phylonet)
         result.append(ret_phylonet)
+        previous_network_file = os.path.join(
+            out_dir,
+            f"{os.path.basename(basedir['dir'])}_{basedir['tree_method']}_{basedir['network_method']}_{h}.nex",
+        )
+        previous_phylonet = ret_phylonet
     return result
 
 
@@ -182,8 +196,19 @@ def iqtree_phylonet(bio_config, basedir, prepare_to_run):
         math.floor(max_workers / int(bio_config.phylonet_threads))
     )
     hmax_values = bio_config.phylonet_hmax
+    previous_network_file = None
+    previous_phylonet = None
     for h in hmax_values:
-        ret_spd = apps.setup_phylonet_data(basedir, bio_config, h, inputs=[ret_rooted])
+        setup_inputs = [ret_rooted]
+        if previous_phylonet is not None:
+            setup_inputs.append(previous_phylonet)
+        ret_spd = apps.setup_phylonet_data(
+            basedir,
+            bio_config,
+            h,
+            previous_network_file=previous_network_file,
+            inputs=setup_inputs,
+        )
         filename = os.path.join(
             out_dir,
             (basedir["tree_method"] + "_" + h + "_" + bio_config.phylonet_input),
@@ -193,6 +218,11 @@ def iqtree_phylonet(bio_config, basedir, prepare_to_run):
         )
         pool_phylo.current(ret_phylonet)
         result.append(ret_phylonet)
+        previous_network_file = os.path.join(
+            out_dir,
+            f"{os.path.basename(basedir['dir'])}_{basedir['tree_method']}_{basedir['network_method']}_{h}.nex",
+        )
+        previous_phylonet = ret_phylonet
     return result
 
 
