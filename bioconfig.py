@@ -286,9 +286,9 @@ class ConfigFactory:
         snaq = 'snaq.jl'
         snaq_threads = int(cf['SNAQ']['SnaqThreads'])
         snaq_hmax_raw = cf['SNAQ']['SnaqHMax']
-        snaq_hmax = list()
-        for h in snaq_hmax_raw.split(','):
-            snaq_hmax.append(h.strip())
+        snaq_hmax = [h.strip() for h in snaq_hmax_raw.split(',') if h.strip()]
+        if len(snaq_hmax) == 1:
+            snaq_hmax = [str(h) for h in range(1, int(snaq_hmax[0]) + 1)]
         snaq_runs = int(cf['SNAQ']['SnaqRuns'])
         snaq_dir = 'snaq'
         
@@ -299,9 +299,9 @@ class ConfigFactory:
         phylonet_threads = cf['PHYLONET']['PhyloNetThreads']
         phylonet_runs = cf['PHYLONET']['PhyloNetRuns']
         phylonet_hmax_raw = cf['PHYLONET']['PhyloNetHMax']
-        phylonet_hmax = list()
-        for h in phylonet_hmax_raw.split(','):
-            phylonet_hmax.append(h.strip())
+        phylonet_hmax = [h.strip() for h in phylonet_hmax_raw.split(',') if h.strip()]
+        if len(phylonet_hmax) == 1:
+            phylonet_hmax = [str(h) for h in range(1, int(phylonet_hmax[0]) + 1)]
         phylonet_input = 'phylonet_phase_1.nex'
         phylonet_dir = 'phylonet'
         #MRBAYES

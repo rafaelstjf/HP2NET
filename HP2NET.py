@@ -41,40 +41,21 @@ def raxml_snaq(bio_config, basedir, prepare_to_run):
     logging.info("Using the Maximum Pseudo Likelihood Method")
     ret_ast = apps.astral(basedir, config=bio_config, inputs=[ret_sad])
     ret_snq = None
-    if len(bio_config.snaq_hmax) > 1:
-        # User passed multiple hmax so we're going to use each one as topology for the next
-        last_h = ""
-        for h in bio_config.snaq_hmax:
-            if ret_snq is None:
-                ret_snq = apps.snaq(
-                    basedir, config=bio_config, hmax=h, inputs=[ret_ast]
-                )
-            else:
-                ret_snq = apps.snaq(
-                    basedir,
-                    config=bio_config,
-                    hmax=h,
-                    inputs=[ret_snq],
-                    use_last_topology=last_h,
-                )
-            last_h = h
-    else:
-        # User passed only one value, so we're going to construct networks from 1 to hmax
-        last_h = ""
-        for h in range(1, int(bio_config.snaq_hmax)):
-            if ret_snq is None:
-                ret_snq = apps.snaq(
-                    basedir, config=bio_config, hmax=str(h), inputs=[ret_ast]
-                )
-            else:
-                ret_snq = apps.snaq(
-                    basedir,
-                    config=bio_config,
-                    hmax=str(h),
-                    inputs=[ret_snq],
-                    use_last_topology=last_h,
-                )
-            last_h = h
+    last_h = ""
+    for h in bio_config.snaq_hmax:
+        if ret_snq is None:
+            ret_snq = apps.snaq(
+                basedir, config=bio_config, hmax=h, inputs=[ret_ast]
+            )
+        else:
+            ret_snq = apps.snaq(
+                basedir,
+                config=bio_config,
+                hmax=h,
+                inputs=[ret_snq],
+                use_last_topology=last_h,
+            )
+        last_h = h
     result.append(ret_snq)
     return result
 
@@ -107,11 +88,7 @@ def raxml_phylonet(bio_config, basedir, prepare_to_run):
     pool_phylo = CircularList(
         math.floor(max_workers / int(bio_config.phylonet_threads))
     )
-    if len(bio_config.phylonet_hmax) > 1:
-        hmax_values = bio_config.phylonet_hmax
-    else:
-        hmax_values = [str(h) for h in range(
-            1, int(bio_config.phylonet_hmax[0]) + 1)]
+    hmax_values = bio_config.phylonet_hmax
     for h in hmax_values:
         ret_spd = apps.setup_phylonet_data(
             basedir, config=bio_config, hmax=h, inputs=[ret_rooted]
@@ -157,40 +134,21 @@ def iqtree_snaq(bio_config, basedir, prepare_to_run):
     logging.info("Using the Maximum Pseudo Likelihood Method")
     ret_ast = apps.astral(basedir, bio_config, inputs=[ret_sad])
     ret_snq = None
-    if len(bio_config.snaq_hmax) > 1:
-        # User passed multiple hmax so we're going to use each one as topology for the next
-        last_h = ""
-        for h in bio_config.snaq_hmax:
-            if ret_snq is None:
-                ret_snq = apps.snaq(
-                    basedir, config=bio_config, hmax=h, inputs=[ret_ast]
-                )
-            else:
-                ret_snq = apps.snaq(
-                    basedir,
-                    config=bio_config,
-                    hmax=h,
-                    inputs=[ret_snq],
-                    use_last_topology=last_h,
-                )
-            last_h = h
-    else:
-        # User passed only one value, so we're going to construct networks from 1 to hmax
-        last_h = ""
-        for h in range(1, int(bio_config.snaq_hmax)):
-            if ret_snq is None:
-                ret_snq = apps.snaq(
-                    basedir, config=bio_config, hmax=str(h), inputs=[ret_ast]
-                )
-            else:
-                ret_snq = apps.snaq(
-                    basedir,
-                    config=bio_config,
-                    hmax=str(h),
-                    inputs=[ret_snq],
-                    use_last_topology=last_h,
-                )
-            last_h = h
+    last_h = ""
+    for h in bio_config.snaq_hmax:
+        if ret_snq is None:
+            ret_snq = apps.snaq(
+                basedir, config=bio_config, hmax=h, inputs=[ret_ast]
+            )
+        else:
+            ret_snq = apps.snaq(
+                basedir,
+                config=bio_config,
+                hmax=h,
+                inputs=[ret_snq],
+                use_last_topology=last_h,
+            )
+        last_h = h
     result.append(ret_snq)
     return result
 
@@ -223,11 +181,7 @@ def iqtree_phylonet(bio_config, basedir, prepare_to_run):
     pool_phylo = CircularList(
         math.floor(max_workers / int(bio_config.phylonet_threads))
     )
-    if len(bio_config.phylonet_hmax) > 1:
-        hmax_values = bio_config.phylonet_hmax
-    else:
-        hmax_values = [str(h) for h in range(
-            1, int(bio_config.phylonet_hmax[0]) + 1)]
+    hmax_values = bio_config.phylonet_hmax
     for h in hmax_values:
         ret_spd = apps.setup_phylonet_data(basedir, bio_config, h, inputs=[ret_rooted])
         filename = os.path.join(
@@ -274,52 +228,34 @@ def mrbayes_snaq(bio_config, basedir, prepare_to_run):
     ret_tree.append(apps.setup_qmc_output(basedir, bio_config, inputs=[ret_qmc]))
     logging.info("Using the Maximum Pseudo Likelihood Method")
     ret_snq = None
-    if len(bio_config.snaq_hmax) > 1:
-        # User passed multiple hmax so we're going to use each one as topology for the next
-        last_h = ""
-        for h in bio_config.snaq_hmax:
-            if ret_snq is None:
-                ret_snq = apps.snaq(
-                    basedir, config=bio_config, hmax=h, inputs=[ret_tree]
-                )
-            else:
-                ret_snq = apps.snaq(
-                    basedir,
-                    config=bio_config,
-                    hmax=h,
-                    inputs=[ret_snq],
-                    use_last_topology=last_h,
-                )
-            last_h = h
-    else:
-        # User passed only one value, so we're going to construct networks from 1 to hmax
-        last_h = ""
-        for h in range(1, int(bio_config.snaq_hmax)):
-            if ret_snq is None:
-                ret_snq = apps.snaq(
-                    basedir, config=bio_config, hmax=str(h), inputs=[ret_tree]
-                )
-            else:
-                ret_snq = apps.snaq(
-                    basedir,
-                    config=bio_config,
-                    hmax=str(h),
-                    inputs=[ret_snq],
-                    use_last_topology=last_h,
-                )
-            last_h = h
+    last_h = ""
+    for h in bio_config.snaq_hmax:
+        if ret_snq is None:
+            ret_snq = apps.snaq(
+                basedir, config=bio_config, hmax=h, inputs=[ret_tree]
+            )
+        else:
+            ret_snq = apps.snaq(
+                basedir,
+                config=bio_config,
+                hmax=h,
+                inputs=[ret_snq],
+                use_last_topology=last_h,
+            )
+        last_h = h
     result.append(ret_snq)
     return result
 
 
 def prepare_to_run(config):
-    folder_list = list()
     r = list()
     phylip_folders = list()
     for basedir in config.workload:
         if basedir["dir"] not in phylip_folders:
             r.append(apps.setup_phylip_data(basedir, config))
             phylip_folders.append(basedir["dir"])
+
+        folder_list = list()
         network_method = basedir["network_method"]
         tree_method = basedir["tree_method"]
         if network_method == "MPL":
