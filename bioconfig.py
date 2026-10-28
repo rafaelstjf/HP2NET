@@ -232,11 +232,33 @@ class ConfigFactory:
                     json_file = glob.glob(os.path.join(input_dir, '*.json'))
                     if len(json_file) > 0:
                         with open(json_file[0], 'r') as jf:
-                            json_data = json.load(jf)
-                            dir_['mapping'] = json_data['Mapping']
-                            dir_['outgroup'] = json_data['Outgroup']
-                            if dir_['outgroup'] == "":
-                                raise RootMissing(dir_['dir'])
+                            try:
+                                json_data = json.load(jf)
+                            except json.JSONDecodeError as error:
+                                raise ValueError(
+                                    f"Invalid JSON in {json_file[0]} at line "
+                                    f"{error.lineno}, column {error.colno}: {error.msg}"
+                                ) from error
+                        if not isinstance(json_data, dict):
+                            raise ValueError(
+                                f"Invalid input JSON in {json_file[0]}: "
+                                "the top-level value must be an object"
+                            )
+                        for key in ("Mapping", "Outgroup"):
+                            if key not in json_data:
+                                raise ValueError(
+                                    f"Invalid input JSON in {json_file[0]}: "
+                                    f"missing required field '{key}'"
+                                )
+                            if not isinstance(json_data[key], str):
+                                raise ValueError(
+                                    f"Invalid input JSON in {json_file[0]}: "
+                                    f"field '{key}' must be a string"
+                                )
+                        dir_['mapping'] = json_data['Mapping']
+                        dir_['outgroup'] = json_data['Outgroup'].strip()
+                        if not dir_['outgroup'] and dir_['network_method'] == "MP":
+                            raise RootMissing(dir_['dir'])
                     else:
                         raise JsonMissingData(dir_['dir'])
                     #check for the sequence alignments
