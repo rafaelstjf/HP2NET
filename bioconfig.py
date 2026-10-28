@@ -17,10 +17,13 @@ You should have received a copy of the GNU General Public License along with
 this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
-#from apps import quartet_maxcut
-from genericpath import isfile
-from parsl import bash_app, python_app
-import parsl, os, json, glob, random
+import configparser
+import glob
+import json
+import os
+import random
+from dataclasses import dataclass, field
+
 from appsexception import JsonMissingData, RootMissing, TarMissingData
 
 # COPYRIGHT SECTION
@@ -33,11 +36,6 @@ __maintainer__ = "Rafael Terra"
 __email__ = "rafaelst@posgrad.lncc.br"
 __status__ = "Research"
 
-
-#
-# Parsl Bash and Python Applications Configuration
-#
-from dataclasses import dataclass, field
 
 # TODO: self.mbblock = Prepare to read from a setup file.
 
@@ -198,10 +196,86 @@ def _map_mrbayes_model(model: str) -> str:
         ) from error
 
 
+def _read_workload_entry(line: str, network_method: str, tree_method: str) -> dict:
+    workload_item = {}
+    line_with_method = line.split("@")
+    workload_item["dir"] = line_with_method[0].strip()
+
+    if len(line_with_method) > 1:
+        methods = line_with_method[1].strip().split("|")
+        workload_item["tree_method"] = methods[0]
+        if len(methods) > 1:
+            workload_item["network_method"] = methods[1]
+        else:
+            workload_item["network_method"] = network_method
+    else:
+        workload_item["tree_method"] = tree_method
+        workload_item["network_method"] = network_method
+
+    input_dir = os.path.join(workload_item["dir"], "input")
+    if not os.path.isdir(input_dir):
+        input_dir = os.path.join(workload_item["dir"], "Input")
+
+    json_files = glob.glob(os.path.join(input_dir, "*.json"))
+    if not json_files:
+        raise JsonMissingData(workload_item["dir"])
+
+    json_path = json_files[0]
+    with open(json_path, "r") as json_file:
+        try:
+            json_data = json.load(json_file)
+        except json.JSONDecodeError as error:
+            raise ValueError(
+                f"Invalid JSON in {json_path} at line "
+                f"{error.lineno}, column {error.colno}: {error.msg}"
+            ) from error
+
+    if not isinstance(json_data, dict):
+        raise ValueError(
+            f"Invalid input JSON in {json_path}: "
+            "the top-level value must be an object"
+        )
+    for key in ("Mapping", "Outgroup"):
+        if key not in json_data:
+            raise ValueError(
+                f"Invalid input JSON in {json_path}: "
+                f"missing required field '{key}'"
+            )
+        if not isinstance(json_data[key], str):
+            raise ValueError(
+                f"Invalid input JSON in {json_path}: "
+                f"field '{key}' must be a string"
+            )
+
+    workload_item["mapping"] = json_data["Mapping"]
+    workload_item["outgroup"] = json_data["Outgroup"].strip()
+    if not workload_item["outgroup"] and workload_item["network_method"] == "MP":
+        raise RootMissing(workload_item["dir"])
+
+    tar_files = glob.glob(os.path.join(input_dir, "*.tar.gz"))
+    if not tar_files:
+        raise TarMissingData(workload_item["dir"])
+    workload_item["sequences"] = tar_files[0]
+    return workload_item
+
+
+def _load_workload(
+    workload_path: str, network_method: str, tree_method: str
+) -> list:
+    workload = []
+    with open(workload_path, "r") as workload_file:
+        for line in workload_file:
+            line = line.strip()
+            if line and not line.startswith("#"):
+                workload.append(
+                    _read_workload_entry(line, network_method, tree_method)
+                )
+    return workload
+
+
 @borg
 class ConfigFactory:
     def __init__(self, config_file: str = "default.ini", custom_workload: str = None) -> None:
-        import configparser
         self.custom_workload = custom_workload
         self.config_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.path.join('config', config_file))
         self.config = configparser.ConfigParser()
@@ -225,72 +299,7 @@ class ConfigFactory:
             workload_path = os.path.join(workflow_path, os.path.join('config', self.custom_workload))
         else:
             workload_path = os.path.join(workflow_path, os.path.join('config', cf['GENERAL']['Workload']))
-        workload = list()
-        with open(f"{workload_path}", "r") as f:
-            for line in f:
-                dir_ = {}
-                line = line.strip()
-                if len(line) > 0 and line[0] != '#':
-                    line_with_method = line.split('@')
-                    dir_['dir'] = line_with_method[0].strip()
-                    #check if the line contains a specific method
-                    if(len(line_with_method) > 1):
-                        methods = line_with_method[1].strip().split('|')
-                        if(len(methods) > 0):
-                            dir_['tree_method']=methods[0]
-                            if(len(methods) > 1):
-                                dir_['network_method'] = methods[1]
-                            else:
-                                dir_['network_method'] = network_method
-                        else:
-                            dir_['tree_method'] = tree_method
-                            dir_['network_method'] = network_method
-                    else:
-                        dir_['tree_method'] = tree_method
-                        dir_['network_method'] = network_method
-                    #read the json
-                    input_dir = os.path.join(dir_['dir'], 'input')
-                    if os.path.isdir(input_dir) == False:
-                        input_dir = os.path.join(dir_['dir'], 'Input')
-                    json_file = glob.glob(os.path.join(input_dir, '*.json'))
-                    if len(json_file) > 0:
-                        with open(json_file[0], 'r') as jf:
-                            try:
-                                json_data = json.load(jf)
-                            except json.JSONDecodeError as error:
-                                raise ValueError(
-                                    f"Invalid JSON in {json_file[0]} at line "
-                                    f"{error.lineno}, column {error.colno}: {error.msg}"
-                                ) from error
-                        if not isinstance(json_data, dict):
-                            raise ValueError(
-                                f"Invalid input JSON in {json_file[0]}: "
-                                "the top-level value must be an object"
-                            )
-                        for key in ("Mapping", "Outgroup"):
-                            if key not in json_data:
-                                raise ValueError(
-                                    f"Invalid input JSON in {json_file[0]}: "
-                                    f"missing required field '{key}'"
-                                )
-                            if not isinstance(json_data[key], str):
-                                raise ValueError(
-                                    f"Invalid input JSON in {json_file[0]}: "
-                                    f"field '{key}' must be a string"
-                                )
-                        dir_['mapping'] = json_data['Mapping']
-                        dir_['outgroup'] = json_data['Outgroup'].strip()
-                        if not dir_['outgroup'] and dir_['network_method'] == "MP":
-                            raise RootMissing(dir_['dir'])
-                    else:
-                        raise JsonMissingData(dir_['dir'])
-                    #check for the sequence alignments
-                    tar_file = glob.glob(os.path.join(input_dir, '*.tar.gz'))
-                    if len(tar_file) > 0:
-                        dir_['sequences'] = tar_file[0]
-                    else:
-                        raise TarMissingData(dir_['dir'])
-                    workload.append(dir_)
+        workload = _load_workload(workload_path, network_method, tree_method)
         bootstrap = cf['GENERAL']['BootStrap']
         execution_provider = cf['GENERAL']['ExecutionProvider'].upper()
         plot_networks = cf["WORKFLOW"].getboolean("Plot")
