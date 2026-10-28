@@ -139,8 +139,22 @@ For both `PhyloNetHMax` and `SnaqHMax`, a single value specifies a range from 1 
   ```ini
   [MRBAYES]
   MBExecutable	= mb
+  MBEvolutionaryModel = HKY
   MBParameters	= set usebeagle=no beagledevice=cpu beagleprecision=double; mcmcp ngen=100000 burninfrac=.25 samplefreq=50 printfreq=10000 diagnfreq=10000 nruns=2 nchains=2 temp=0.40 swapfreq=10
   ```
+
+`MBEvolutionaryModel` accepts a model name in plain language; `HP2NET` translates it to the corresponding MrBayes `lset` options. The supported models are:
+
+| Value | Meaning | MrBayes options |
+|---|---|---|
+| `HKY` | HKY substitution model | `nst=2` |
+| `HKY + gamma` | HKY with gamma-distributed rate variation | `nst=2 rates=gamma` |
+| `HKY + invariant sites` | HKY with a proportion of invariant sites | `nst=2 rates=propinv` |
+| `HKY + invariant sites + gamma` | HKY with invariant sites and gamma-distributed rate variation | `nst=2 rates=invgamma` |
+| `GTR` | General time-reversible substitution model | `nst=6` |
+| `GTR + gamma` | GTR with gamma-distributed rate variation | `nst=6 rates=gamma` |
+| `GTR + invariant sites` | GTR with a proportion of invariant sites | `nst=6 rates=propinv` |
+| `GTR + invariant sites + gamma` | GTR with invariant sites and gamma-distributed rate variation | `nst=6 rates=invgamma` |
 
 * Bucky settings
 

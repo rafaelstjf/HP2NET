@@ -93,6 +93,7 @@ class BioConfig:
     snaq_runs:          int
     snaq_dir:           str
     mrbayes:            str
+    mrbayes_evolutionary_model: str
     mrbayes_parameters: str
     mrbayes_dir:        str
     bucky:              str
@@ -154,6 +155,7 @@ class BioConfig:
             self.snaq_runs,
             self.snaq_dir,
             self.mrbayes,
+            self.mrbayes_evolutionary_model,
             self.mrbayes_parameters,
             self.mrbayes_dir,
             self.bucky,
@@ -173,6 +175,27 @@ class BioConfig:
             self.phylonet_runs,
             self.plot_script,
         ))
+
+
+def _map_mrbayes_model(model: str) -> str:
+    models = {
+        "hky": "nst=2",
+        "hky + gamma": "nst=2 rates=gamma",
+        "hky + invariant sites": "nst=2 rates=propinv",
+        "hky + invariant sites + gamma": "nst=2 rates=invgamma",
+        "gtr": "nst=6",
+        "gtr + gamma": "nst=6 rates=gamma",
+        "gtr + invariant sites": "nst=6 rates=propinv",
+        "gtr + invariant sites + gamma": "nst=6 rates=invgamma",
+    }
+    normalized_model = " ".join(model.casefold().split())
+    try:
+        return models[normalized_model]
+    except KeyError as error:
+        raise ValueError(
+            f"Unsupported MrBayes evolutionary model '{model}'. "
+            f"Choose one of: {', '.join(models)}."
+        ) from error
 
 
 @borg
@@ -338,6 +361,8 @@ class ConfigFactory:
         phylonet_dir = 'phylonet'
         #MRBAYES
         mrbayes = cf['MRBAYES']['MBExecutable']
+        mrbayes_model = cf['MRBAYES']['MBEvolutionaryModel']
+        mrbayes_evolutionary_model = _map_mrbayes_model(mrbayes_model)
         mrbayes_parameters = cf['MRBAYES']['MBParameters']
         mrbayes_dir = 'mrbayes'
         #BUCKY
@@ -391,6 +416,7 @@ class ConfigFactory:
                                    snaq_runs=snaq_runs,
                                    snaq_dir=snaq_dir,
                                    mrbayes=mrbayes,
+                                   mrbayes_evolutionary_model=mrbayes_evolutionary_model,
                                    mrbayes_parameters=mrbayes_parameters,
                                    mrbayes_dir=mrbayes_dir,
                                    bucky=bucky,
