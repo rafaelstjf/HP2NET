@@ -550,9 +550,9 @@ def snaq(basedir: dict,
                 topology_file = initial_topology
 
     command = (
-        f'julia "{snaq_exec}" {tree_method} "{tree_file}" "{topology_file}" '
+        f'julia -t {num_threads} "{snaq_exec}" {tree_method} "{tree_file}" "{topology_file}" '
         f'"{output_folder}" '
-        f'{num_threads} {hmax} {runs} {seed}'
+        f'{1} {hmax} {runs} {seed}'
     )
     if tree_method in ("RAXML", "IQTREE") and len(mapping) > 0:
         command += f" '{mapping}'"
