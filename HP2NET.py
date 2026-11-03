@@ -94,7 +94,7 @@ def raxml_phylonet(bio_config, basedir, prepare_to_run):
     for h in hmax_values:
         setup_inputs = [ret_rooted]
         if previous_phylonet is not None:
-            setup_inputs.append(previous_phylonet)
+            setup_inputs = [previous_phylonet]
         ret_spd = apps.setup_phylonet_data(
             basedir,
             config=bio_config,
@@ -201,7 +201,7 @@ def iqtree_phylonet(bio_config, basedir, prepare_to_run):
     for h in hmax_values:
         setup_inputs = [ret_rooted]
         if previous_phylonet is not None:
-            setup_inputs.append(previous_phylonet)
+            setup_inputs = [previous_phylonet]
         ret_spd = apps.setup_phylonet_data(
             basedir,
             bio_config,
@@ -255,7 +255,7 @@ def mrbayes_snaq(bio_config, basedir, prepare_to_run):
     ret_post_bucky = apps.setup_bucky_output(basedir, bio_config, inputs=ret_bucky)
     ret_pre_qmc = apps.setup_qmc_data(basedir, bio_config, inputs=[ret_post_bucky])
     ret_qmc = apps.quartet_maxcut(basedir, bio_config, inputs=[ret_pre_qmc])
-    ret_tree.append(apps.setup_qmc_output(basedir, bio_config, inputs=[ret_qmc]))
+    ret_tree = apps.setup_qmc_output(basedir, bio_config, inputs=[ret_qmc])
     logging.info("Using the Maximum Pseudo Likelihood Method")
     ret_snq = None
     last_h = ""
