@@ -1,6 +1,7 @@
 #!/bin/bash
 #SBATCH --nodes=3           #Numero de Nós
-#SBATCH --ntasks-per-node=24 #Numero de tarefas por Nó
+#SBATCH --ntasks-per-node=1 #Numero de tarefas por Nó
+#SBATCH --cpus-per-task=24 #Numero de CPU por tarefa
 #SBATCH -p cpu_small         #Fila (partition) a ser utilizada
 #SBATCH -J Biocomp             #Nome job
 #SBATCH --exclusive          #Utilização exclusiva dos nós durante a execução do job
