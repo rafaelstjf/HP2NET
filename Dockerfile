@@ -1,6 +1,3 @@
-```dockerfile
-# Dockerfile for installation of HP2Net framework. All the lines related to quartet maxcut are commented due to the software
-# being unavailable
 FROM python:3.12-slim-bookworm
 LABEL version="1.0" maintainer="Rafael Terra <rafaelstjf@gmail.com>"
 WORKDIR /app
@@ -76,4 +73,3 @@ RUN julia -e 'using Pkg; Pkg.add("PhyloNetworks")'
 RUN julia -e 'using Pkg; Pkg.add(["RCall", "PhyloPlots", "CSV"])'
 # Set the default command
 ENTRYPOINT ["python3", "HP2NET.py"]
-```
