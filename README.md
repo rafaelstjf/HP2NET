@@ -14,16 +14,16 @@ In view of the complexity in modeling network experiments, the present work intr
 1. Python >= 3.9.6
    1. Biopython >= 1.75
    2. Pandas >= 1.3.2
-   3. Parsl >= 1.0
+   3. Parsl >= 1.3
 3. Raxml >= 8.2.12
 4. Astral  >= 5.7.1
-5. SnaQ (PhyloNetworks) <= 0.16.4
+5. SnaQ (PhyloNetworks) >= 1.1
 6. MrBayes >= 3.2.7a
 7. BUCKy >=  1.4.4
 8. Quartet MaxCut >= 2.10
 9. PhyloNet >= 3.8.2
 10. Julia >= 1.4.1
-11. IQTREE >= 2.0
+11. IQ-TREE >= 2.0
 
 
 ## How to use
@@ -93,15 +93,16 @@ BootStrap       = 1000
   RaxmlEvolutionaryModel = GTRGAMMA --HKY85
   ```
 
-
-* IQTREE settings
+* IQ-TREE settings
 
   ```ini
   [IQTREE]
   IqTreeExecutable = iqtree2
-  IqTreeEvolutionaryModel = TIM2+I+G # if setted as AUTO, iqtree will try to find the best fitting model and create the trees
+  IqTreeEvolutionaryModel = TIM2+I+G 
   IqTreeThreads = 6
   ```
+
+If `IqTreeEvolutionaryModel` is set to AUTO, IQ-TREE will try to find the best-fitting model and create the trees. `IqTreeThreads` is the maximum number of threads that IQ-TREE is allowed to use, the software will decide how many threads to use.
 
 * ASTRAL settings
 
@@ -131,13 +132,29 @@ BootStrap       = 1000
   SnaqRuns        = 3
   ```
 
+For both `PhyloNetHMax` and `SnaqHMax`, a single value specifies a range from 1 through that value, using the last h value as the initial topology. Setting hmax to 0 runs only with this value, while comma-separated values specify the exact hmax values to use. Prefix a single value with `@` (for example, `@3`) to run only with that exact value instead of expanding it into a range.
+
 * Mr. Bayes settings
 
   ```ini
   [MRBAYES]
   MBExecutable	= mb
+  MBEvolutionaryModel = HKY
   MBParameters	= set usebeagle=no beagledevice=cpu beagleprecision=double; mcmcp ngen=100000 burninfrac=.25 samplefreq=50 printfreq=10000 diagnfreq=10000 nruns=2 nchains=2 temp=0.40 swapfreq=10
   ```
+
+`MBEvolutionaryModel` accepts a model name in plain language; `HP2NET` translates it to the corresponding MrBayes `lset` options. The supported models are:
+
+| Value | Meaning | MrBayes options |
+|---|---|---|
+| `HKY` | HKY substitution model | `nst=2` |
+| `HKY + gamma` | HKY with gamma-distributed rate variation | `nst=2 rates=gamma` |
+| `HKY + invariant sites` | HKY with a proportion of invariant sites | `nst=2 rates=propinv` |
+| `HKY + invariant sites + gamma` | HKY with invariant sites and gamma-distributed rate variation | `nst=2 rates=invgamma` |
+| `GTR` | General time-reversible substitution model | `nst=6` |
+| `GTR + gamma` | GTR with gamma-distributed rate variation | `nst=6 rates=gamma` |
+| `GTR + invariant sites` | GTR with a proportion of invariant sites | `nst=6 rates=propinv` |
+| `GTR + invariant sites + gamma` | GTR with invariant sites and gamma-distributed rate variation | `nst=6 rates=invgamma` |
 
 * Bucky settings
 
@@ -196,7 +213,7 @@ Each experiment folder needs to have a *input folder* containing a *.tar.gz* com
 }
 ```
 
-Where ``Mapping`` is a direct mapping of the taxon, when there are multiple alleles per species, in the format ``species1:taxon1,taxon2;species2:taxon3,taxon4`` *(white spaces are not supported)* and ``Outgroup`` is the taxon used to root the network. The Mapping parameter is optional (although it has to be in the json file without value), but the outgroup is obligatory. It's important to say that the flow *MRBAYES|MPL* doesn't support multiple alleles per species. Example:
+Where ``Mapping`` is a direct mapping of the taxon, when there are multiple alleles per species, in the format ``species1:taxon1,taxon2;species2:taxon3,taxon4`` *(white spaces are not supported)* and ``Outgroup`` is the taxon used to root the network. The Mapping parameter is optional (although it has to be in the json file without value); the outgroup is required when using PhyloNet. It's important to say that the flow *MRBAYES|MPL* doesn't support multiple alleles per species. Example:
 
 ```json
 {
@@ -210,11 +227,11 @@ Where ``Mapping`` is a direct mapping of the taxon, when there are multiple alle
 
 * In a local machine:
 
-  After setting up the framework, just run ``python3 parsl_workflow.py``.
+  After setting up the framework, just run ``python3 HP2NET.py``.
   
 * In a SLURM environment:
 
-  Create an submition script that inside contains: ``python3 parsl_workflow.py``.
+  Create an submition script that inside contains: ``python3 HP2NET.py``.
 
   ```sh
   #!/bin/bash
@@ -223,7 +240,7 @@ Where ``Mapping`` is a direct mapping of the taxon, when there are multiple alle
   #SBATCH -o slurm-%j.out
   module load python/3.9.6
   cd /path/to/biocomp
-  python3 parsl_workflow.py
+  python3 HP2NET.py
   ```
 
 The framework is under heavy development. If you notice any bug, please create an issue here on GitHub.
@@ -286,4 +303,3 @@ Terra, R., Carvalho, D., Machado, D. J., Osthoff, C., & Ocaña, K. (2026). HP2NE
 
 
 **Also cite all the coupled software!**
-

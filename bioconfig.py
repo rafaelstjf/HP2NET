@@ -17,10 +17,13 @@ You should have received a copy of the GNU General Public License along with
 this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
-#from apps import quartet_maxcut
-from genericpath import isfile
-from parsl import bash_app, python_app
-import parsl, os, json, glob
+import configparser
+import glob
+import json
+import os
+import random
+from dataclasses import dataclass, field
+
 from appsexception import JsonMissingData, RootMissing, TarMissingData
 
 # COPYRIGHT SECTION
@@ -33,11 +36,6 @@ __maintainer__ = "Rafael Terra"
 __email__ = "rafaelst@posgrad.lncc.br"
 __status__ = "Research"
 
-
-#
-# Parsl Bash and Python Applications Configuration
-#
-from dataclasses import dataclass, field
 
 # TODO: self.mbblock = Prepare to read from a setup file.
 
@@ -62,6 +60,7 @@ class BioConfig:
     network_method:     str
     tree_method:        str
     bootstrap:          str
+    seed:               int
     workload:           field(default_factory=list)
     workflow_name:      str
     workflow_path:      str
@@ -92,6 +91,7 @@ class BioConfig:
     snaq_runs:          int
     snaq_dir:           str
     mrbayes:            str
+    mrbayes_evolutionary_model: str
     mrbayes_parameters: str
     mrbayes_dir:        str
     bucky:              str
@@ -122,6 +122,7 @@ class BioConfig:
             self.network_method,
             self.tree_method,
             self.bootstrap,
+            self.seed,
             tuple(workload_tuples),
             self.workflow_name,
             self.workflow_path,
@@ -152,6 +153,7 @@ class BioConfig:
             self.snaq_runs,
             self.snaq_dir,
             self.mrbayes,
+            self.mrbayes_evolutionary_model,
             self.mrbayes_parameters,
             self.mrbayes_dir,
             self.bucky,
@@ -173,10 +175,107 @@ class BioConfig:
         ))
 
 
+def _map_mrbayes_model(model: str) -> str:
+    models = {
+        "hky": "nst=2",
+        "hky + gamma": "nst=2 rates=gamma",
+        "hky + invariant sites": "nst=2 rates=propinv",
+        "hky + invariant sites + gamma": "nst=2 rates=invgamma",
+        "gtr": "nst=6",
+        "gtr + gamma": "nst=6 rates=gamma",
+        "gtr + invariant sites": "nst=6 rates=propinv",
+        "gtr + invariant sites + gamma": "nst=6 rates=invgamma",
+    }
+    normalized_model = " ".join(model.casefold().split())
+    try:
+        return models[normalized_model]
+    except KeyError as error:
+        raise ValueError(
+            f"Unsupported MrBayes evolutionary model '{model}'. "
+            f"Choose one of: {', '.join(models)}."
+        ) from error
+
+
+def _read_workload_entry(line: str, network_method: str, tree_method: str) -> dict:
+    workload_item = {}
+    line_with_method = line.split("@")
+    workload_item["dir"] = line_with_method[0].strip()
+
+    if len(line_with_method) > 1:
+        methods = line_with_method[1].strip().split("|")
+        workload_item["tree_method"] = methods[0]
+        if len(methods) > 1:
+            workload_item["network_method"] = methods[1]
+        else:
+            workload_item["network_method"] = network_method
+    else:
+        workload_item["tree_method"] = tree_method
+        workload_item["network_method"] = network_method
+
+    input_dir = os.path.join(workload_item["dir"], "input")
+    if not os.path.isdir(input_dir):
+        input_dir = os.path.join(workload_item["dir"], "Input")
+
+    json_files = glob.glob(os.path.join(input_dir, "*.json"))
+    if not json_files:
+        raise JsonMissingData(workload_item["dir"])
+
+    json_path = json_files[0]
+    with open(json_path, "r") as json_file:
+        try:
+            json_data = json.load(json_file)
+        except json.JSONDecodeError as error:
+            raise ValueError(
+                f"Invalid JSON in {json_path} at line "
+                f"{error.lineno}, column {error.colno}: {error.msg}"
+            ) from error
+
+    if not isinstance(json_data, dict):
+        raise ValueError(
+            f"Invalid input JSON in {json_path}: "
+            "the top-level value must be an object"
+        )
+    for key in ("Mapping", "Outgroup"):
+        if key not in json_data:
+            raise ValueError(
+                f"Invalid input JSON in {json_path}: "
+                f"missing required field '{key}'"
+            )
+        if not isinstance(json_data[key], str):
+            raise ValueError(
+                f"Invalid input JSON in {json_path}: "
+                f"field '{key}' must be a string"
+            )
+
+    workload_item["mapping"] = json_data["Mapping"]
+    workload_item["outgroup"] = json_data["Outgroup"].strip()
+    if not workload_item["outgroup"] and workload_item["network_method"] == "MP":
+        raise RootMissing(workload_item["dir"])
+
+    tar_files = glob.glob(os.path.join(input_dir, "*.tar.gz"))
+    if not tar_files:
+        raise TarMissingData(workload_item["dir"])
+    workload_item["sequences"] = tar_files[0]
+    return workload_item
+
+
+def _load_workload(
+    workload_path: str, network_method: str, tree_method: str
+) -> list:
+    workload = []
+    with open(workload_path, "r") as workload_file:
+        for line in workload_file:
+            line = line.strip()
+            if line and not line.startswith("#"):
+                workload.append(
+                    _read_workload_entry(line, network_method, tree_method)
+                )
+    return workload
+
+
 @borg
 class ConfigFactory:
     def __init__(self, config_file: str = "default.ini", custom_workload: str = None) -> None:
-        import configparser
         self.custom_workload = custom_workload
         self.config_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.path.join('config', config_file))
         self.config = configparser.ConfigParser()
@@ -200,54 +299,11 @@ class ConfigFactory:
             workload_path = os.path.join(workflow_path, os.path.join('config', self.custom_workload))
         else:
             workload_path = os.path.join(workflow_path, os.path.join('config', cf['GENERAL']['Workload']))
-        workload = list()
-        with open(f"{workload_path}", "r") as f:
-            for line in f:
-                dir_ = {}
-                line = line.strip()
-                if len(line) > 0 and line[0] != '#':
-                    line_with_method = line.split('@')
-                    dir_['dir'] = line_with_method[0].strip()
-                    #check if the line contains a specific method
-                    if(len(line_with_method) > 1):
-                        methods = line_with_method[1].strip().split('|')
-                        if(len(methods) > 0):
-                            dir_['tree_method']=methods[0]
-                            if(len(methods) > 1):
-                                dir_['network_method'] = methods[1]
-                            else:
-                                dir_['network_method'] = network_method
-                        else:
-                            dir_['tree_method'] = tree_method
-                            dir_['network_method'] = network_method
-                    else:
-                        dir_['tree_method'] = tree_method
-                        dir_['network_method'] = network_method
-                    #read the json
-                    input_dir = os.path.join(dir_['dir'], 'input')
-                    if os.path.isdir(input_dir) == False:
-                        input_dir = os.path.join(dir_['dir'], 'Input')
-                    json_file = glob.glob(os.path.join(input_dir, '*.json'))
-                    if len(json_file) > 0:
-                        with open(json_file[0], 'r') as jf:
-                            json_data = json.load(jf)
-                            dir_['mapping'] = json_data['Mapping']
-                            dir_['outgroup'] = json_data['Outgroup']
-                            if dir_['outgroup'] == "":
-                                raise RootMissing(dir_['dir'])
-                    else:
-                        raise JsonMissingData(dir_['dir'])
-                    #check for the sequence alignments
-                    tar_file = glob.glob(os.path.join(input_dir, '*.tar.gz'))
-                    if len(tar_file) > 0:
-                        dir_['sequences'] = tar_file[0]
-                    else:
-                        raise TarMissingData(dir_['dir'])
-                    workload.append(dir_)
+        workload = _load_workload(workload_path, network_method, tree_method)
         bootstrap = cf['GENERAL']['BootStrap']
         execution_provider = cf['GENERAL']['ExecutionProvider'].upper()
         plot_networks = cf["WORKFLOW"].getboolean("Plot")
-
+        seed = int(cf["GENERAL"].get("Seed", random.randrange(1, 1000, 2)))
         #SYSTEM
         #WORKFLOW
         workflow_name = "HP2NET"
@@ -283,10 +339,19 @@ class ConfigFactory:
         #SNAQ
         snaq = 'snaq.jl'
         snaq_threads = int(cf['SNAQ']['SnaqThreads'])
-        snaq_hmax_raw = cf['SNAQ']['SnaqHMax']
-        snaq_hmax = list()
-        for h in snaq_hmax_raw.split(','):
-            snaq_hmax.append(h.strip())
+        snaq_hmax_raw = cf['SNAQ']['SnaqHMax'].strip()
+        snaq_hmax_is_explicit = not snaq_hmax_raw.startswith('@')
+        if snaq_hmax_is_explicit:
+            snaq_hmax = [h.strip() for h in snaq_hmax_raw.split(',') if h.strip()]
+        else:
+            snaq_hmax = [str(int(snaq_hmax_raw[1:].strip()))]
+        if any(int(h) < 0 for h in snaq_hmax):
+            raise ValueError("SNAQ SnaqHMax values cannot be negative")
+        if snaq_hmax_is_explicit and len(snaq_hmax) == 1:
+            max_h = int(snaq_hmax[0])
+            snaq_hmax = (
+                ["0"] if max_h == 0 else [str(h) for h in range(1, max_h + 1)]
+            )
         snaq_runs = int(cf['SNAQ']['SnaqRuns'])
         snaq_dir = 'snaq'
         
@@ -296,14 +361,25 @@ class ConfigFactory:
         phylonet = f"java -jar {os.path.join(phylonet_exec_dir, phylonet_jar)}"
         phylonet_threads = cf['PHYLONET']['PhyloNetThreads']
         phylonet_runs = cf['PHYLONET']['PhyloNetRuns']
-        phylonet_hmax_raw = cf['PHYLONET']['PhyloNetHMax']
-        phylonet_hmax = list()
-        for h in phylonet_hmax_raw.split(','):
-            phylonet_hmax.append(h.strip())
+        phylonet_hmax_raw = cf['PHYLONET']['PhyloNetHMax'].strip()
+        phylonet_hmax_is_explicit = not phylonet_hmax_raw.startswith('@')
+        if phylonet_hmax_is_explicit:
+            phylonet_hmax = [h.strip() for h in phylonet_hmax_raw.split(',') if h.strip()]
+        else:
+            phylonet_hmax = [str(int(phylonet_hmax_raw[1:].strip()))]
+        if any(int(h) < 0 for h in phylonet_hmax):
+            raise ValueError("PhyloNet PhyloNetHMax values cannot be negative")
+        if phylonet_hmax_is_explicit and len(phylonet_hmax) == 1:
+            max_h = int(phylonet_hmax[0])
+            phylonet_hmax = (
+                ["0"] if max_h == 0 else [str(h) for h in range(1, max_h + 1)]
+            )
         phylonet_input = 'phylonet_phase_1.nex'
         phylonet_dir = 'phylonet'
         #MRBAYES
         mrbayes = cf['MRBAYES']['MBExecutable']
+        mrbayes_model = cf['MRBAYES']['MBEvolutionaryModel']
+        mrbayes_evolutionary_model = _map_mrbayes_model(mrbayes_model)
         mrbayes_parameters = cf['MRBAYES']['MBParameters']
         mrbayes_dir = 'mrbayes'
         #BUCKY
@@ -324,6 +400,7 @@ class ConfigFactory:
                                    network_method=network_method,
                                    tree_method=tree_method,
                                    bootstrap=bootstrap,
+                                   seed=seed,
                                    workload=workload,
                                    env_path=env_path,
                                    environ=environ,
@@ -356,6 +433,7 @@ class ConfigFactory:
                                    snaq_runs=snaq_runs,
                                    snaq_dir=snaq_dir,
                                    mrbayes=mrbayes,
+                                   mrbayes_evolutionary_model=mrbayes_evolutionary_model,
                                    mrbayes_parameters=mrbayes_parameters,
                                    mrbayes_dir=mrbayes_dir,
                                    bucky=bucky,

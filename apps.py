@@ -79,7 +79,7 @@ def setup_phylip_data(basedir: dict, config: BioConfig,
     # Now one file is opened to check its format
     sequences = glob.glob(os.path.join(sequence_dir, '*'))
     if len(sequences) == 0:
-        raise AlignmentConversion(input_phylip_dir)
+        raise AlignmentConversion(sequence_dir)
     with open(sequences[0], 'r') as s_file:
         line = s_file.readline()
         if "#NEXUS" in line:
@@ -130,8 +130,7 @@ def raxml(basedir: dict,
           inputs=[],
           next_pipe: Any = None,
           stderr=parsl.AUTO_LOGNAME,
-          stdout=parsl.AUTO_LOGNAME,
-          seed = None):
+          stdout=parsl.AUTO_LOGNAME):
     """Runs the Raxml's executable on a sequence alignment in phylip format
     Parameters:
         basedir: current working directory
@@ -151,14 +150,7 @@ def raxml(basedir: dict,
     logging.info(f'Raxml called with {basedir["dir"]}')
     raxml_dir = os.path.join(basedir['dir'], config.raxml_dir)
 
-    # TODO: Create the following parameters(external configuration): -m, -N,
-
-    if seed is not None:
-        p = seed
-        x = seed
-    else:
-        p = random.randint(1, 10000)
-        x = random.randint(1, 10000)
+    p = x = config.seed
     params = f"-T {num_threads} -p {p} -x {x} -f a -m {config.raxml_model} -N {config.bootstrap}"
     output_file = os.path.splitext(os.path.basename(input_file))[0]
     # Return to Parsl to be executed on the workflow
@@ -409,8 +401,8 @@ def astral(basedir: dict,
            inputs=[],
            outputs=[],
            stderr=parsl.AUTO_LOGNAME,
-           stdout=parsl.AUTO_LOGNAME,
-           seed = None):
+           stdout=parsl.AUTO_LOGNAME
+           ):
     """Runs the Astral's executable using the besttree file and create the species tree in the astral folder
 
     Parameters:
@@ -434,12 +426,16 @@ def astral(basedir: dict,
     exec_astral = config.astral
     tree_output = ""
     astral_output = ""
+    astral_raxml = ""
+    astral_iqtree = ""
+    bs_file = ""
     if(tree_method == "RAXML"):
         try:
             astral_raxml = os.path.join(astral_dir, config.raxml_dir)
             Path(astral_raxml).mkdir(exist_ok=True)
         except Exception:
             print("Failed to create the raxml bootstrap folder!")
+            raise FileCreationError(astral_raxml)
         bs_file = os.path.join(astral_raxml,'BSlistfiles')
         raxm_dir = os.path.join(work_dir, config.raxml_dir)
         tree_output = os.path.join(raxm_dir,config.raxml_output)
@@ -454,6 +450,7 @@ def astral(basedir: dict,
             Path(astral_iqtree).mkdir(exist_ok=True)
         except Exception:
             print("Failed to create the raxml bootstrap folder!")
+            raise FileCreationError(astral_raxml)
         bs_file = os.path.join(astral_iqtree,'BSlistfiles')
         iqtree_dir = os.path.join(work_dir, config.iqtree_dir)
         tree_output = os.path.join(iqtree_dir,config.iqtree_output)
@@ -471,9 +468,9 @@ def astral(basedir: dict,
             for specie in species:
                 map_.write(specie.strip() + '\n')
             map_.close()
-        return f'{exec_astral} -i {tree_output} -b {bs_file} -r {config.bootstrap} -a {map_filename} -o {astral_output}'
+        return f'{exec_astral} -i {tree_output} -b {bs_file} -r {config.bootstrap} -a {map_filename} -o {astral_output} -s {config.seed}'
     else:
-        return f'{exec_astral} -i {tree_output} -b {bs_file} -r {config.bootstrap} -o {astral_output}'
+        return f'{exec_astral} -i {tree_output} -b {bs_file} -r {config.bootstrap} -o {astral_output} -s {config.seed}'
 
 @parsl.bash_app(executors=['single_partition'])
 def snaq(basedir: dict,
@@ -481,10 +478,10 @@ def snaq(basedir: dict,
         hmax: str,
         inputs=[],
         outputs=[],
-        next_pipe: Any = None,
+        use_last_topology = "",
         stderr=parsl.AUTO_LOGNAME,
-        stdout=parsl.AUTO_LOGNAME,
-        seed = None):
+        stdout=parsl.AUTO_LOGNAME
+        ):
     """Runs the phylonetwork algorithm (snaq) and create the phylogenetic network in newick format
 
     Parameters:
@@ -500,10 +497,8 @@ def snaq(basedir: dict,
     """
     # set environment variables
     import os, logging
-    from pathlib import Path
     work_dir = basedir['dir']
     tree_method = basedir['tree_method']
-    outgroup = basedir['outgroup']
     mapping = basedir['mapping']
     logging.info(f'SNAQ called with {work_dir}')
     # run the julia script with PhyloNetworks
@@ -511,31 +506,57 @@ def snaq(basedir: dict,
     num_threads = config.snaq_threads
     output_folder = os.path.join(work_dir, config.snaq_dir)
     runs = config.snaq_runs
+    seed = config.seed
+
     if tree_method == "RAXML":
-        raxml_tree = os.path.join(os.path.join(work_dir, config.raxml_dir), config.raxml_output)
-        astral_tree = os.path.join(work_dir, os.path.join(config.astral_dir, config.raxml_dir))
-        astral_tree = os.path.join(astral_tree, config.astral_output)
-        if len(mapping) > 0:
-            return f'julia {snaq_exec} {tree_method} {raxml_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs} \'{mapping}\''
-        else:
-            return f'julia {snaq_exec} {tree_method} {raxml_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs}'
+        tree_file = os.path.join(work_dir, config.raxml_dir, config.raxml_output)
+        topology_file = os.path.join(
+            work_dir, config.astral_dir, config.raxml_dir, config.astral_output
+        )
     elif tree_method == "IQTREE":
-        iqtree_tree = os.path.join(os.path.join(work_dir, config.iqtree_dir), config.iqtree_output)
-        astral_tree = os.path.join(work_dir, os.path.join(config.astral_dir,config.iqtree_dir))
-        astral_tree = os.path.join(astral_tree, config.astral_output)
-        if len(mapping) > 0:
-            return f'julia {snaq_exec} {tree_method} {iqtree_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs} \'{mapping}\''
-        else:
-            return f'julia {snaq_exec} {tree_method} {iqtree_tree} {astral_tree} {output_folder} {num_threads} {hmax} {runs}'
+        tree_file = os.path.join(work_dir, config.iqtree_dir, config.iqtree_output)
+        topology_file = os.path.join(
+            work_dir, config.astral_dir, config.iqtree_dir, config.astral_output
+        )
     elif tree_method == "MRBAYES":
         dir_name = os.path.basename(work_dir)
-        qmc_output = os.path.join(os.path.join(work_dir, config.quartet_maxcut_dir), f'{dir_name}.tre')
-        bucky_folder = os.path.join(work_dir, config.bucky_dir)
-        bucky_table = os.path.join(bucky_folder, f"{dir_name}.csv")
-        #mrbayes flow doesn't support mapping
-        return f'julia {snaq_exec} {tree_method} {bucky_table} {qmc_output} {output_folder} {num_threads} {hmax} {runs}'
+        tree_file = os.path.join(work_dir, config.bucky_dir, f"{dir_name}.csv")
+        topology_file = os.path.join(
+            work_dir, config.quartet_maxcut_dir, f"{dir_name}.tre"
+        )
     else:
         return
+
+    previous_hmax = use_last_topology.strip()
+
+    if previous_hmax != "":
+        dir_name = os.path.basename(work_dir)
+        previous_network = os.path.join(
+            output_folder,
+            f"{dir_name}_{tree_method}_MPL_{previous_hmax}.out",
+        )
+        initial_topology = os.path.join(
+            output_folder,
+            f"{dir_name}_{tree_method}_MPL_{hmax}_initial.tre",
+        )
+        if os.path.isfile(previous_network):
+            with open(previous_network, "r") as network_file:
+                initial_network = network_file.readline().partition(
+                    " -Ploglik"
+                )[0].strip()
+            if initial_network.endswith(";"):
+                with open(initial_topology, "w") as topology_output:
+                    topology_output.write(initial_network + "\n")
+                topology_file = initial_topology
+
+    command = (
+        f'julia -t {num_threads} "{snaq_exec}" {tree_method} "{tree_file}" "{topology_file}" '
+        f'"{output_folder}" '
+        f'{1} {hmax} {runs} {seed}'
+    )
+    if tree_method in ("RAXML", "IQTREE") and len(mapping) > 0:
+        command += f" '{mapping}'"
+    return command
 
 @parsl.python_app(executors=['single_partition'])
 def prepare_prunetrees(basedir: dict,
@@ -558,8 +579,7 @@ def mrbayes(basedir: dict,
             input_file: str,
             inputs=[],
             stderr=parsl.AUTO_LOGNAME,
-            stdout=parsl.AUTO_LOGNAME,
-            seed = None):
+            stdout=parsl.AUTO_LOGNAME):
     """Runs the Mr. Bayes' executable on a sequence alignment file
 
     Parameters:
@@ -585,10 +605,35 @@ def mrbayes(basedir: dict,
     # open the gene alignment file, read its contents and create a new file with mrbayes parameters
     gene_par = open(os.path.join(mb_folder, gene_name), 'w+')
     gene_par.write(gene_string)
-    par = f"begin mrbayes;\nset nowarnings=yes;\nset autoclose=yes;\nlset nst=2;\n{config.mrbayes_parameters};\nmcmc;\nsumt;\nend;"
-    if seed is not None:
-        par = f"begin mrbayes;\nset nowarnings=yes;\nset autoclose=yes;\nlset nst=2;\n{config.mrbayes_parameters};\nSeed={seed};\nmcmc;\nsumt;\nend;"
+    params = config.mrbayes_parameters.strip()
+
+    # add the seed if it's not in the parameters
+    params = config.mrbayes_parameters.strip()
+
+    # Remove parâmetros obsoletos (caso existam) da string original
+    for deprecated in ["seed=", "swapseed="]:
+        if deprecated in params:
+            # remove qualquer trecho tipo seed=12345 ou swapseed=12345
+            params = ' '.join(
+                part for part in params.split()
+                if not part.strip().startswith(deprecated)
+            )
+
+    # Adiciona os seeds na forma correta (comando set)
+    par = (
+        "begin mrbayes;\n"
+        "set nowarnings=yes;\n"
+        "set autoclose=yes;\n"
+        f"set seed={config.seed} swapseed={config.seed};\n"
+        f"{params};\n"
+        f"lset {config.mrbayes_evolutionary_model};\n"
+        "mcmc;\n"
+        "sumt;\n"
+        "end;"
+    )
+
     gene_par.write(par)
+
     return f"{config.mrbayes} {os.path.join(mb_folder, gene_name)}"
 
 # mbsum bash app
@@ -717,8 +762,8 @@ def bucky(basedir: dict,
           inputs=[],
           outputs=[],
           stderr=parsl.AUTO_LOGNAME,
-          stdout=parsl.AUTO_LOGNAME,
-          seed = None):
+          stdout=parsl.AUTO_LOGNAME
+          ):
     """Runs bucky's executable using as input a certain prune tree file
 
     Parameters:
@@ -742,10 +787,19 @@ def bucky(basedir: dict,
     output_file = os.path.basename(prune_file)
     output_file = re.sub("-prune.txt", "", output_file)
     output_file = os.path.join(bucky_folder, output_file)
-
-    params = f"-a 1 -n 1000000 -cf 0 -o {output_file} -p {prune_file} {(' ').join(files)}"
-    if seed is not None:
-        params+= f" -s1 {seed} -s2 {seed}"
+    seed = config.seed
+    s_temp = str(seed)
+    s_temp = s_temp[::-1]
+    seed2 = int(s_temp)
+    """
+    -a 1 Specifies the alpha parameter. 
+    -n 1000000 Number of MCMC generations. 
+    -cf 0 Configures the concordance-factor analysis. 
+    -s1 and -s2 Random seeds. 
+    -o BUCKy output prefix. 
+    -p Prune-tree file.
+    """
+    params = f"-a 1 -n 1000000 -cf 0 -s1 {seed} -s2 {seed2} -o {output_file} -p {prune_file} {(' ').join(files)}"
     return f"{config.bucky} {params}"
 
 
@@ -770,6 +824,7 @@ def setup_bucky_output(basedir: dict,
         named according to task id and saved under task_logs in the run directory.
     """
     import re, os, glob, logging
+
     work_dir = basedir['dir']
     logging.info(f'Setting up BUCky output in {work_dir}')
     bucky_folder = os.path.join(work_dir, config.bucky_dir)
@@ -780,6 +835,17 @@ def setup_bucky_output(basedir: dict,
     mean_num_loci_pattern = re.compile(r"(=\s+\d+\.\d+\s+\(number of loci\))")
     translate_block_pattern = re.compile(r"translate\n(\s*\w+\s*\w+(,|;)\n*)+")
     # open all the bucky's output files and parse them
+    """
+    For each BUCKy ``.out`` file, the corresponding ``.concordance`` file is read and parsed to extract:
+        - the four taxa associated with the quartet;
+        - the concordance factor (CF) for the ``12|34`` split;
+        - the lower and upper bounds of its 95% confidence interval; 
+        - the concordance factor for the ``13|24`` split; 
+        - the lower and upper bounds of its 95% confidence interval; 
+        - the concordance factor for the ``14|23`` split; 
+        - the lower and upper bounds of its 95% confidence interval; 
+        - the number of genes/loci used in the analysis. 
+    """
     for out_file in out_files:
         taxa = []
         splits = {}
@@ -1012,6 +1078,7 @@ def setup_phylonet_data(basedir: dict,
                         hmax: str,
                         inputs=[],
                         outputs=[],
+                        previous_network_file: str = None,
                         stderr=parsl.AUTO_LOGNAME,
                         stdout=parsl.AUTO_LOGNAME):
     """Get the raxml/iqtree's output and create a NEXUS file as output for the phylonet in the basedir
@@ -1056,16 +1123,34 @@ def setup_phylonet_data(basedir: dict,
         tree_index+=1
         buffer+="Tree geneTree" + str(tree_index) + " = " + tree
     in_file.close()
-    buffer+='END;\nBEGIN PHYLONET;\nInferNetwork_MP ('
+    buffer += "END;\n"
+    start_network_option = ""
+    if previous_network_file is not None:
+        with open(previous_network_file, "r") as network_file:
+            previous_result = network_file.read()
+        previous_network = re.search(
+            r"Inferred Network #1:\s*(.+?;)", previous_result, re.DOTALL
+        )
+        if previous_network is None:
+            raise ValueError(
+                f"Could not find the previous PhyloNet network in {previous_network_file}"
+            )
+        buffer += (
+            "BEGIN NETWORKS;\n"
+            f"Network startingNetwork = {previous_network.group(1).strip()}\n"
+            "END;\n"
+        )
+        start_network_option = " -s startingNetwork"
+    buffer += "BEGIN PHYLONET;\nInferNetwork_MP ("
     for i in range(0, tree_index-1):
         buffer+="geneTree" + str(i+1) +','
     filename = f"{os.path.basename(work_dir)}_{tree_method}_{network_method}_{hmax}.nex"
     output_network = os.path.join(out_dir,filename)
     if(len(mapping) == 0):
-        buffer+="geneTree" + str(tree_index) +') ' + hmax + " -pl " + config.phylonet_threads + " -x " + config.phylonet_runs + " " + output_network + ';\nEND;'
+        buffer+="geneTree" + str(tree_index) +') ' + hmax + start_network_option + " -pl " + config.phylonet_threads + " -x " + config.phylonet_runs + " " + output_network + ';\nEND;'
     else:
         mapping = re.sub(" ", "_", mapping)
-        buffer+="geneTree" + str(tree_index) +') ' + hmax + " -pl " + config.phylonet_threads + " -a <" + mapping +"> -x " + config.phylonet_runs + " " + output_network + ';\nEND;'
+        buffer+="geneTree" + str(tree_index) +') ' + hmax + start_network_option + " -pl " + config.phylonet_threads + " -a <" + mapping +"> -x " + config.phylonet_runs + " " + output_network + ';\nEND;'
 
     #---
     out_file.write(buffer)
@@ -1112,8 +1197,8 @@ def iqtree(basedir: dict,
             inputs=[],
             next_pipe: Any = None,
             stderr=parsl.AUTO_LOGNAME,
-            stdout=parsl.AUTO_LOGNAME,
-            seed= None):
+            stdout=parsl.AUTO_LOGNAME
+            ):
     """Runs IQ-TREE's executable using as input a sequence alignment in phylip format
 
     Parameters:
@@ -1133,9 +1218,9 @@ def iqtree(basedir: dict,
     logging.info(f'IQ-TREE with {work_dir}')
     iqtree_dir = os.path.join(work_dir, config.iqtree_dir)
     if ((config.iqtree_model).upper() == "AUTO"):
-        flags = f"-T AUTO -ntmax {config.iqtree_threads} -B {config.bootstrap} --boot-trees -m TEST -s {input_file} --keep-ident -redo"
+        flags = f"-T AUTO -ntmax {config.iqtree_threads} -B {config.bootstrap} --boot-trees -m TEST -s {input_file} --keep-ident -redo -quiet --seed {config.seed}"
     else:
-        flags = f"-T AUTO -ntmax {config.iqtree_threads} -B {config.bootstrap} --boot-trees -m {config.iqtree_model}  -s {input_file} --keep-ident -redo"
+        flags = f"-T AUTO -ntmax {config.iqtree_threads} -B {config.bootstrap} --boot-trees -m {config.iqtree_model}  -s {input_file} --keep-ident -redo -quiet --seed {config.seed}"
     # Return to Parsl to be executed on the workflow
     return f"cd {iqtree_dir}; {config.iqtree} {flags}"
 
@@ -1188,7 +1273,7 @@ def plot_networks(config: BioConfig,
                 networks+=os.path.join(snaq_dir, name)
         if basedir['network_method'] == "MP":
             phylonet_dir = os.path.join(basedir['dir'], config.phylonet_dir)
-            for h in config.snaq_hmax:
+            for h in config.phylonet_hmax:
                 name = f'{os.path.basename(basedir["dir"])}_{basedir["tree_method"]}_MP_{h}.nex'
                 if len(networks) > 0:
                     networks+=','
