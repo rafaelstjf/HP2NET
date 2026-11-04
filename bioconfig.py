@@ -339,11 +339,15 @@ class ConfigFactory:
         #SNAQ
         snaq = 'snaq.jl'
         snaq_threads = int(cf['SNAQ']['SnaqThreads'])
-        snaq_hmax_raw = cf['SNAQ']['SnaqHMax']
-        snaq_hmax = [h.strip() for h in snaq_hmax_raw.split(',') if h.strip()]
+        snaq_hmax_raw = cf['SNAQ']['SnaqHMax'].strip()
+        snaq_hmax_is_explicit = not snaq_hmax_raw.startswith('@')
+        if snaq_hmax_is_explicit:
+            snaq_hmax = [h.strip() for h in snaq_hmax_raw.split(',') if h.strip()]
+        else:
+            snaq_hmax = [str(int(snaq_hmax_raw[1:].strip()))]
         if any(int(h) < 0 for h in snaq_hmax):
             raise ValueError("SNAQ SnaqHMax values cannot be negative")
-        if len(snaq_hmax) == 1:
+        if snaq_hmax_is_explicit and len(snaq_hmax) == 1:
             max_h = int(snaq_hmax[0])
             snaq_hmax = (
                 ["0"] if max_h == 0 else [str(h) for h in range(1, max_h + 1)]
@@ -357,11 +361,15 @@ class ConfigFactory:
         phylonet = f"java -jar {os.path.join(phylonet_exec_dir, phylonet_jar)}"
         phylonet_threads = cf['PHYLONET']['PhyloNetThreads']
         phylonet_runs = cf['PHYLONET']['PhyloNetRuns']
-        phylonet_hmax_raw = cf['PHYLONET']['PhyloNetHMax']
-        phylonet_hmax = [h.strip() for h in phylonet_hmax_raw.split(',') if h.strip()]
+        phylonet_hmax_raw = cf['PHYLONET']['PhyloNetHMax'].strip()
+        phylonet_hmax_is_explicit = not phylonet_hmax_raw.startswith('@')
+        if phylonet_hmax_is_explicit:
+            phylonet_hmax = [h.strip() for h in phylonet_hmax_raw.split(',') if h.strip()]
+        else:
+            phylonet_hmax = [str(int(phylonet_hmax_raw[1:].strip()))]
         if any(int(h) < 0 for h in phylonet_hmax):
             raise ValueError("PhyloNet PhyloNetHMax values cannot be negative")
-        if len(phylonet_hmax) == 1:
+        if phylonet_hmax_is_explicit and len(phylonet_hmax) == 1:
             max_h = int(phylonet_hmax[0])
             phylonet_hmax = (
                 ["0"] if max_h == 0 else [str(h) for h in range(1, max_h + 1)]

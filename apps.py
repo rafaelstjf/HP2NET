@@ -1273,12 +1273,7 @@ def plot_networks(config: BioConfig,
                 networks+=os.path.join(snaq_dir, name)
         if basedir['network_method'] == "MP":
             phylonet_dir = os.path.join(basedir['dir'], config.phylonet_dir)
-            if len(config.phylonet_hmax) > 1:
-                hmax_values = config.phylonet_hmax
-            else:
-                hmax_values = [str(h) for h in range(
-                    1, int(config.phylonet_hmax[0]) + 1)]
-            for h in hmax_values:
+            for h in config.phylonet_hmax:
                 name = f'{os.path.basename(basedir["dir"])}_{basedir["tree_method"]}_MP_{h}.nex'
                 if len(networks) > 0:
                     networks+=','
