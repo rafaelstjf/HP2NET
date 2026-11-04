@@ -1,6 +1,7 @@
+```dockerfile
 # Dockerfile for installation of HP2Net framework. All the lines related to quartet maxcut are commented due to the software
 # being unavailable
-FROM python:3.12-slim-bullseye
+FROM python:3.12-slim-bookworm
 LABEL version="1.0" maintainer="Rafael Terra <rafaelstjf@gmail.com>"
 WORKDIR /app
 COPY . /app/
@@ -9,27 +10,20 @@ ENV TZ=Etc/UTC
 
 # Install essential packages
 RUN apt-get update && \
-    apt-get install -y \
-        software-properties-common \
+    apt-get install -y --no-install-recommends \
         git \
         build-essential \
         wget \
         ca-certificates \
-        python3-setuptools \
-        python3-pip \
-        python3-dev \
-        python3-venv \
         raxml \
         mrbayes \
-        openjdk-17-jre \
-        openjdk-17-jdk \
+        openjdk-17-jdk-headless \
         r-base && \
-    apt-get autoremove -y && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 # Install Julia
-RUN wget --no-check-certificate https://julialang-s3.julialang.org/bin/linux/x64/1.9/julia-1.9.3-linux-x86_64.tar.gz && \
+RUN wget https://julialang-s3.julialang.org/bin/linux/x64/1.9/julia-1.9.3-linux-x86_64.tar.gz && \
     tar -zxvf julia-1.9.3-linux-x86_64.tar.gz -C /app && \
     rm julia-1.9.3-linux-x86_64.tar.gz
 ENV PATH=$PATH:/app/julia-1.9.3/bin
@@ -70,15 +64,16 @@ RUN wget https://github.com/NakhlehLab/PhyloNet/releases/latest/download/PhyloNe
 
 # Install Quartet Maxcut
 RUN mv /app/tools/find-cut-Linux-64 /usr/local/bin && \
-    chmod a+x /usr/local/bin/find-cut-Linux-64
+     chmod a+x /usr/local/bin/find-cut-Linux-64
 # Clean up
 RUN rm -rf ASTRAL iqtree bucky /var/lib/apt/lists/*
 
 # Install Python packages
-RUN python3 -m pip install  --upgrade pip && \
+RUN python3 -m pip install --upgrade pip && \
     python3 -m pip install -r requirements.txt
 
 RUN julia -e 'using Pkg; Pkg.add("PhyloNetworks")'
 RUN julia -e 'using Pkg; Pkg.add(["RCall", "PhyloPlots", "CSV"])'
 # Set the default command
 ENTRYPOINT ["python3", "HP2NET.py"]
+```
