@@ -132,7 +132,7 @@ If `IqTreeEvolutionaryModel` is set to AUTO, IQ-TREE will try to find the best-f
   SnaqRuns        = 3
   ```
 
-For both `PhyloNetHMax` and `SnaqHMax`, a single value specifies a range from 1 through that value, using the last h value as the initial topology. Setting hmax to 0 runs only with this value, while comma-separated values specify the exact hmax values to use.
+For both `PhyloNetHMax` and `SnaqHMax`, a single value specifies a range from 1 through that value, using the last h value as the initial topology. Setting hmax to 0 runs only with this value, while comma-separated values specify the exact hmax values to use. Prefix a single value with `@` (for example, `@3`) to run only with that exact value instead of expanding it into a range.
 
 * Mr. Bayes settings
 
