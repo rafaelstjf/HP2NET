@@ -38,87 +38,165 @@ from typing import Any
 from utils import app_reuse, Cache
 
 
+
 # setup_phylip_data bash app
 @parsl.python_app(executors=['single_partition'])
 def setup_phylip_data(basedir: dict, config: BioConfig,
                       stderr=parsl.AUTO_LOGNAME,
                       stdout=parsl.AUTO_LOGNAME):
-    """Extract the sequence alignments tar file and convert the gene alignments from the nexus format to the phylip format.
+    """Extract the sequence alignments tar file and convert the gene
+    alignments from the nexus format to the phylip format.
 
     Parameters:
-            basedir: it is going to search for a tar file with nexus files. The script will create:
-            seqdir=input/nexus
-            seqdir=input/phylip
+        basedir: it is going to search for a tar file with nexus files.
+            The script will create:
+                seqdir=input/nexus
+                seqdir=input/phylip
+
     Returns:
-        returns an parsl's AppFuture.
+        Dictionary containing the generated directories.
 
     Raises:
-        PhylipMissingData --- if cannot find a tar file with nexus files.
-
+        AlignmentConversion: if cannot find or convert the sequence files.
 
     TODO: Provide provenance.
     NB:
-        Stdout and Stderr are defaulted to parsl.AUTO_LOGNAME, so the log will be automatically 
-        named according to task id and saved under task_logs in the run directory.
+        Stdout and Stderr are defaulted to parsl.AUTO_LOGNAME, so the log
+        will be automatically named according to task id and saved under
+        task_logs in the run directory.
     """
-    import os, glob, tarfile, logging, tarfile, shutil, re
+
+    import os, glob, tarfile, logging, shutil, re
+
     from Bio import AlignIO
     from pathlib import Path
     from appsexception import AlignmentConversion
 
     logging.info(f'Converting Nexus files to Phylip on {basedir["dir"]}')
+
     input_dir = os.path.join(basedir['dir'], 'input')
     sequence_dir = os.path.join(input_dir, 'sequence')
+
     input_format = 0
+
     # First the sequences are extracted
     Path(sequence_dir).mkdir(exist_ok=True)
-    if os.path.exists(sequence_dir):
-        tar_file = basedir['sequences']
-        tar = tarfile.open(tar_file, "r:gz")
+
+    tar_file = basedir['sequences']
+
+    with tarfile.open(tar_file, "r:gz") as tar:
         tar.extractall(path=sequence_dir)
+
     # Now one file is opened to check its format
-    sequences = glob.glob(os.path.join(sequence_dir, '*'))
+    sequences = [
+        f for f in glob.glob(os.path.join(sequence_dir, '*'))
+        if os.path.isfile(f)
+    ]
+
     if len(sequences) == 0:
         raise AlignmentConversion(sequence_dir)
+
     with open(sequences[0], 'r') as s_file:
         line = s_file.readline()
-        if "#NEXUS" in line:
-            input_format = 0 # nexus
+
+        if "#NEXUS" in line.upper():
+            input_format = 0  # nexus
         elif ">" in line:
-            input_format = 1 # fasta
-        elif len(re.findall(r'\d+\s\d+', line)) > 0:
-            input_format = 2 # other .i.e. phylip
+            input_format = 1  # fasta
+        elif re.match(r'^\s*\d+\s+\d+', line):
+            input_format = 2  # phylip
 
     input_nexus_dir = os.path.join(input_dir, 'nexus')
     input_phylip_dir = os.path.join(input_dir, 'phylip')
     input_fasta_dir = os.path.join(input_dir, 'fasta')
+
     # So, some work must be done. Build the Nexus directory
     if not os.path.isdir(input_nexus_dir):
         Path(input_nexus_dir).mkdir(exist_ok=True)
+
     if not os.path.isdir(input_phylip_dir):
         Path(input_phylip_dir).mkdir(exist_ok=True)
+
     if not os.path.isdir(input_fasta_dir):
         Path(input_fasta_dir).mkdir(exist_ok=True)
+
     # Now, use the function to convert nexus to phylip.
-    files = glob.glob(os.path.join(sequence_dir,'*'))
+    files = glob.glob(os.path.join(sequence_dir, '*'))
+    files = [f for f in files if os.path.isfile(f)]
+
     try:
         for f in files:
-            out_name = os.path.basename(f).split('.')[0]
+
+            out_name = os.path.splitext(os.path.basename(f))[0]
+
             if input_format == 0:
-                AlignIO.convert(f, "nexus", os.path.join(input_phylip_dir, f'{out_name}.phy'), "phylip-sequential", molecule_type = "DNA")
-                AlignIO.convert(f, "nexus", os.path.join(input_fasta_dir, f'{out_name}.fasta'), "fasta", molecule_type = "DNA")
-                shutil.copyfile(f, os.path.join(input_nexus_dir, os.path.basename(f)))
+                AlignIO.convert(
+                    f, "nexus",
+                    os.path.join(input_phylip_dir, f'{out_name}.phy'),
+                    "phylip-sequential",
+                    molecule_type="DNA"
+                )
+
+                AlignIO.convert(
+                    f, "nexus",
+                    os.path.join(input_fasta_dir, f'{out_name}.fasta'),
+                    "fasta",
+                    molecule_type="DNA"
+                )
+
+                shutil.copyfile(
+                    f,
+                    os.path.join(input_nexus_dir, os.path.basename(f))
+                )
+
             if input_format == 1:
-                AlignIO.convert(f, "fasta", os.path.join(input_phylip_dir, f'{out_name}.phy'), "phylip-sequential", molecule_type = "DNA")
-                AlignIO.convert(f, "fasta", os.path.join(input_nexus_dir, f'{out_name}.nex'), "nexus", molecule_type = "DNA")
-                shutil.copyfile(f, os.path.join(input_fasta_dir, os.path.basename(f)))
+                AlignIO.convert(
+                    f, "fasta",
+                    os.path.join(input_phylip_dir, f'{out_name}.phy'),
+                    "phylip-sequential",
+                    molecule_type="DNA"
+                )
+
+                AlignIO.convert(
+                    f, "fasta",
+                    os.path.join(input_nexus_dir, f'{out_name}.nex'),
+                    "nexus",
+                    molecule_type="DNA"
+                )
+
+                shutil.copyfile(
+                    f,
+                    os.path.join(input_fasta_dir, os.path.basename(f))
+                )
+
             if input_format == 2:
-                AlignIO.convert(f, "phylip-sequential", os.path.join(input_nexus_dir, f'{out_name}.nex'), "nexus", molecule_type = "DNA")
-                AlignIO.convert(f, "phylip-sequential", os.path.join(input_fasta_dir, f'{out_name}.fasta'), "fasta", molecule_type = "DNA")
-                shutil.copyfile(f, os.path.join(input_phylip_dir, os.path.basename(f)))
+                AlignIO.convert(
+                    f, "phylip-sequential",
+                    os.path.join(input_nexus_dir, f'{out_name}.nex'),
+                    "nexus",
+                    molecule_type="DNA"
+                )
+
+                AlignIO.convert(
+                    f, "phylip-sequential",
+                    os.path.join(input_fasta_dir, f'{out_name}.fasta'),
+                    "fasta",
+                    molecule_type="DNA"
+                )
+
+                shutil.copyfile(
+                    f,
+                    os.path.join(input_phylip_dir, os.path.basename(f))
+                )
+
     except Exception as e:
-        raise AlignmentConversion(basedir=basedir['dir'])
-    return
+        raise AlignmentConversion(basedir=basedir['dir']) from e
+
+    return {
+        'nexus': input_nexus_dir,
+        'phylip': input_phylip_dir,
+        'fasta': input_fasta_dir
+    }
 
 
 # raxml bash app
@@ -151,7 +229,10 @@ def raxml(basedir: dict,
     raxml_dir = os.path.join(basedir['dir'], config.raxml_dir)
 
     p = x = config.seed
-    params = f"-T {num_threads} -p {p} -x {x} -f a -m {config.raxml_model} -N {config.bootstrap}"
+    if num_threads > 1:
+        params = f"-T {num_threads} -p {p} -x {x} -f a -m {config.raxml_model} -N {config.bootstrap}"
+    else:
+        params = f"-p {p} -x {x} -f a -m {config.raxml_model} -N {config.bootstrap}"
     output_file = os.path.splitext(os.path.basename(input_file))[0]
     # Return to Parsl to be executed on the workflow
     return f"cd {raxml_dir}; {raxml_exec} {params} -s {input_file} -n {output_file}"
