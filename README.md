@@ -132,7 +132,7 @@ If `IqTreeEvolutionaryModel` is set to AUTO, IQ-TREE will try to find the best-f
   SnaqRuns        = 3
   ```
 
-For both `PhyloNetHMax` and `SnaqHMax`, a single value specifies a range from 1 through that value, using the last h value as the initial topology. Setting hmax to 0 runs only with this value, while comma-separated values specify the exact hmax values to use.
+For both `PhyloNetHMax` and `SnaqHMax`, a single value specifies a range from 1 through that value, using the last h value as the initial topology. Setting hmax to 0 runs only with this value, while comma-separated values specify the exact hmax values to use. Prefix a single value with `@` (for example, `@3`) to run only with that exact value instead of expanding it into a range.
 
 * Mr. Bayes settings
 
@@ -298,5 +298,8 @@ docker run --rm -v $DIR:$DIR rafaelstjf/hp2net:main -s ${DIR}/sdumont.ini -w ${D
 ## If you use it, please cite
 
 Terra, R., Coelho, M., Cruz, L., Garcia-Zapata, M., Gadelha, L., Osthoff, C., ... & Ocana, K. (2021, July). Gerência e Análises de Workflows aplicados a Redes Filogenéticas de Genomas de Dengue no Brasil. In *Anais do XV Brazilian e-Science Workshop* (pp. 49-56). SBC.
+
+Terra, R., Carvalho, D., Machado, D. J., Osthoff, C., & Ocaña, K. (2026). HP2NET: Empowering Efficient Phylogenetic Network Analysis through High-Performance Computing. Bioinformatics. https://doi.org/10.64898/2026.03.05.709005
+
 
 **Also cite all the coupled software!**

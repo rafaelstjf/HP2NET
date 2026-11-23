@@ -75,6 +75,7 @@ def workflow_config(config: BioConfig, **kwargs) -> parsl.config.Config:
         mon_hub = parsl.monitoring.monitoring.MonitoringHub(
             workflow_name=name,
             hub_address=address_by_hostname(),
+            hub_port_range=(65000, 65500),
             resource_monitoring_enabled=True,
             monitoring_debug=False,
             resource_monitoring_interval=interval,
@@ -87,15 +88,16 @@ def workflow_config(config: BioConfig, **kwargs) -> parsl.config.Config:
                     label=f'single_partition',
                     # Optional: The network interface on node 0 which compute nodes can communicate with.
                     address=address_by_hostname(),
+                    interchange_port_range=(65000,65500),
                     max_workers_per_node=curr_workers,
                     cores_per_worker=1,
                     worker_debug=False,
                     provider=LocalProvider(
-                        nodes_per_block=1,
+                        nodes_per_block=config.workflow_node,
                         parallelism=1,
-                        init_blocks=config.workflow_node,
-                        max_blocks=config.workflow_node,
-                        min_blocks = config.workflow_node,
+                        init_blocks=1,
+                        max_blocks=1,
+                        min_blocks = 1,
                         worker_init=env_str,
                         launcher=SrunLauncher(
                             overrides=f'-c {config.workflow_core}')
