@@ -317,59 +317,64 @@ def prepare_to_run(config):
 
 
 def main(**kwargs):
-    logging.info("Starting the Workflow Orchestration")
-    if kwargs["config_file"] is not None:
-        config_file = kwargs["config_file"]
-    else:
-        config_file = "default.ini"
-    if kwargs["workload_file"] is not None:
-        cf = bioconfig.ConfigFactory(
-            config_file, custom_workload=kwargs["workload_file"]
-        )
-    else:
-        cf = bioconfig.ConfigFactory(config_file)
-    bio_config = cf.build_config()
-    dkf_config = workflow_config(bio_config, **kwargs)
-    logging.info(f"{hash(bio_config)}")
-    dkf = parsl.load(dkf_config)
-    results = list()
-    prep = prepare_to_run(bio_config)
-    for basedir in bio_config.workload:
-        r = None
-        network_method = basedir["network_method"]
-        tree_method = basedir["tree_method"]
-        if network_method == "MPL":
-            if tree_method == "RAXML":
-                r = raxml_snaq(bio_config, basedir, prep)
-            elif tree_method == "IQTREE":
-                r = iqtree_snaq(bio_config, basedir, prep)
-            elif tree_method == "MRBAYES":
-                r = mrbayes_snaq(bio_config, basedir, prep)
-            else:
-                logging.error(
-                    f"Invalid parameter combination: {bio_config.network_method} and {bio_config.tree_method}"
-                )
-        elif network_method == "MP":
-            if tree_method == "RAXML":
-                r = raxml_phylonet(bio_config, basedir, prep)
-            elif tree_method == "IQTREE":
-                r = iqtree_phylonet(bio_config, basedir, prep)
-            else:
-                logging.error(
-                    f"Invalid parameter combination: {bio_config.network_method} and {bio_config.tree_method}"
-                )
+    try:
+        logging.info("Starting the Workflow Orchestration")
+        if kwargs["config_file"] is not None:
+            config_file = kwargs["config_file"]
         else:
-            logging.error(f"Invalid network method: {bio_config.network_method}")
-        if r is not None:
-            results.extend(r)
-            # wait_for_all(r)
-    if bio_config.plot_networks == True:
-        plot = apps.plot_networks(bio_config, inputs=results)
-        wait_for_all([plot])
-    else:
-        wait_for_all(results)
-    parsl.dfk().cleanup()
-    return
+            config_file = "default.ini"
+        if kwargs["workload_file"] is not None:
+            cf = bioconfig.ConfigFactory(
+                config_file, custom_workload=kwargs["workload_file"]
+            )
+        else:
+            cf = bioconfig.ConfigFactory(config_file)
+        bio_config = cf.build_config()
+        dkf_config = workflow_config(bio_config, **kwargs)
+        logging.info(f"{hash(bio_config)}")
+        dkf = parsl.load(dkf_config)
+        results = list()
+        prep = prepare_to_run(bio_config)
+        wait_for_all(prep)
+        for basedir in bio_config.workload:
+            r = None
+            network_method = basedir["network_method"]
+            tree_method = basedir["tree_method"]
+            if network_method == "MPL":
+                if tree_method == "RAXML":
+                    r = raxml_snaq(bio_config, basedir, prep)
+                elif tree_method == "IQTREE":
+                    r = iqtree_snaq(bio_config, basedir, prep)
+                elif tree_method == "MRBAYES":
+                    r = mrbayes_snaq(bio_config, basedir, prep)
+                else:
+                    logging.error(
+                        f"Invalid parameter combination: {bio_config.network_method} and {bio_config.tree_method}"
+                    )
+            elif network_method == "MP":
+                if tree_method == "RAXML":
+                    r = raxml_phylonet(bio_config, basedir, prep)
+                elif tree_method == "IQTREE":
+                    r = iqtree_phylonet(bio_config, basedir, prep)
+                else:
+                    logging.error(
+                        f"Invalid parameter combination: {bio_config.network_method} and {bio_config.tree_method}"
+                    )
+            else:
+                logging.error(f"Invalid network method: {bio_config.network_method}")
+            if r is not None:
+                results.extend(r)
+                # wait_for_all(r)
+        if bio_config.plot_networks == True:
+            plot = apps.plot_networks(bio_config, inputs=results)
+            wait_for_all([plot])
+        else:
+            wait_for_all(results)
+    except:
+        logging.exception("Workflow execution failed")
+    finally:
+        parsl.dfk().cleanup()
+        return
 
 
 if __name__ == "__main__":
